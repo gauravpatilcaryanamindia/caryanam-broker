@@ -8,6 +8,7 @@ import com.caryanam.caryanam_broker.exception.ResourceNotFoundException;
 import com.caryanam.caryanam_broker.repository.PropertyRepository;
 
 import com.caryanam.caryanam_broker.service.PropertyService;
+import com.caryanam.caryanam_broker.service.PropertyUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class PropertyUserServiceImpl implements PropertyServiceUser {
+public class PropertyUserServiceImpl implements PropertyUserService {
 
     @Autowired
     private PropertyRepository propertyRepository;
