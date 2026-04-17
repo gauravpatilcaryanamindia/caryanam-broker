@@ -119,9 +119,14 @@ public class PropertyServiceImpl implements PropertyService {
         dto.setLikesCount(property.getLikesCount());
         dto.setViewsCount(property.getViewsCount());
         dto.setStatus(property.getStatus());
-       return dto;
+        List<PropertyImage> imageList = propertyImageRepository.findByPropertyId(id);
+        List<String> imagePaths = new ArrayList<>();
+        for (PropertyImage img : imageList) {
+            imagePaths.add(img.getImagePath());
+        }
+        dto.setImages(imagePaths);
+        return dto;
     }
-
 
     @Override
     public PropertyDto updateProperty(Long id, PropertyDto propertyDto) {
@@ -208,7 +213,7 @@ public class PropertyServiceImpl implements PropertyService {
         }
         int totalImages = propertyImageRepository.countByPropertyId(propertyId);
         if (totalImages < 4) {
-            property.setStatus(AppConstants.INACTIVE);
+            property.setStatus(AppConstants.ACTIVE);
             propertyRepository.save(property);
             return AppConstants.UPLOAD_SUCCESSFULLY + (4 - totalImages) + AppConstants.MORE_IMG;
         }

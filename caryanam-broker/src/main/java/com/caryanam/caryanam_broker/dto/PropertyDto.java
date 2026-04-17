@@ -6,6 +6,8 @@ import com.caryanam.caryanam_broker.Enum.FurnishingType;
 import com.caryanam.caryanam_broker.Enum.PropertyType;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class PropertyDto {
 
@@ -22,5 +24,5 @@ public class PropertyDto {
     private BhkType bhkType;
     private FurnishingType furnishing;
     private String carpetArea;
-
+    private List<String> images;
 }
