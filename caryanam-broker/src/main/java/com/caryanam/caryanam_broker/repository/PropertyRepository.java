@@ -4,6 +4,7 @@ package com.caryanam.caryanam_broker.repository;
 
 import com.caryanam.caryanam_broker.Enum.PropertyType;
 import com.caryanam.caryanam_broker.entity.Property;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.List;
 
 public interface PropertyRepository extends JpaRepository<Property, Long> {
 
-    int countByAdminId(Long adminId);
+    int countByAdmin_AdminId(Long adminId);
 
     List<Property> findByStatus(String active);
 
