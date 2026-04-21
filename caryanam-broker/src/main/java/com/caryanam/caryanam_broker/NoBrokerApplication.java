@@ -10,10 +10,10 @@ public class NoBrokerApplication {
 		SpringApplication.run(NoBrokerApplication.class, args);
 
 
-		System.out.println("no broker  Application started");
+		System.out.println("Caryanam Broker Application start Successfully");
 		System.out.println("\n\n");
 		System.err.println("PORT : localhost8080");
-		System.err.println("documentation : "+"http://localhost:8080/v3/api-docs");
+		System.err.println("documentation : "+"http://localhost:8080/swagger-ui.html");
 		System.err.println("  *****    *******  *******       *****   *******    *****    ******   *******" );
 		System.err.println(" *     *   *      *    *         *           *      *     *   *     *     *   " );
 		System.err.println("*       *  *      *    *         *           *     *       *  *     *     *   " );

@@ -36,25 +36,25 @@ public class ChatController {
             throw new BadRequestException("Sender and Receiver cannot be same");
         }
 
-        if (dto.getMessage() == null || dto.getMessage().trim().isEmpty()) {
-            throw new BadRequestException("Message cannot be blank");
-        }
+        // ================= AUTO FIRST MESSAGE =================
+        dto.setMessage("Hi, I’m interested in your property. Could you please share more information?");
+        MessageResponseDTO userMsg = chatService.sendMessage(dto);
 
-        if (dto.getMessage().length() > 1000) {
-            throw new BadRequestException("Message too long");
-        }
+        // ================= AUTO ADMIN REPLY =================
+        MessageRequestDTO adminDto = new MessageRequestDTO();
+        adminDto.setSenderId(dto.getReceiverId());
+        adminDto.setReceiverId(dto.getSenderId());
+        adminDto.setMessage("Please wait, an agent will connect with you shortly.");
 
-        dto.setMessage(dto.getMessage().trim());
+        chatService.sendMessage(adminDto);
 
-        MessageResponseDTO response = chatService.sendMessage(dto);
-
-        boolean isAccepted = chatService.isChatAccepted(response.getRoomId());
+        boolean isAccepted = chatService.isChatAccepted(userMsg.getRoomId());
 
         return ResponseEntity.ok(
                 new ResponseDto<>(
                         200,
-                        isAccepted ? "Message sent (Real-time)" : "Message sent (Waiting for admin approval)",
-                        response
+                        "Auto messages sent",
+                        userMsg
                 )
         );
     }

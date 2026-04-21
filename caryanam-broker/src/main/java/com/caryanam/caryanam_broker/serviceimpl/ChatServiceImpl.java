@@ -68,21 +68,65 @@ public class ChatServiceImpl implements ChatService {
         Long userId;
         Long adminId;
 
-
-        if (dto.getSenderId() == 1) {   // USER sends first
+        if (dto.getSenderId() == 1) {   // USER
             userId = dto.getSenderId();
             adminId = dto.getReceiverId();
-        } else {                        // ADMIN replies
+        } else {                        // ADMIN
             adminId = dto.getSenderId();
             userId = dto.getReceiverId();
         }
 
         String roomId = createOrGetRoom(userId, adminId);
 
+        // ================= CHECK FIRST MESSAGE =================
+        ChatRoom room = chatRoomRepo.findByUserIdAndAdminId(
+                Math.min(userId, adminId),
+                Math.max(userId, adminId)
+        ).orElseThrow(() -> new RuntimeException("Room not found"));
+
+        // ================= AUTO FIRST MESSAGE =================
+        if (!room.isFirstMessageSent()) {
+
+            Message firstMsg = new Message();
+            firstMsg.setRoomId(roomId);
+            firstMsg.setSenderId(userId);
+            firstMsg.setSenderRole("USER");
+            firstMsg.setContent("Hi, I’m interested in your property. Could you please share more information?");
+            firstMsg.setTimestamp(LocalDateTime.now());
+            firstMsg.setRead(false);
+            firstMsg.setStatus(MessageStatus.PENDING);
+
+            messageRepo.save(firstMsg);
+
+            // mark first message sent
+            room.setFirstMessageSent(true);
+            chatRoomRepo.save(room);
+
+            // ================= AUTO ADMIN REPLY =================
+            Message adminReply = new Message();
+            adminReply.setRoomId(roomId);
+            adminReply.setSenderId(adminId);
+            adminReply.setSenderRole("ADMIN");
+            adminReply.setContent("Please wait, an agent will connect with you shortly.");
+            adminReply.setTimestamp(LocalDateTime.now());
+            adminReply.setRead(false);
+            adminReply.setStatus(MessageStatus.PENDING);
+
+            messageRepo.save(adminReply);
+
+            return new MessageResponseDTO(
+                    roomId,
+                    firstMsg.getSenderId(),
+                    firstMsg.getSenderRole(),
+                    firstMsg.getContent(),
+                    firstMsg.getTimestamp().format(FORMATTER)
+            );
+        }
+
+        // ================= NORMAL MESSAGE FLOW =================
         Message msg = new Message();
         msg.setRoomId(roomId);
         msg.setSenderId(dto.getSenderId());
-
 
         if (dto.getSenderId().equals(userId)) {
             msg.setSenderRole("USER");
@@ -103,20 +147,6 @@ public class ChatServiceImpl implements ChatService {
                 msg.getSenderRole(),
                 msg.getContent(),
                 msg.getTimestamp().format(FORMATTER)
-        );
-    }
-
-    // ================= CONVERT =================
-    private SocketMessageDTO convertToSocket(Message msg) {
-        return new SocketMessageDTO(
-                msg.getId(),
-                msg.getRoomId(),
-                msg.getSenderId(),
-                msg.getSenderRole(),
-                msg.getContent(),
-                msg.isRead(),
-                msg.getTimestamp().format(FORMATTER),
-                msg.getStatus()
         );
     }
 

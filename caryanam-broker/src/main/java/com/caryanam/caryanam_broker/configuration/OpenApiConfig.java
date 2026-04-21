@@ -14,7 +14,7 @@ public class OpenApiConfig {
     public OpenApiCustomizer openApiCustomizer() {
         return openApi -> {
             Server localServer = new Server();
-            localServer.setUrl("http://localhost:8080/v3/api-docs");
+            localServer.setUrl("http://localhost:8080/swagger-ui.html");
             localServer.setDescription("Local Server");
 
             Server productionServer = new Server();
