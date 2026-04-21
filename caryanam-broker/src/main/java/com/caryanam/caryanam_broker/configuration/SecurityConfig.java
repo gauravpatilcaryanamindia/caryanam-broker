@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers("/sockettest.html", "/**/*.html", "/**/*.js", "/**/*.css").permitAll()
                         .requestMatchers("/api/auth/**","/api/auth/register").permitAll()
                         .requestMatchers("/chat/**","/socket.io/**").permitAll()
+                        .requestMatchers("/api/admin/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 

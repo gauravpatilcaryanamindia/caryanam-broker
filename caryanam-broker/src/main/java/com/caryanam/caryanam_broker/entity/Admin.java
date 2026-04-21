@@ -27,14 +27,16 @@ public class Admin {
     private String password;
 
     private Integer premiumCount;
-    private Integer propertyLimit;
+    //private Integer propertyLimit;
 
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Column(nullable = false)
+    private Integer propertyLimit = 1;
 
-    @OneToMany(mappedBy = "admin")
-    @JsonIgnore
-    private List<Property> properties;
+//    @OneToMany(mappedBy = "admin")
+//    @JsonIgnore
+//    private List<Property> properties;
 
 }
