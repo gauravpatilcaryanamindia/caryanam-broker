@@ -39,7 +39,7 @@ public class PropertyServiceImpl implements PropertyService {
             System.out.println("Admin not found");
             return null;
         }
-        int propertyCount = propertyRepository.countByAdminId(adminId);
+        int propertyCount = propertyRepository.countByAdmin_AdminId(adminId);
         if (propertyCount >= admin.getPropertyLimit()) {
             return null;
         }

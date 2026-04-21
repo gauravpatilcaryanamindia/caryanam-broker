@@ -1,22 +1,19 @@
 package com.caryanam.caryanam_broker.entity;
 
+
+
 import com.caryanam.caryanam_broker.enums.Role;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
-
-
-@Data
-
 @Entity
-@Table(name = "admin")
-public class Admin {
+@Data
+@Table(name = "users")
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long adminId;
+    private Long userId;
 
     private String fullName;
     private String mobileNumber;
@@ -26,15 +23,6 @@ public class Admin {
 
     private String password;
 
-    private Integer premiumCount;
-    private Integer propertyLimit;
-
     @Enumerated(EnumType.STRING)
     private Role role;
-
-
-    @OneToMany(mappedBy = "admin")
-    @JsonIgnore
-    private List<Property> properties;
-
 }

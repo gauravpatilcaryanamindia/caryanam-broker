@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Socket Chat Test</title>
+</head>
+<body>
+
+<h2>Socket Chat</h2>
+
+<p id="info"></p>
+
+<input type="text" id="msg" placeholder="Enter message">
+<button id="sendBtn">Send</button>
+
+<ul id="messages"></ul>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+
+  const USER_ID = urlParams.get("userId");
+  const ADMIN_ID = urlParams.get("adminId");
+
+  let CURRENT_ID = null;
+  let RECEIVER_ID = null;
+  let IS_ADMIN = false;
+
+  if (USER_ID) {
+    CURRENT_ID = Number(USER_ID);
+    RECEIVER_ID = 2;
+    document.getElementById("info").innerText = "USER: " + CURRENT_ID;
+  }
+  else if (ADMIN_ID) {
+    CURRENT_ID = Number(ADMIN_ID);
+    RECEIVER_ID = 1;
+    IS_ADMIN = true;
+    document.getElementById("info").innerText = "ADMIN: " + CURRENT_ID;
+  }
+  else {
+    alert("Pass userId or adminId");
+    throw new Error("Missing ID");
+  }
+
+
+  const socket = io("http://localhost:9092", {
+    transports: ["websocket"],
+    query: IS_ADMIN
+            ? { adminId: CURRENT_ID }
+            : { userId: CURRENT_ID }
+  });
+
+  socket.on("connect", () => {
+    console.log(" Connected:", socket.id);
+
+    const roomId =
+            CURRENT_ID < RECEIVER_ID
+                    ? CURRENT_ID + "_" + RECEIVER_ID
+                    : RECEIVER_ID + "_" + CURRENT_ID;
+
+    socket.emit("join_room", roomId);
+  });
+
+
+  socket.on("receive_message", (data) => {
+    console.log(" RECEIVED:", data);
+
+    const li = document.createElement("li");
+
+
+    li.innerText = `${data.senderRole}: ${data.message}`;
+
+    document.getElementById("messages").appendChild(li);
+  });
+
+
+  function sendMessage() {
+    const input = document.getElementById("msg");
+    const msg = input.value.trim();
+
+    if (!msg) {
+      alert("Enter message");
+      return;
+    }
+
+    const payload = {
+      senderId: CURRENT_ID,
+      receiverId: RECEIVER_ID,
+      senderRole: IS_ADMIN ? "ADMIN" : "USER",
+      message: msg
+    };
+
+    console.log(" Sending:", payload);
+
+    socket.emit("send_message", payload);
+
+    input.value = "";
+  }
+
+  document.getElementById("sendBtn").onclick = sendMessage;
+
+  document.getElementById("msg").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+      sendMessage();
+    }
+  });
+</script>
+
+</body>
+</html>

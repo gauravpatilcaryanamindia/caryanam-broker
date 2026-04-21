@@ -13,7 +13,7 @@ public class NoBrokerApplication {
 		System.out.println("no broker  Application started");
 		System.out.println("\n\n");
 		System.err.println("PORT : localhost8080");
-		System.err.println("documentation : "+"http://localhost:8080/swagger-ui/index.html#/");
+		System.err.println("documentation : "+"http://localhost:8080/v3/api-docs");
 		System.err.println("  *****    *******  *******       *****   *******    *****    ******   *******" );
 		System.err.println(" *     *   *      *    *         *           *      *     *   *     *     *   " );
 		System.err.println("*       *  *      *    *         *           *     *       *  *     *     *   " );
