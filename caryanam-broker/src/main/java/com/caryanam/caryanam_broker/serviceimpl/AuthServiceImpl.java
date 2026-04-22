@@ -20,6 +20,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -38,6 +41,8 @@ public class AuthServiceImpl implements AuthService {
 
      @Autowired
     private AuthenticationManager authenticationManager;
+
+    private static final Set<String> tokenBlacklist = new HashSet<>();
 
     //  USER REGISTRATION
     @Override
@@ -115,4 +120,21 @@ public class AuthServiceImpl implements AuthService {
                 role
         );
     }
+
+    @Override
+    public void logout(String token) {
+
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        tokenBlacklist.add(token);
+
+        System.out.println("User logged out, token blacklisted: " + token);
+    }
+
+    public static boolean isTokenBlacklisted(String token) {
+        return tokenBlacklist.contains(token);
+    }
+
 }

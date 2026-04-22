@@ -1,4 +1,5 @@
 package com.caryanam.caryanam_broker.configuration;
+import com.caryanam.caryanam_broker.serviceimpl.AuthServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,13 +35,16 @@ public class JwtFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-
-
-        String authHeader = request.getHeader("Authorization");
+         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
 
             String token = authHeader.substring(7);
+            if (AuthServiceImpl.isTokenBlacklisted(token)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Token expired (Logged out)");
+                return;
+            }
             String username = jwtUtil.extractUsername(token);
 
             if (username != null &&
