@@ -5,11 +5,9 @@ import com.caryanam.caryanam_broker.exception.BadRequestException;
 import com.caryanam.caryanam_broker.service.ChatService;
 import com.caryanam.caryanam_broker.socket.MessageRequestDTO;
 import com.caryanam.caryanam_broker.socket.MessageResponseDTO;
-
-
 import com.caryanam.caryanam_broker.socket.RoomRequestDTO;
-import com.corundumstudio.socketio.SocketIOServer;
 
+import com.caryanam.caryanam_broker.socket.TypingDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -23,7 +21,7 @@ public class ChatController {
 
     private final ChatService chatService;
 
-    //  SEND MESSAGE
+    // ================= SEND MESSAGE =================
     @PostMapping("/send")
     public ResponseEntity<ResponseDto<MessageResponseDTO>> send(
             @Valid @RequestBody MessageRequestDTO dto) {
@@ -36,30 +34,24 @@ public class ChatController {
             throw new BadRequestException("Sender and Receiver cannot be same");
         }
 
-        // ================= AUTO FIRST MESSAGE =================
-        dto.setMessage("Hi, I’m interested in your property. Could you please share more information?");
-        MessageResponseDTO userMsg = chatService.sendMessage(dto);
+        if (dto.getSenderRole() == null ||
+                (!dto.getSenderRole().equals("USER") && !dto.getSenderRole().equals("ADMIN"))) {
+            throw new BadRequestException("SenderRole must be USER or ADMIN");
+        }
 
-        // ================= AUTO ADMIN REPLY =================
-        MessageRequestDTO adminDto = new MessageRequestDTO();
-        adminDto.setSenderId(dto.getReceiverId());
-        adminDto.setReceiverId(dto.getSenderId());
-        adminDto.setMessage("Please wait, an agent will connect with you shortly.");
-
-        chatService.sendMessage(adminDto);
-
-        boolean isAccepted = chatService.isChatAccepted(userMsg.getRoomId());
+        // ✅ ONLY CALL SERVICE
+        MessageResponseDTO response = chatService.sendMessage(dto);
 
         return ResponseEntity.ok(
                 new ResponseDto<>(
                         200,
-                        "Auto messages sent",
-                        userMsg
+                        "Message processed successfully",
+                        response
                 )
         );
     }
 
-    //  CREATE ROOM
+    // ================= CREATE ROOM =================
     @PostMapping("/room")
     public ResponseEntity<ResponseDto<String>> createRoom(
             @Valid @RequestBody RoomRequestDTO request) {
@@ -82,7 +74,7 @@ public class ChatController {
         );
     }
 
-    //  ACCEPT CHAT
+    // ================= ACCEPT CHAT =================
     @PostMapping("/accept")
     public ResponseEntity<ResponseDto<String>> accept(
             @Valid @RequestBody RoomRequestDTO request) {
@@ -98,7 +90,7 @@ public class ChatController {
         );
     }
 
-    //  REJECT CHAT
+    // ================= REJECT CHAT =================
     @PostMapping("/reject")
     public ResponseEntity<ResponseDto<String>> reject(
             @Valid @RequestBody RoomRequestDTO request) {
@@ -111,6 +103,36 @@ public class ChatController {
 
         return ResponseEntity.ok(
                 new ResponseDto<>(200, "Chat rejected", request.getRoomId())
+        );
+    }
+
+    @PostMapping("/typing")
+    public ResponseEntity<ResponseDto<String>> typing(
+            @RequestBody TypingDTO dto) {
+
+        if (dto.getRoomId() == null) {
+            throw new BadRequestException("RoomId is required");
+        }
+
+        chatService.handleTyping(dto);
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(200, "Typing event sent", dto.getRoomId())
+        );
+    }
+    @PostMapping("/status")
+    public ResponseEntity<ResponseDto<String>> updateStatus(
+            @RequestParam Long userId,
+            @RequestParam boolean online) {
+
+        if (userId == null) {
+            throw new BadRequestException("UserId is required");
+        }
+
+        chatService.updateUserStatus(userId, online);
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(200, "User status updated", userId.toString())
         );
     }
 }

@@ -42,13 +42,16 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+
+                        .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/sockettest.html", "/**/*.html", "/**/*.js", "/**/*.css").permitAll()
                         .requestMatchers("/api/auth/**","/api/auth/register").permitAll()
                         .requestMatchers("/chat/**","/socket.io/**").permitAll()
-                        .requestMatchers("/api/admin/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+
 
 
                         .anyRequest().authenticated()

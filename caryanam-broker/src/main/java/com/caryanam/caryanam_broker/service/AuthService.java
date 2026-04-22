@@ -13,4 +13,6 @@ public interface AuthService {
     RegisterResponseDTO registerAdmin(RegisterRequestDTO dto);
 
     public String login(LoginRequestDTO dto);
+
+    void logout(String token);
 }
