@@ -120,11 +120,18 @@ public class PropertyServiceImpl implements PropertyService {
         dto.setViewsCount(property.getViewsCount());
         dto.setStatus(property.getStatus());
         List<PropertyImage> imageList = propertyImageRepository.findByPropertyId(id);
-        List<String> imagePaths = new ArrayList<>();
-        for (PropertyImage img : imageList) {
-            imagePaths.add(img.getImagePath());
+        List<String> doctypeImages = new ArrayList<>();
+        if (imageList != null && imageList.size() > 0) {
+            for (int i = 0; i < imageList.size(); i++) {
+                String path = imageList.get(i).getImagePath();
+                if (i == 0) {
+                    dto.setCoverImage(path);
+                } else {
+                    doctypeImages.add(path);
+                }
+            }
         }
-        dto.setImages(imagePaths);
+        dto.setDoctypeImages(String.valueOf(doctypeImages));
         return dto;
     }
 
@@ -172,7 +179,6 @@ public class PropertyServiceImpl implements PropertyService {
         return AppConstants.PROPERTY_DELETED;
     }
 
-
     @Override
     public String uploadPropertyImages(Long propertyId, MultipartFile[] files) {
         Property property = propertyRepository.findById(propertyId).orElse(null);
@@ -184,8 +190,11 @@ public class PropertyServiceImpl implements PropertyService {
         if (!folder.exists()) {
             folder.mkdirs();
         }
+        int index = 0;
+        StringBuilder doctypeImages = new StringBuilder();
         for (MultipartFile file : files) {
-            String fileName = file.getOriginalFilename();
+            String originalName = file.getOriginalFilename();
+            String fileName = System.currentTimeMillis() + "_" + originalName;
             String filePath = uploadDir + fileName;
             Long originalKb = file.getSize() / 1024;
             Double originalMb = file.getSize() / (1024.0 * 1024.0);
@@ -206,20 +215,29 @@ public class PropertyServiceImpl implements PropertyService {
                 image.setCompressedSizeMb(compressedMb);
                 image.setProperty(property);
                 propertyImageRepository.save(image);
+                if (index == 0) {
+                    property.setCoverImage(fileName);
+                } else {
+                    if (doctypeImages.length() > 0) {
+                        doctypeImages.append(",");
+                    }
+                    doctypeImages.append(fileName);
+                }
+                index++;
             } catch (Exception e) {
                 e.printStackTrace();
                 return MessageConfig.IMAGE_UPLOAD_FAILED;
             }
         }
-        int totalImages = propertyImageRepository.countByPropertyId(propertyId);
-        if (totalImages < 4) {
-            property.setStatus(AppConstants.ACTIVE);
-            propertyRepository.save(property);
-            return AppConstants.UPLOAD_SUCCESSFULLY + (4 - totalImages) + AppConstants.MORE_IMG;
+        if (doctypeImages.length() > 0) {
+            property.setDoctypeImages(doctypeImages.toString());
         }
+        int totalImages = propertyImageRepository.countByPropertyId(propertyId);
         property.setStatus(AppConstants.ACTIVE);
         propertyRepository.save(property);
-
+        if (totalImages < 4) {
+            return AppConstants.UPLOAD_SUCCESSFULLY + (4 - totalImages) + AppConstants.MORE_IMG;
+        }
         return MessageConfig.IMAGE_UPLOAD_SUCCESS;
     }
 

@@ -29,7 +29,7 @@ public class AdminPropertyController {
     @Autowired
     private AdminRepository adminRepository;
 
-    @PostMapping("/add-property/{adminId}")
+    @PostMapping("/addPropertyByAdmin/{adminId}")
     public ResponseEntity<Object> addProperty(
             @PathVariable Long adminId, @RequestBody PropertyDto propertyDto) {
         if (propertyDto.getTitle() == null || propertyDto.getTitle().trim().isEmpty()) {
@@ -91,7 +91,7 @@ public class AdminPropertyController {
     }
 
     // 3. Get Property By Id
-    @GetMapping("/get-property-by-id/{id}")
+    @GetMapping("/getPropertyById/{id}")
     public ResponseEntity<Object> getPropertyById(@PathVariable Long id) {
         if (id == null || id <= 0) {
             return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
@@ -100,7 +100,7 @@ public class AdminPropertyController {
     }
 
     // 4. Update Property
-    @PutMapping("/update-property/{id}")
+    @PutMapping("/updatePropertyById/{id}")
     public ResponseEntity<Object> updateProperty(@PathVariable Long id, @RequestBody PropertyDto propertyDto) {
         if (id == null || id <= 0) {
             return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
@@ -109,7 +109,7 @@ public class AdminPropertyController {
     }
 
     // 5. Delete Property
-    @DeleteMapping("/delete-property/{id}")
+    @DeleteMapping("deletePropertyById/{id}")
     public ResponseEntity<Object> deleteProperty(@PathVariable Long id) {
         if (id == null || id <= 0) {
             return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
@@ -122,7 +122,7 @@ public class AdminPropertyController {
         return ResponseHandler.generateResponse(MessageConfig.PROPERTY_FILTERED, HttpStatus.OK, propertyService.filterProperties(filterDto));
     }
 
-    @PostMapping("/upload-property-images/{id}")
+    @PostMapping("/uploadPropertyImagesByPropertyId/{id}")
     public ResponseEntity<Object> uploadPropertyImages(@PathVariable Long id, @RequestParam("files") MultipartFile[] files) {
         if (files == null || files.length == 0) {
             return ResponseHandler.generateResponse(MessageConfig.IMAGE_REQUIRED, HttpStatus.BAD_REQUEST, null);
@@ -152,7 +152,7 @@ public class AdminPropertyController {
         return ResponseHandler.generateResponse(response, HttpStatus.OK, null);
     }
 
-    @PostMapping("/buy-premium/{adminId}")
+    @PostMapping("/buyPremiumByAdminId/{adminId}")
     public ResponseEntity<Object> buyPremium(@PathVariable Long adminId) {
         Admin admin = adminRepository.findById(adminId).orElse(null);
         if (admin == null) {

@@ -4,10 +4,11 @@ package com.caryanam.caryanam_broker.dto;
 import com.caryanam.caryanam_broker.Enum.BhkType;
 import com.caryanam.caryanam_broker.Enum.FurnishingType;
 import com.caryanam.caryanam_broker.Enum.PropertyType;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
-import java.util.List;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
 public class PropertyDto {
 
@@ -24,5 +25,6 @@ public class PropertyDto {
     private BhkType bhkType;
     private FurnishingType furnishing;
     private String carpetArea;
-    private List<String> images;
+    private String coverImage;
+    private String doctypeImages;
 }

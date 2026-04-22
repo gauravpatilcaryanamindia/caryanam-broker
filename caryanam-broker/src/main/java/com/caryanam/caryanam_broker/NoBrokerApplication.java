@@ -18,7 +18,7 @@ public class NoBrokerApplication {
 		System.err.println(" *     *   *      *    *         *           *      *     *   *     *     *   " );
 		System.err.println("*       *  *      *    *         *           *     *       *  *     *     *   " );
 		System.err.println("*       *  *******     *          *****      *     *       *  ******      *   " );
-		System.err.println("*********  *           *               *     *     *********  *   *       *   " );
+		System.err.println("*********  * 	          *               *     *     *********  *   *       *   " );
 		System.err.println("*       *  *           *               *     *     *       *  *    *      *   " );
 		System.err.println("*       *  *        *******       *****      *     *       *  *     *     *   " );
 

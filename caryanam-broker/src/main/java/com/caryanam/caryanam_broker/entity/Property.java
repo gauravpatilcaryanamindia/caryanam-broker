@@ -33,6 +33,8 @@ public class Property {
     @Enumerated(EnumType.STRING)
     private FurnishingType furnishing;
     private String carpetArea;
+    private String coverImage;
+    private String doctypeImages;
     @ManyToOne
     @JoinColumn(name = "admin_id")
     private Admin admin;

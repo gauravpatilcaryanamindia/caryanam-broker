@@ -26,7 +26,7 @@ public class Admin {
 
     private String password;
 
-    private Integer premiumCount;
+    private Integer premiumCount=0;
     //private Integer propertyLimit;
 
     @Enumerated(EnumType.STRING)
@@ -35,8 +35,6 @@ public class Admin {
     @Column(nullable = false)
     private Integer propertyLimit = 1;
 
-//    @OneToMany(mappedBy = "admin")
-//    @JsonIgnore
-//    private List<Property> properties;
+
 
 }
