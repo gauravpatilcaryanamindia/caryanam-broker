@@ -47,6 +47,10 @@ public class PropertyServiceImpl implements PropertyService {
         property.setTitle(propertyDto.getTitle());
         property.setPrice(propertyDto.getPrice());
         property.setLocation(propertyDto.getLocation());
+        property.setAddress(propertyDto.getAddress());
+        property.setCity(propertyDto.getCity());
+        property.setState(propertyDto.getState());
+        property.setPincode(propertyDto.getPincode());
         property.setDescription(propertyDto.getDescription());
         property.setPropertyType(propertyDto.getPropertyType());
         property.setBhkType(propertyDto.getBhkType());
@@ -63,6 +67,10 @@ public class PropertyServiceImpl implements PropertyService {
         responseDto.setTitle(savedProperty.getTitle());
         responseDto.setPrice(savedProperty.getPrice());
         responseDto.setLocation(savedProperty.getLocation());
+        responseDto.setAddress(savedProperty.getAddress());
+        responseDto.setCity(savedProperty.getCity());
+        responseDto.setState(savedProperty.getState());
+        responseDto.setPincode(savedProperty.getPincode());
         responseDto.setDescription(savedProperty.getDescription());
         responseDto.setPropertyType(savedProperty.getPropertyType());
         responseDto.setBhkType(savedProperty.getBhkType());
@@ -85,6 +93,10 @@ public class PropertyServiceImpl implements PropertyService {
             dto.setTitle(property.getTitle());
             dto.setPrice(property.getPrice());
             dto.setLocation(property.getLocation());
+            dto.setAddress(property.getAddress());
+            dto.setCity(property.getCity());
+            dto.setState(property.getState());
+            dto.setPincode(property.getPincode());
             dto.setDescription(property.getDescription());
             dto.setPropertyType(property.getPropertyType());
             dto.setBhkType(property.getBhkType());
@@ -110,6 +122,10 @@ public class PropertyServiceImpl implements PropertyService {
         dto.setTitle(property.getTitle());
         dto.setPrice(property.getPrice());
         dto.setLocation(property.getLocation());
+        dto.setAddress(property.getAddress());
+        dto.setCity(property.getCity());
+        dto.setState(property.getState());
+        dto.setPincode(property.getPincode());
         dto.setDescription(property.getDescription());
         dto.setPropertyType(property.getPropertyType());
         dto.setBhkType(property.getBhkType());
@@ -144,6 +160,10 @@ public class PropertyServiceImpl implements PropertyService {
         property.setTitle(propertyDto.getTitle());
         property.setPrice(propertyDto.getPrice());
         property.setLocation(propertyDto.getLocation());
+        property.setAddress(propertyDto.getAddress());
+        property.setCity(propertyDto.getCity());
+        property.setState(propertyDto.getState());
+        property.setPincode(propertyDto.getPincode());
         property.setDescription(propertyDto.getDescription());
         property.setPropertyType(propertyDto.getPropertyType());
         property.setBhkType(propertyDto.getBhkType());
@@ -156,6 +176,10 @@ public class PropertyServiceImpl implements PropertyService {
         responseDto.setTitle(updatedProperty.getTitle());
         responseDto.setPrice(updatedProperty.getPrice());
         responseDto.setLocation(updatedProperty.getLocation());
+        responseDto.setAddress(updatedProperty.getAddress());
+        responseDto.setCity(updatedProperty.getCity());
+        responseDto.setState(updatedProperty.getState());
+        responseDto.setPincode(updatedProperty.getPincode());
         responseDto.setDescription(updatedProperty.getDescription());
         responseDto.setPropertyType(updatedProperty.getPropertyType());
         responseDto.setBhkType(updatedProperty.getBhkType());
@@ -293,6 +317,10 @@ public class PropertyServiceImpl implements PropertyService {
             dto.setTitle(property.getTitle());
             dto.setPrice(property.getPrice());
             dto.setLocation(property.getLocation());
+            dto.setAddress(property.getAddress());
+            dto.setCity(property.getCity());
+            dto.setState(property.getState());
+            dto.setPincode(property.getPincode());
             dto.setDescription(property.getDescription());
             dto.setPropertyType(property.getPropertyType());
             dto.setBhkType(property.getBhkType());

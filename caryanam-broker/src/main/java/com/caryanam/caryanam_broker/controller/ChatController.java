@@ -2,6 +2,9 @@ package com.caryanam.caryanam_broker.controller;
 
 import com.caryanam.caryanam_broker.dto.ResponseDto;
 import com.caryanam.caryanam_broker.exception.BadRequestException;
+import com.caryanam.caryanam_broker.exception.InvalidOperationException;
+import com.caryanam.caryanam_broker.repository.AdminRepository;
+import com.caryanam.caryanam_broker.repository.UserRepository;
 import com.caryanam.caryanam_broker.service.ChatService;
 import com.caryanam.caryanam_broker.socket.MessageRequestDTO;
 import com.caryanam.caryanam_broker.socket.MessageResponseDTO;
@@ -14,32 +17,48 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/chat")
 @RequiredArgsConstructor
 public class ChatController {
 
     private final ChatService chatService;
+    private final UserRepository userRepository;
+    private final AdminRepository adminRepository;
 
     // ================= SEND MESSAGE =================
     @PostMapping("/send")
-    public ResponseEntity<ResponseDto<MessageResponseDTO>> send(
-            @Valid @RequestBody MessageRequestDTO dto) {
+    public ResponseEntity<?> sendMessage(@RequestBody MessageRequestDTO dto) {
+
+        if (dto == null) {
+            throw new InvalidOperationException("Request body is missing");
+        }
 
         if (dto.getSenderId() == null || dto.getReceiverId() == null) {
-            throw new BadRequestException("SenderId and ReceiverId are required");
+            throw new InvalidOperationException("SenderId and ReceiverId are required");
+        }
+
+        if (!"USER".equals(dto.getSenderRole())) {
+            throw new InvalidOperationException("Only USER can send message to ADMIN");
         }
 
         if (dto.getSenderId().equals(dto.getReceiverId())) {
-            throw new BadRequestException("Sender and Receiver cannot be same");
+            throw new InvalidOperationException("Sender and Receiver cannot be same");
         }
 
-        if (dto.getSenderRole() == null ||
-                (!dto.getSenderRole().equals("USER") && !dto.getSenderRole().equals("ADMIN"))) {
-            throw new BadRequestException("SenderRole must be USER or ADMIN");
+        Long userId = dto.getSenderId();
+        Long adminId = dto.getReceiverId();
+
+        if (!userRepository.existsById(userId)) {
+            throw new InvalidOperationException("User not found with id: " + userId);
         }
 
-        // ✅ ONLY CALL SERVICE
+        if (!adminRepository.existsById(adminId)) {
+            throw new InvalidOperationException("Admin not found with id: " + adminId);
+        }
+
         MessageResponseDTO response = chatService.sendMessage(dto);
 
         return ResponseEntity.ok(
@@ -50,7 +69,6 @@ public class ChatController {
                 )
         );
     }
-
     // ================= CREATE ROOM =================
     @PostMapping("/room")
     public ResponseEntity<ResponseDto<String>> createRoom(

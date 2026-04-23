@@ -50,6 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**","/api/auth/register").permitAll()
                         .requestMatchers("/chat/**","/socket.io/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole("USER")
 
 
 

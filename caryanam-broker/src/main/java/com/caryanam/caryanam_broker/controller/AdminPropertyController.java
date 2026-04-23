@@ -55,6 +55,31 @@ public class AdminPropertyController {
                 return ResponseHandler.generateResponse(MessageConfig.LOCATION_INVALID, HttpStatus.BAD_REQUEST, null);
             }
         }
+
+        if (propertyDto.getCity() == null || propertyDto.getCity().trim().isEmpty()) {
+            return ResponseHandler.generateResponse(MessageConfig.City_is_required, HttpStatus.BAD_REQUEST, null);
+        }
+
+        if (propertyDto.getAddress() == null || propertyDto.getAddress().trim().isEmpty()) {
+            return ResponseHandler.generateResponse(MessageConfig.Address_is_required, HttpStatus.BAD_REQUEST, null);
+        }
+
+        if (propertyDto.getState() == null || propertyDto.getState().trim().isEmpty()) {
+            return ResponseHandler.generateResponse(MessageConfig.State_is_required , HttpStatus.BAD_REQUEST, null);
+        }
+
+        String pincode = propertyDto.getPincode();
+
+
+        if (pincode == null || pincode.trim().isEmpty()) {
+            return ResponseHandler.generateResponse(MessageConfig.Invalid_pincode, HttpStatus.BAD_REQUEST, null);
+        }
+
+        pincode = pincode.trim();
+
+        if (!pincode.matches("[1-9][0-9]{5}")) {
+            return ResponseHandler.generateResponse(MessageConfig.Invalid_pincode, HttpStatus.BAD_REQUEST, null);
+        }
         if (propertyDto.getDescription() == null || propertyDto.getDescription().trim().isEmpty()) {
             return ResponseHandler.generateResponse(MessageConfig.DESCRIPTION_REQUIRED, HttpStatus.BAD_REQUEST, null);
         }

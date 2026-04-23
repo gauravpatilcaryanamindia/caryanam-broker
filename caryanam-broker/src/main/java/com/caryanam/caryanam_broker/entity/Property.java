@@ -26,6 +26,12 @@ public class Property {
     private Integer likesCount;
     private Integer viewsCount;
     private String status;
+
+    private String city;
+    private String address;
+    private String state;
+    private String pincode;
+
     @Enumerated(EnumType.STRING)
     private PropertyType propertyType;
     @Enumerated(EnumType.STRING)

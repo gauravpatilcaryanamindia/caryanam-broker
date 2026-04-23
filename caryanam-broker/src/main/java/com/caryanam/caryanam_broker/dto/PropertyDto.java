@@ -22,6 +22,12 @@ public class PropertyDto {
     private Integer likesCount;
     private Integer viewsCount;
     private String status;
+
+    private String city;
+    private String address;
+    private String state;
+    private String pincode;
+
     private BhkType bhkType;
     private FurnishingType furnishing;
     private String carpetArea;
