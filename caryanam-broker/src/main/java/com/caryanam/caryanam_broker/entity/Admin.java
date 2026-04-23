@@ -1,19 +1,13 @@
 package com.caryanam.caryanam_broker.entity;
 
 import com.caryanam.caryanam_broker.enums.Role;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
-
-
 @Data
-
 @Entity
 @Table(name = "admin")
 public class Admin {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long adminId;

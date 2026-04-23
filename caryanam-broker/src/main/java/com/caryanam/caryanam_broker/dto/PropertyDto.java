@@ -3,6 +3,7 @@ package com.caryanam.caryanam_broker.dto;
 
 import com.caryanam.caryanam_broker.Enum.BhkType;
 import com.caryanam.caryanam_broker.Enum.FurnishingType;
+import com.caryanam.caryanam_broker.Enum.PgType;
 import com.caryanam.caryanam_broker.Enum.PropertyType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
@@ -18,6 +19,7 @@ public class PropertyDto {
     private String location;
     private String description;
     private PropertyType propertyType;
+    private PgType pgType;
     private String mobileNumber;
     private Integer likesCount;
     private Integer viewsCount;

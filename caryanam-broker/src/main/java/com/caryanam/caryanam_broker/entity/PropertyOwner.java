@@ -1,24 +1,26 @@
 package com.caryanam.caryanam_broker.entity;
 import com.caryanam.caryanam_broker.enums.Role;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Data;
 
-@Entity
+
 @Data
-@Table(name = "users")
-public class User {
+@Entity
+@Table(name = "P_Owner")
+public class PropertyOwner {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
+    private Long OwnerId;
 
     private String fullName;
     private String mobileNumber;
+    private String password;
 
     @Column(unique = true, nullable = false)
     private String email;
 
-    private String password;
-
     @Enumerated(EnumType.STRING)
     private Role role;
+
 }
+

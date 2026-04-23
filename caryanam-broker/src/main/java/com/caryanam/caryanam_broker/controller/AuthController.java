@@ -138,6 +138,67 @@ public class AuthController {
         return ResponseEntity.status(201)
                 .body(new ResponseDto<>(201, "Admin Registered Successfully", response));
     }
+    //  ADMIN REGISTER
+    @PostMapping("/register/POwner")
+    public ResponseEntity<ResponseDto<RegisterResponseDTO>> registerOwner(
+            @RequestBody RegisterRequestDTO dto) {
+
+        // Null check
+        if (dto == null) {
+            return ResponseEntity.badRequest()
+                    .body(new ResponseDto<>(400, "Request body is missing", null));
+        }
+
+        // Full Name
+        if (dto.getFullName() == null || dto.getFullName().trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new ResponseDto<>(400, "Full name is required", null));
+        }
+
+        // Mobile Number
+        if (dto.getMobileNumber() == null || !dto.getMobileNumber().matches("\\d{10}")) {
+            return ResponseEntity.badRequest()
+                    .body(new ResponseDto<>(400, "Mobile number must be 10 digits", null));
+        }
+
+        //  Email (ONLY lowercase Gmail)
+        if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new ResponseDto<>(400, "Email is required", null));
+        }
+
+        if (!dto.getEmail().matches("^[A-Za-z0-9._%+-]+@gmail\\.com$")) {
+            return ResponseEntity.badRequest()
+                    .body(new ResponseDto<>(400, "Only Gmail format allowed", null));
+        }
+
+        // Password
+        if (dto.getPassword() == null || dto.getPassword().length() < 6) {
+            return ResponseEntity.badRequest()
+                    .body(new ResponseDto<>(400, "Password must be at least 6 characters", null));
+        }
+
+
+        if (dto.getRole() == null) {
+            return ResponseEntity.badRequest()
+                    .body(new ResponseDto<>(400, "Role is required", null));
+        }
+
+        if (dto.getRole() != Role.PROPERTY_OWNER) {
+            return ResponseEntity.badRequest()
+                    .body(new ResponseDto<>(400, "Only ADMIN role allowed", null));
+        }
+
+        // Normalize email
+        dto.setEmail(dto.getEmail().toLowerCase().trim());
+
+        //  Call service
+        RegisterResponseDTO response = authService.registerAdmin(dto);
+
+        return ResponseEntity.status(201)
+                .body(new ResponseDto<>(201, "Property Owner Registered Successfully", response));
+    }
+
 
 
     //LOGIN USER,ADMIN

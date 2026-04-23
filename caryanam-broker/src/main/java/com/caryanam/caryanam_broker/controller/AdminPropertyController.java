@@ -1,5 +1,6 @@
 package com.caryanam.caryanam_broker.controller;
 
+import com.caryanam.caryanam_broker.Enum.PgType;
 import com.caryanam.caryanam_broker.Enum.PropertyType;
 import com.caryanam.caryanam_broker.appconstant.AppConstants;
 import com.caryanam.caryanam_broker.dto.PropertyDto;
@@ -88,6 +89,13 @@ public class AdminPropertyController {
         }
         if (propertyDto.getPropertyType() == PropertyType.ALL) {
             return ResponseHandler.generateResponse(MessageConfig.PROPERTY_TYPE_INVALID, HttpStatus.BAD_REQUEST, null);
+        }
+        if(propertyDto.getPgType()== null){
+            return ResponseHandler.generateResponse(MessageConfig.PG_TYPE_REQUIRED, HttpStatus.BAD_REQUEST, null);
+        }
+        if(propertyDto.getPgType()== PgType.ALL){
+            return ResponseHandler.generateResponse(MessageConfig.PG_TYPE_INVALID, HttpStatus.BAD_REQUEST, null);
+
         }
         if (propertyDto.getBhkType() == null) {
             return ResponseHandler.generateResponse(MessageConfig.BHK_REQUIRED, HttpStatus.BAD_REQUEST, null);

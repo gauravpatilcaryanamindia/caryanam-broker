@@ -1,14 +1,15 @@
 package com.caryanam.caryanam_broker.serviceimpl;
-
-
 import com.caryanam.caryanam_broker.configuration.JwtUtil;
 import com.caryanam.caryanam_broker.dto.LoginRequestDTO;
 import com.caryanam.caryanam_broker.dto.RegisterRequestDTO;
 import com.caryanam.caryanam_broker.dto.RegisterResponseDTO;
 import com.caryanam.caryanam_broker.entity.Admin;
+import com.caryanam.caryanam_broker.entity.PropertyOwner;
 import com.caryanam.caryanam_broker.entity.User;
 import com.caryanam.caryanam_broker.enums.Role;
 import com.caryanam.caryanam_broker.repository.AdminRepository;
+
+import com.caryanam.caryanam_broker.repository.PropertyOwnerRepository;
 import com.caryanam.caryanam_broker.repository.UserRepository;
 import com.caryanam.caryanam_broker.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -34,24 +35,26 @@ public class AuthServiceImpl implements AuthService {
     private AdminRepository adminRepository;
 
     @Autowired
+    private PropertyOwnerRepository propertyOwerRepository;
+
+    @Autowired
     private JwtUtil jwtUtil;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-     @Autowired
+    @Autowired
     private AuthenticationManager authenticationManager;
 
     private static final Set<String> tokenBlacklist = new HashSet<>();
 
-    //  USER REGISTRATION
+
     @Override
     public RegisterResponseDTO registerUser(RegisterRequestDTO dto) {
 
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("User email already exists");
         }
-
         User user = new User();
         user.setFullName(dto.getFullName());
         user.setMobileNumber(String.valueOf(dto.getMobileNumber()));
@@ -60,7 +63,6 @@ public class AuthServiceImpl implements AuthService {
         user.setRole(Role.USER);
 
         User saved = userRepository.save(user);
-
         return RegisterResponseDTO.builder()
                 .id(saved.getUserId())
                 .fullName(saved.getFullName())
@@ -70,69 +72,75 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-    // ADMIN REGISTRATION
     @Override
     public RegisterResponseDTO registerAdmin(RegisterRequestDTO dto) {
 
         if (adminRepository.existsByEmail(dto.getEmail())) {
             throw new RuntimeException("Admin email already exists");
         }
-
         Admin admin = new Admin();
         admin.setFullName(dto.getFullName());
         admin.setMobileNumber(String.valueOf(dto.getMobileNumber()));
         admin.setEmail(dto.getEmail());
         admin.setPassword(passwordEncoder.encode(dto.getPassword()));
         admin.setRole(Role.ADMIN);
-
         Admin saved = adminRepository.save(admin);
-
         return RegisterResponseDTO.builder()
                 .id(saved.getAdminId())
                 .fullName(saved.getFullName())
                 .email(saved.getEmail())
                 .role(saved.getRole().name())
+                .build();
+    }
 
+    @Override
+    public RegisterResponseDTO registerPropertyOwner(RegisterRequestDTO dto) {
+        if (propertyOwerRepository.existsByEmail(dto.getEmail())) {
+            throw new RuntimeException("propertyOwer email already exists");
+        }
+        PropertyOwner owner = new PropertyOwner();
+        owner.setFullName(dto.getFullName());
+        owner.setMobileNumber(String.valueOf(dto.getMobileNumber()));
+        owner.setEmail(dto.getEmail());
+        owner.setEmail(dto.getEmail());
+        owner.setPassword(passwordEncoder.encode(dto.getPassword()));
+        owner.setRole(Role.PROPERTY_OWNER);
+        PropertyOwner saved = propertyOwerRepository.save(owner);
+        return RegisterResponseDTO.builder()
+                .id(saved.getOwnerId())
+                .fullName(saved.getFullName())
+                .email(saved.getEmail())
+                .role(saved.getRole().name())
                 .build();
     }
 
     //login USER,ADMIN
     @Override
     public String login(LoginRequestDTO request) {
-
-        Authentication authentication = authenticationManager.authenticate(
+              Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
-                        request.getPassword()
-                )
-        );
+                        request.getPassword()));
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
         String role = userDetails.getAuthorities()
                 .stream()
                 .findFirst()
                 .map(granted -> granted.getAuthority())
                 .orElse("USER");
-
         return jwtUtil.generateToken(
                 userDetails.getUsername(),
-                role
-        );
+                role);
     }
 
     @Override
     public void logout(String token) {
-
         if (token.startsWith("Bearer ")) {
             token = token.substring(7);
         }
-
         tokenBlacklist.add(token);
-
         System.out.println("User logged out, token blacklisted: " + token);
     }
-
     public static boolean isTokenBlacklisted(String token) {
         return tokenBlacklist.contains(token);
     }

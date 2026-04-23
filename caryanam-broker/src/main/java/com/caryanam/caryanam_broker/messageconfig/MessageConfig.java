@@ -37,6 +37,7 @@ public class MessageConfig {
     public static final String  Invalid_pincode="Invalid pincode";
     public static final String  Address_is_required="Address is required";
     public static final String City_is_required="City is required";
-
+    public static final String PG_TYPE_REQUIRED="Pg not found";
+    public static final String PG_TYPE_INVALID="Invalid PG Type";
 
 }

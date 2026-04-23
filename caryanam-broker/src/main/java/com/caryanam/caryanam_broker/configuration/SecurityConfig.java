@@ -49,13 +49,10 @@ public class SecurityConfig {
                         .requestMatchers("/sockettest.html", "/**/*.html", "/**/*.js", "/**/*.css").permitAll()
                         .requestMatchers("/api/auth/**","/api/auth/register").permitAll()
                         .requestMatchers("/chat/**","/socket.io/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/admin/**").hasRole("USER")
-
-
-
-
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/admin/**").permitAll()
+                        //.requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        //.requestMatchers("/api/admin/**").hasRole("USER")
+                     .anyRequest().authenticated()
                 )
 
 
