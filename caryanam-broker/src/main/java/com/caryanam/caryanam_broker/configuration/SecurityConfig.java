@@ -34,40 +34,63 @@ public class SecurityConfig {
     private CustomUserDetailsService userDetailsService;
 
     //  Security Filter
+//    @Bean
+//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+//
+//        http
+//
+//                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+//                .csrf(csrf -> csrf.disable())
+//                .authorizeHttpRequests(auth -> auth
+//
+//                        .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+//                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+//                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+//                        .requestMatchers("/sockettest.html", "/**/*.html", "/**/*.js", "/**/*.css").permitAll()
+//                        .requestMatchers("/api/auth/**","/api/auth/register").permitAll()
+//                        .requestMatchers("/chat/**","/socket.io/**").permitAll()
+//                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+//                        .requestMatchers("/api/admin/**").hasRole("USER")
+//
+//
+//
+//
+//                        .anyRequest().authenticated()
+//                )
+//
+//
+//                .sessionManagement(session ->
+//                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//                )
+//
+//               .authenticationProvider(authenticationProvider())
+//               .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+//
+//        return http.build();
+//    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/sockettest.html", "/**/*.html", "/**/*.js", "/**/*.css").permitAll()
-                        .requestMatchers("/api/auth/**","/api/auth/register").permitAll()
-                        .requestMatchers("/chat/**","/socket.io/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/admin/**").hasRole("USER")
-
-
-
-
-                        .anyRequest().authenticated()
+                        // 🔓 EVERYTHING OPEN
+                        .anyRequest().permitAll()
                 )
-
 
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-               .authenticationProvider(authenticationProvider())
-               .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
 
     //  Authentication Manager
     @Bean

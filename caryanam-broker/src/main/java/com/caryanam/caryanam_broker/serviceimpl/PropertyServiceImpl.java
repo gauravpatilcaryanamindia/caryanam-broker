@@ -6,10 +6,12 @@ import com.caryanam.caryanam_broker.dto.PropertyFilterDto;
 import com.caryanam.caryanam_broker.entity.Admin;
 import com.caryanam.caryanam_broker.entity.Property;
 import com.caryanam.caryanam_broker.entity.PropertyImage;
+import com.caryanam.caryanam_broker.entity.User;
 import com.caryanam.caryanam_broker.messageconfig.MessageConfig;
 import com.caryanam.caryanam_broker.repository.AdminRepository;
 import com.caryanam.caryanam_broker.repository.PropertyImageRepository;
 import com.caryanam.caryanam_broker.repository.PropertyRepository;
+import com.caryanam.caryanam_broker.repository.UserRepository;
 import com.caryanam.caryanam_broker.service.PropertyService;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +33,9 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Autowired
     private AdminRepository adminRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Override
     public PropertyDto addProperty(PropertyDto propertyDto, Long adminId) {
@@ -84,11 +89,21 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
-    public List<PropertyDto> getAllProperties() {
+    public List<PropertyDto> getAllProperties(Long Id) {
+
+        User user = userRepository.findById(Id).orElse(null);
+
+        if (user == null || !user.isPremiumActive()) {
+            return new ArrayList<>(); // premium नाही तर empty list
+        }
+
         List<Property> propertyList = propertyRepository.findByStatus(AppConstants.ACTIVE);
         List<PropertyDto> dtoList = new ArrayList<>();
+
         for (Property property : propertyList) {
+
             PropertyDto dto = new PropertyDto();
+
             dto.setId(property.getId());
             dto.setTitle(property.getTitle());
             dto.setPrice(property.getPrice());
@@ -106,8 +121,10 @@ public class PropertyServiceImpl implements PropertyService {
             dto.setLikesCount(property.getLikesCount());
             dto.setViewsCount(property.getViewsCount());
             dto.setStatus(property.getStatus());
+
             dtoList.add(dto);
         }
+
         return dtoList;
     }
 
@@ -266,33 +283,49 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
-    public List<PropertyDto> filterProperties(PropertyFilterDto filterDto) {
+    public List<PropertyDto> filterProperties(PropertyFilterDto filterDto, Long userId) {
+
+        User user = userRepository.findById(userId).orElse(null);
+
+        if (user == null || !user.isPremiumActive()) {
+            return new ArrayList<>();
+        }
+
         List<Property> allProperties = propertyRepository.findAll();
         List<Property> filteredList = new ArrayList<>();
+
         for (Property property : allProperties) {
+
             boolean match = true;
+
             if (filterDto.getPropertyType() != null && !filterDto.getPropertyType().isEmpty()) {
                 if (!property.getPropertyType().name().equalsIgnoreCase(filterDto.getPropertyType())) {
                     match = false;
                 }
             }
+
             if (filterDto.getMinPrice() != null) {
                 if (property.getPrice() < filterDto.getMinPrice()) {
                     match = false;
                 }
             }
+
             if (filterDto.getMaxPrice() != null) {
                 if (property.getPrice() > filterDto.getMaxPrice()) {
                     match = false;
                 }
             }
+
             if (match) {
                 filteredList.add(property);
             }
         }
+
+        // sorting same as before
         if (filterDto.getSortBy() != null) {
             for (int i = 0; i < filteredList.size(); i++) {
                 for (int j = i + 1; j < filteredList.size(); j++) {
+
                     if (filterDto.getSortBy().equalsIgnoreCase(AppConstants.ASC)) {
                         if (filteredList.get(i).getPrice() > filteredList.get(j).getPrice()) {
                             Property temp = filteredList.get(i);
@@ -300,6 +333,7 @@ public class PropertyServiceImpl implements PropertyService {
                             filteredList.set(j, temp);
                         }
                     }
+
                     if (filterDto.getSortBy().equalsIgnoreCase(AppConstants.DESC)) {
                         if (filteredList.get(i).getPrice() < filteredList.get(j).getPrice()) {
                             Property temp = filteredList.get(i);
@@ -310,17 +344,16 @@ public class PropertyServiceImpl implements PropertyService {
                 }
             }
         }
+
         List<PropertyDto> dtoList = new ArrayList<>();
+
         for (Property property : filteredList) {
             PropertyDto dto = new PropertyDto();
+
             dto.setId(property.getId());
             dto.setTitle(property.getTitle());
             dto.setPrice(property.getPrice());
             dto.setLocation(property.getLocation());
-            dto.setAddress(property.getAddress());
-            dto.setCity(property.getCity());
-            dto.setState(property.getState());
-            dto.setPincode(property.getPincode());
             dto.setDescription(property.getDescription());
             dto.setPropertyType(property.getPropertyType());
             dto.setBhkType(property.getBhkType());
@@ -330,8 +363,10 @@ public class PropertyServiceImpl implements PropertyService {
             dto.setLikesCount(property.getLikesCount());
             dto.setViewsCount(property.getViewsCount());
             dto.setStatus(property.getStatus());
+
             dtoList.add(dto);
         }
+
         return dtoList;
     }
 }
