@@ -44,4 +44,7 @@ public class Property {
     @ManyToOne
     @JoinColumn(name = "admin_id")
     private Admin admin;
+
+    private boolean isPremiumActive;   // access control
+    private String paymentStatus;      // PENDING / SUCCESS / REJECTED
    }

@@ -8,6 +8,10 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class JwtUtil {
@@ -17,16 +21,21 @@ public class JwtUtil {
     private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
 
 
-    public String generateToken(String username, String role) {
+
+    public String generateToken(String username, String role, String deviceType) {
         return Jwts.builder()
                 .setSubject(username)
                 .claim("role", role)
+                .claim("deviceType", deviceType)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 hour
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
                 .signWith(key)
                 .compact();
     }
 
+    public String extractDeviceType(String token) {
+        return getClaims(token).get("deviceType", String.class);
+    }
 
     public String extractUsername(String token) {
         return getClaims(token).getSubject();
@@ -49,5 +58,25 @@ public class JwtUtil {
                 .getBody();
     }
 
+    @Component
+    public class UserSessionStore {
+
+        private final Map<String, Set<String>> sessions = new ConcurrentHashMap<>();
+
+        public void addSession(String username, String token) {
+            sessions.computeIfAbsent(username, k -> new HashSet<>()).add(token);
+        }
+
+        public void removeSessionByToken(String username, String token) {
+            Set<String> userTokens = sessions.get(username);
+            if (userTokens != null) {
+                userTokens.remove(token);
+            }
+        }
+
+        public Set<String> getSessions(String username) {
+            return sessions.get(username);
+        }
+    }
 
 }

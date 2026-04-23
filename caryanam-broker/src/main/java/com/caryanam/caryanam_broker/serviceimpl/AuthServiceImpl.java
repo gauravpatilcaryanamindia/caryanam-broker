@@ -96,7 +96,31 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-    //login USER,ADMIN
+//    //login USER,ADMIN
+//    @Override
+//    public String login(LoginRequestDTO request) {
+//
+//        Authentication authentication = authenticationManager.authenticate(
+//                new UsernamePasswordAuthenticationToken(
+//                        request.getEmail(),
+//                        request.getPassword()
+//                )
+//        );
+//
+//        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+//
+//        String role = userDetails.getAuthorities()
+//                .stream()
+//                .findFirst()
+//                .map(granted -> granted.getAuthority())
+//                .orElse("USER");
+//
+//        return jwtUtil.generateToken(
+//                userDetails.getUsername(),
+//                role
+//        );
+//    }
+
     @Override
     public String login(LoginRequestDTO request) {
 
@@ -115,9 +139,17 @@ public class AuthServiceImpl implements AuthService {
                 .map(granted -> granted.getAuthority())
                 .orElse("USER");
 
+        // ⭐ ADD DEVICE TYPE (IMPORTANT FIX)
+        String deviceType = request.getDeviceType();
+
+        if (deviceType == null || deviceType.isEmpty()) {
+            deviceType = "WEB";   // fallback
+        }
+
         return jwtUtil.generateToken(
                 userDetails.getUsername(),
-                role
+                role,
+                deviceType
         );
     }
 

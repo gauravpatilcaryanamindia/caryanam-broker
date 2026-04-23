@@ -34,7 +34,13 @@ public class Admin {
 
     @Column(nullable = false)
     private Integer propertyLimit = 1;
+//
+//    private boolean isPremiumActive;
+//    private String paymentStatus;
 
+    @Column(nullable = false)
+    private boolean premiumActive = false;
 
-
+    @Column(nullable = false)
+    private String premiumStatus = "NONE";
 }

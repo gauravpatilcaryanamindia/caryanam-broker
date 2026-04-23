@@ -25,4 +25,13 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+//    private boolean isPremiumActive;   // access control
+//    private String paymentStatus;
+
+    @Column(nullable = false)
+    private boolean premiumActive = false;
+
+    @Column(nullable = false)
+    private String premiumStatus = "NONE";
 }

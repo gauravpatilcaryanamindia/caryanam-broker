@@ -3,12 +3,11 @@ package com.caryanam.caryanam_broker.controller;
 import com.caryanam.caryanam_broker.dto.ApiResponse;
 import com.caryanam.caryanam_broker.dto.PropertyDto;
 import com.caryanam.caryanam_broker.dto.PropertyFilterDto;
-import com.caryanam.caryanam_broker.service.PropertyService;
+import com.caryanam.caryanam_broker.serviceimpl.PropertyUserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -17,7 +16,7 @@ import java.util.List;
 public class PropertyController {
 
     @Autowired
-    private PropertyService propertyService;
+    private PropertyUserServiceImpl propertyService;
 
     @GetMapping("/getAll")
     public ResponseEntity<ApiResponse<List<PropertyDto>>> getAll() {

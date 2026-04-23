@@ -11,7 +11,7 @@ public interface PropertyService {
 
     PropertyDto addProperty(PropertyDto propertyDto, Long adminId);
 
-    List<PropertyDto> getAllProperties();
+    List<PropertyDto> getAllProperties(Long id);
 
     PropertyDto getPropertyById(Long id);
 
@@ -21,8 +21,7 @@ public interface PropertyService {
 
     String uploadPropertyImages(Long propertyId, MultipartFile[] files);
 
-    List<PropertyDto> filterProperties(PropertyFilterDto filterDto);
-
+    List<PropertyDto> filterProperties(PropertyFilterDto filterDto, Long userId);
 
 
 }

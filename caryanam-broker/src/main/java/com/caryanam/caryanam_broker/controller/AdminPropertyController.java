@@ -16,6 +16,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/admin")
 public class AdminPropertyController {
@@ -109,10 +112,14 @@ public class AdminPropertyController {
         return ResponseHandler.generateResponse(MessageConfig.PROPERTY_ADDED, HttpStatus.OK, response);
     }
 
-    // 2. Get All Properties
-    @GetMapping("/get-all-properties")
-    public ResponseEntity<Object> getAllProperties() {
-        return ResponseHandler.generateResponse(MessageConfig.PROPERTY_FETCHED, HttpStatus.OK, propertyService.getAllProperties());
+
+    @GetMapping("/get-all-properties/{userId}")
+    public ResponseEntity<Object> getAllProperties(@PathVariable Long Id) {
+        return ResponseHandler.generateResponse(
+                MessageConfig.PROPERTY_FETCHED,
+                HttpStatus.OK,
+                propertyService.getAllProperties(Id)
+        );
     }
 
     // 3. Get Property By Id
@@ -140,11 +147,6 @@ public class AdminPropertyController {
             return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
         }
         return ResponseHandler.generateResponse(propertyService.deleteProperty(id), HttpStatus.OK, MessageConfig.PROPERTY_DELETED);
-    }
-
-    @PostMapping("/filter-properties")
-    public ResponseEntity<Object> filterProperties(@RequestBody PropertyFilterDto filterDto) {
-        return ResponseHandler.generateResponse(MessageConfig.PROPERTY_FILTERED, HttpStatus.OK, propertyService.filterProperties(filterDto));
     }
 
     @PostMapping("/uploadPropertyImagesByPropertyId/{id}")
@@ -181,12 +183,20 @@ public class AdminPropertyController {
     public ResponseEntity<Object> buyPremium(@PathVariable Long adminId) {
         Admin admin = adminRepository.findById(adminId).orElse(null);
         if (admin == null) {
-            return ResponseHandler.generateResponse(MessageConfig.ADMIN_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+            return ResponseHandler.generateResponse("Admin not found", HttpStatus.BAD_REQUEST, null);
         }
-        admin.setPremiumCount(admin.getPremiumCount() + 1);
-        admin.setPropertyLimit(admin.getPropertyLimit() + 1);
+        if (admin.isPremiumActive()) {
+            return ResponseHandler.generateResponse("Premium already active", HttpStatus.BAD_REQUEST, null);
+        }
+        admin.setPremiumStatus("PENDING");
+        admin.setPremiumActive(false);
         adminRepository.save(admin);
-        return ResponseHandler.generateResponse(MessageConfig.PREMIUM_ACTIVE, HttpStatus.OK, admin);
+        String qrUrl = "http://localhost:8080/qr/payment.png";
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Scan QR & complete payment");
+        response.put("qrCode", qrUrl);
+        response.put("status", "PENDING");
+        return ResponseHandler.generateResponse("Payment initiated", HttpStatus.OK, response);
     }
 
 }
