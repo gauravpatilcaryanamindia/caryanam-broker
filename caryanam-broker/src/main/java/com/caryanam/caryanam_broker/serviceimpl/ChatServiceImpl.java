@@ -82,6 +82,17 @@ public class ChatServiceImpl implements ChatService {
                 Math.max(userId, adminId)
         ).orElseThrow(() -> new RuntimeException("Room not found"));
 
+        List<Message> existingMessages = messageRepo.findByRoomId(roomId);
+
+//        if (!existingMessages.isEmpty()) {
+//            // Already initialized → return first message
+//            Message first = existingMessages.get(0);
+//            return mapToDTO(first);
+//        }
+
+        if (!existingMessages.isEmpty()) {
+            throw new BadRequestException("You have already sent message");
+        }
         // ================= FIRST MESSAGE FLOW =================
         if (!room.isFirstMessageSent()) {
 
@@ -114,11 +125,13 @@ public class ChatServiceImpl implements ChatService {
             chatRoomRepo.save(room);
 
             // SOCKET EMIT
-            socketServer.getRoomOperations(roomId)
-                    .sendEvent("receive_message", mapToDTO(firstMsg));
+            if (existingMessages.isEmpty()) {
+                socketServer.getRoomOperations(roomId)
+                        .sendEvent("receive_message", mapToDTO(firstMsg));
 
-            socketServer.getRoomOperations(roomId)
-                    .sendEvent("receive_message", mapToDTO(adminReply));
+                socketServer.getRoomOperations(roomId)
+                        .sendEvent("receive_message", mapToDTO(adminReply));
+            }
 
             return mapToDTO(firstMsg);
         }
