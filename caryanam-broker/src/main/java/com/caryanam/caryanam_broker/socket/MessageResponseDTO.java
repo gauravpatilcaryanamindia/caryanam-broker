@@ -11,7 +11,6 @@ public class MessageResponseDTO {
     private Long senderId;
     private String senderRole;
     private String message;
-    //   private LocalDateTime time;
     private String time;
 
 

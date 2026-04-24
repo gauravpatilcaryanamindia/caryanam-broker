@@ -1,8 +1,10 @@
 package com.caryanam.caryanam_broker.configuration;
 
 import com.caryanam.caryanam_broker.entity.Admin;
+import com.caryanam.caryanam_broker.entity.PropertyOwner;
 import com.caryanam.caryanam_broker.entity.User;
 import com.caryanam.caryanam_broker.repository.AdminRepository;
+import com.caryanam.caryanam_broker.repository.PropertyOwnerRepository;
 import com.caryanam.caryanam_broker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -19,6 +21,10 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
     private AdminRepository adminRepository;
+
+    @Autowired
+    private PropertyOwnerRepository propertyOwnerRepository;
+
 
     @Override
     public UserDetails loadUserByUsername(String email)
@@ -49,6 +55,20 @@ public class CustomUserDetailsService implements UserDetailsService {
                     List.of(new SimpleGrantedAuthority("ROLE_" + role))
             );
         }
+
+        //  Check PROPERTY OWNER
+        PropertyOwner owner = propertyOwnerRepository.findByEmail(email).orElse(null);
+        if (owner != null) {
+
+            String role = owner.getRole() != null ? owner.getRole().name() : "PROPERTY_OWNER";
+
+            return new org.springframework.security.core.userdetails.User(
+                    owner.getEmail(),
+                    owner.getPassword(),
+                    List.of(new SimpleGrantedAuthority("ROLE_" + role))
+            );
+        }
+
 
         throw new UsernameNotFoundException("User not found with email: " + email);
     }

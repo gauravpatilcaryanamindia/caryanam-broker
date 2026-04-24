@@ -12,8 +12,6 @@ import java.util.Optional;
 @Repository
 public interface AdminRepository extends JpaRepository<Admin, Long> {
 
-    // Email se admin find karne ke liye (login ke time use hoga)
-  // Admin findByEmail(String email);
     boolean existsByEmail(String email);
     Optional<Admin> findByEmail(String email);
     List<Admin> findByPremiumStatus(String status);

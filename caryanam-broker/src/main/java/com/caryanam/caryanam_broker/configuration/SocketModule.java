@@ -47,7 +47,7 @@ public class SocketModule {
 
         server.addEventListener("join_room", String.class, (client, roomId, ackSender) -> {
 
-            // Prevent duplicate joins
+
             client.leaveRoom(roomId);
             client.joinRoom(roomId);
 
@@ -62,7 +62,7 @@ public class SocketModule {
 
             System.out.println("Message received: " + dto);
 
-            // Call service
+
             MessageResponseDTO response = chatService.sendMessage(dto);
 
             String roomId = response.getRoomId();

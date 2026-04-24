@@ -2,5 +2,6 @@ package com.caryanam.caryanam_broker.enums;
 
 public enum Role {
     ADMIN,
-    USER
+    USER,
+    PROPERTY_OWNER
 }

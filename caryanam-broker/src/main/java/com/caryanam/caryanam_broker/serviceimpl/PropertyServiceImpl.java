@@ -58,6 +58,7 @@ public class PropertyServiceImpl implements PropertyService {
         property.setPincode(propertyDto.getPincode());
         property.setDescription(propertyDto.getDescription());
         property.setPropertyType(propertyDto.getPropertyType());
+        property.setPgType(propertyDto.getPgType());
         property.setBhkType(propertyDto.getBhkType());
         property.setFurnishing(propertyDto.getFurnishing());
         property.setCarpetArea(propertyDto.getCarpetArea());
@@ -78,6 +79,7 @@ public class PropertyServiceImpl implements PropertyService {
         responseDto.setPincode(savedProperty.getPincode());
         responseDto.setDescription(savedProperty.getDescription());
         responseDto.setPropertyType(savedProperty.getPropertyType());
+        responseDto.setPgType(savedProperty.getPgType());
         responseDto.setBhkType(savedProperty.getBhkType());
         responseDto.setFurnishing(savedProperty.getFurnishing());
         responseDto.setCarpetArea(savedProperty.getCarpetArea());
@@ -114,6 +116,7 @@ public class PropertyServiceImpl implements PropertyService {
             dto.setPincode(property.getPincode());
             dto.setDescription(property.getDescription());
             dto.setPropertyType(property.getPropertyType());
+            dto.setPgType(property.getPgType());
             dto.setBhkType(property.getBhkType());
             dto.setFurnishing(property.getFurnishing());
             dto.setCarpetArea(property.getCarpetArea());
@@ -145,6 +148,7 @@ public class PropertyServiceImpl implements PropertyService {
         dto.setPincode(property.getPincode());
         dto.setDescription(property.getDescription());
         dto.setPropertyType(property.getPropertyType());
+        dto.setPgType(property.getPgType());
         dto.setBhkType(property.getBhkType());
         dto.setFurnishing(property.getFurnishing());
         dto.setCarpetArea(property.getCarpetArea());
@@ -183,6 +187,7 @@ public class PropertyServiceImpl implements PropertyService {
         property.setPincode(propertyDto.getPincode());
         property.setDescription(propertyDto.getDescription());
         property.setPropertyType(propertyDto.getPropertyType());
+        property.setPgType(propertyDto.getPgType());
         property.setBhkType(propertyDto.getBhkType());
         property.setFurnishing(propertyDto.getFurnishing());
         property.setCarpetArea(propertyDto.getCarpetArea());
@@ -199,6 +204,7 @@ public class PropertyServiceImpl implements PropertyService {
         responseDto.setPincode(updatedProperty.getPincode());
         responseDto.setDescription(updatedProperty.getDescription());
         responseDto.setPropertyType(updatedProperty.getPropertyType());
+        responseDto.setPgType(updatedProperty.getPgType());
         responseDto.setBhkType(updatedProperty.getBhkType());
         responseDto.setFurnishing(updatedProperty.getFurnishing());
         responseDto.setCarpetArea(updatedProperty.getCarpetArea());
@@ -356,6 +362,7 @@ public class PropertyServiceImpl implements PropertyService {
             dto.setLocation(property.getLocation());
             dto.setDescription(property.getDescription());
             dto.setPropertyType(property.getPropertyType());
+            dto.setPgType(property.getPgType());
             dto.setBhkType(property.getBhkType());
             dto.setFurnishing(property.getFurnishing());
             dto.setCarpetArea(property.getCarpetArea());

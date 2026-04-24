@@ -12,6 +12,8 @@ public interface AuthService {
 
     RegisterResponseDTO registerAdmin(RegisterRequestDTO dto);
 
+    RegisterResponseDTO registerPropertyOwner(RegisterRequestDTO dto);
+
     public String login(LoginRequestDTO dto);
 
     void logout(String token);

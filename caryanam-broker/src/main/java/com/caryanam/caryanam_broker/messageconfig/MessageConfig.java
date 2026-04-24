@@ -33,10 +33,12 @@ public class MessageConfig {
     public static final String LOCATION_INVALID = "Location should not contain numbers";
     public static final String ADMIN_NOT_FOUND = "Admin not Found.";
     public static final String PREMIUM_ACTIVE="Premium activated";
-    public static final String State_is_required="State is required";
-    public static final String  Invalid_pincode="Invalid pincode";
-    public static final String  Address_is_required="Address is required";
-    public static final String City_is_required="City is required";
+    public static final String STATE_IS_REQUIRED="State is required";
+    public static final String INVALID_PINCODE="Invalid pincode";
+    public static final String ADDRESS_IS_REQUIRED="Address is required";
+    public static final String CITY_IS_REQUIRED="City is required";
+    public static final String PG_TYPE_REQUIRED="Pg not found";
+    public static final String PG_TYPE_INVALID="Invalid PG Type";
 
 
 }

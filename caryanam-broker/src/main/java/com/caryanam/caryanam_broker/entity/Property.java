@@ -5,6 +5,7 @@ package com.caryanam.caryanam_broker.entity;
 
 import com.caryanam.caryanam_broker.Enum.BhkType;
 import com.caryanam.caryanam_broker.Enum.FurnishingType;
+import com.caryanam.caryanam_broker.Enum.PgType;
 import com.caryanam.caryanam_broker.Enum.PropertyType;
 import jakarta.persistence.*;
 import jakarta.persistence.Enumerated;
@@ -34,6 +35,8 @@ public class Property {
 
     @Enumerated(EnumType.STRING)
     private PropertyType propertyType;
+    @Enumerated(EnumType.STRING)
+    private PgType pgType;
     @Enumerated(EnumType.STRING)
     private BhkType bhkType;
     @Enumerated(EnumType.STRING)

@@ -26,7 +26,6 @@ public class Message {
 
     private LocalDateTime timestamp;
 
-    // 🔥 ADD THIS
     @Enumerated(EnumType.STRING)
     private MessageStatus status;
 }

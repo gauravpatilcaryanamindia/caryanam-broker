@@ -6,9 +6,11 @@ import com.caryanam.caryanam_broker.dto.LoginRequestDTO;
 import com.caryanam.caryanam_broker.dto.RegisterRequestDTO;
 import com.caryanam.caryanam_broker.dto.RegisterResponseDTO;
 import com.caryanam.caryanam_broker.entity.Admin;
+import com.caryanam.caryanam_broker.entity.PropertyOwner;
 import com.caryanam.caryanam_broker.entity.User;
 import com.caryanam.caryanam_broker.enums.Role;
 import com.caryanam.caryanam_broker.repository.AdminRepository;
+import com.caryanam.caryanam_broker.repository.PropertyOwnerRepository;
 import com.caryanam.caryanam_broker.repository.UserRepository;
 import com.caryanam.caryanam_broker.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private AdminRepository adminRepository;
+
+    @Autowired
+    private PropertyOwnerRepository propertyOwerRepository;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -70,6 +75,27 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    @Override
+    public RegisterResponseDTO registerPropertyOwner(RegisterRequestDTO dto) {
+        if (propertyOwerRepository.existsByEmail(dto.getEmail())) {
+            throw new RuntimeException("propertyOwer email already exists");
+        }
+        PropertyOwner owner = new PropertyOwner();
+        owner.setFullName(dto.getFullName());
+        owner.setMobileNumber(String.valueOf(dto.getMobileNumber()));
+        owner.setEmail(dto.getEmail());
+        owner.setEmail(dto.getEmail());
+        owner.setPassword(passwordEncoder.encode(dto.getPassword()));
+        owner.setRole(Role.PROPERTY_OWNER);
+        PropertyOwner saved = propertyOwerRepository.save(owner);
+        return RegisterResponseDTO.builder()
+                .id(saved.getOwnerId())
+                .fullName(saved.getFullName())
+                .email(saved.getEmail())
+                .role(saved.getRole().name())
+                .build();
+    }
+
     // ADMIN REGISTRATION
     @Override
     public RegisterResponseDTO registerAdmin(RegisterRequestDTO dto) {
@@ -96,30 +122,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-//    //login USER,ADMIN
-//    @Override
-//    public String login(LoginRequestDTO request) {
-//
-//        Authentication authentication = authenticationManager.authenticate(
-//                new UsernamePasswordAuthenticationToken(
-//                        request.getEmail(),
-//                        request.getPassword()
-//                )
-//        );
-//
-//        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-//
-//        String role = userDetails.getAuthorities()
-//                .stream()
-//                .findFirst()
-//                .map(granted -> granted.getAuthority())
-//                .orElse("USER");
-//
-//        return jwtUtil.generateToken(
-//                userDetails.getUsername(),
-//                role
-//        );
-//    }
+
 
     @Override
     public String login(LoginRequestDTO request) {
@@ -127,9 +130,7 @@ public class AuthServiceImpl implements AuthService {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
-                        request.getPassword()
-                )
-        );
+                        request.getPassword()));
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
@@ -139,13 +140,11 @@ public class AuthServiceImpl implements AuthService {
                 .map(granted -> granted.getAuthority())
                 .orElse("USER");
 
-        // ⭐ ADD DEVICE TYPE (IMPORTANT FIX)
+
         String deviceType = request.getDeviceType();
-
         if (deviceType == null || deviceType.isEmpty()) {
-            deviceType = "WEB";   // fallback
+            deviceType = "WEB";
         }
-
         return jwtUtil.generateToken(
                 userDetails.getUsername(),
                 role,
@@ -161,7 +160,6 @@ public class AuthServiceImpl implements AuthService {
         }
 
         tokenBlacklist.add(token);
-
         System.out.println("User logged out, token blacklisted: " + token);
     }
 

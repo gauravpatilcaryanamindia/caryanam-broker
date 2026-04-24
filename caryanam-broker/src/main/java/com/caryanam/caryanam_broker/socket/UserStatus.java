@@ -10,6 +10,5 @@ public class UserStatus {
 
     @Id
     private Long userId;
-
     private boolean online;
 }

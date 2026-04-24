@@ -27,16 +27,13 @@ public class Admin {
     private String password;
 
     private Integer premiumCount=0;
-    //private Integer propertyLimit;
+
 
     @Enumerated(EnumType.STRING)
     private Role role;
 
     @Column(nullable = false)
     private Integer propertyLimit = 1;
-//
-//    private boolean isPremiumActive;
-//    private String paymentStatus;
 
     @Column(nullable = false)
     private boolean premiumActive = false;
