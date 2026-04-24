@@ -122,16 +122,6 @@ public class OwnerPropertyController {
         return ResponseHandler.generateResponse(MessageConfig.PROPERTY_ADDED, HttpStatus.OK, response);
     }
 
-
-    @GetMapping("/get-all-properties/{userId}")
-    public ResponseEntity<Object> getAllProperties(@PathVariable Long Id) {
-        return ResponseHandler.generateResponse(
-                MessageConfig.PROPERTY_FETCHED,
-                HttpStatus.OK,
-                propertyService.getAllProperties(Id)
-        );
-    }
-
     // 3. Get Property By Id
     @GetMapping("/getPropertyById/{id}")
     public ResponseEntity<Object> getPropertyById(@PathVariable Long id) {
