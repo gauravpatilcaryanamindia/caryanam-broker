@@ -25,7 +25,9 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role;
-
+    private Integer premiumCount = 0;
+    @Column(nullable = false)
+    private Integer propertyLimit = 1;
     @Column(nullable = false)
     private boolean premiumActive = false;
 

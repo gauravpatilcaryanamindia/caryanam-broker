@@ -42,7 +42,6 @@ public class adminController {
         return ResponseEntity.ok("Owner premium approved");
     }
 
-
     @PostMapping("/approvePremium")
     public ResponseEntity<String> approvePremium(@RequestParam String type,
                                                  @RequestParam Long id) {
@@ -64,6 +63,7 @@ public class adminController {
             }
             owner.setPremiumActive(true);
             owner.setPremiumStatus("APPROVED");
+            owner.setPremiumCount(owner.getPremiumCount() + 1);
             propertyOwnerRepository.save(owner);
             return ResponseEntity.ok("Owner premium approved");
         }

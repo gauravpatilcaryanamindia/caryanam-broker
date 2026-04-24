@@ -31,9 +31,18 @@ public class UserController {
         if (user == null) {
             return ResponseEntity.badRequest().body("User not found");
         }
+        if ("APPROVED".equalsIgnoreCase(user.getPremiumStatus())) {
+            user.setPremiumStatus("NONE");
+            user.setPremiumActive(false);
+        }
+        if ("PENDING".equalsIgnoreCase(user.getPremiumStatus())) {
+            return ResponseEntity.badRequest().body("Payment already in process");
+        }
         user.setPremiumStatus("PENDING");
         user.setPremiumActive(false);
+        user.setPremiumCount(user.getPremiumCount() + 1);
         userRepository.save(user);
+
         return ResponseEntity.ok("User premium request sent");
     }
 

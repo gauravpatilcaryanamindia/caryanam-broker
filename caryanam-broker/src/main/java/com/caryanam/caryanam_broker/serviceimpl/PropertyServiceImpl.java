@@ -31,59 +31,6 @@ public class PropertyServiceImpl implements PropertyService {
     @Autowired
     private UserRepository userRepository;
 
-//    @Override
-//    public PropertyDto addProperty(PropertyDto propertyDto, Long adminId) {
-//        PropertyOwner propertyOwner = propertyOwnerRepository.findById(adminId).orElse(null);
-//        if (propertyOwner == null) {
-//            System.out.println("Admin not found");
-//            return null;
-//        }
-//        int propertyCount = propertyRepository.countByAdmin_AdminId(adminId);
-//        if (propertyCount >= propertyOwner.getPropertyLimit()) {
-//            return null;
-//        }
-//        Property property = new Property();
-//        property.setTitle(propertyDto.getTitle());
-//        property.setPrice(propertyDto.getPrice());
-//        property.setLocation(propertyDto.getLocation());
-//        property.setAddress(propertyDto.getAddress());
-//        property.setCity(propertyDto.getCity());
-//        property.setState(propertyDto.getState());
-//        property.setPincode(propertyDto.getPincode());
-//        property.setDescription(propertyDto.getDescription());
-//        property.setPropertyType(propertyDto.getPropertyType());
-//        property.setPgType(propertyDto.getPgType());
-//        property.setBhkType(propertyDto.getBhkType());
-//        property.setFurnishing(propertyDto.getFurnishing());
-//        property.setCarpetArea(propertyDto.getCarpetArea());
-//        property.setMobileNumber(propertyDto.getMobileNumber());
-//        property.setLikesCount(0);
-//        property.setViewsCount(0);
-//        property.setStatus(AppConstants.ACTIVE);
-//        property.setAdmin(propertyOwner);
-//        Property savedProperty = propertyRepository.save(property);
-//        PropertyDto responseDto = new PropertyDto();
-//        responseDto.setId(savedProperty.getId());
-//        responseDto.setTitle(savedProperty.getTitle());
-//        responseDto.setPrice(savedProperty.getPrice());
-//        responseDto.setLocation(savedProperty.getLocation());
-//        responseDto.setAddress(savedProperty.getAddress());
-//        responseDto.setCity(savedProperty.getCity());
-//        responseDto.setState(savedProperty.getState());
-//        responseDto.setPincode(savedProperty.getPincode());
-//        responseDto.setDescription(savedProperty.getDescription());
-//        responseDto.setPropertyType(savedProperty.getPropertyType());
-//        responseDto.setPgType(savedProperty.getPgType());
-//        responseDto.setBhkType(savedProperty.getBhkType());
-//        responseDto.setFurnishing(savedProperty.getFurnishing());
-//        responseDto.setCarpetArea(savedProperty.getCarpetArea());
-//        responseDto.setMobileNumber(savedProperty.getMobileNumber());
-//        responseDto.setStatus(savedProperty.getStatus());
-//        responseDto.setLikesCount(savedProperty.getLikesCount());
-//        responseDto.setViewsCount(savedProperty.getViewsCount());
-//        return responseDto;
-//    }
-
     @Override
     public PropertyDto addProperty(PropertyDto propertyDto, Long ownerId) {
 

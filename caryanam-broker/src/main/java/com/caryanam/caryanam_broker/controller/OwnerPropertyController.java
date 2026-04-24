@@ -4,12 +4,9 @@ import com.caryanam.caryanam_broker.Enum.PgType;
 import com.caryanam.caryanam_broker.Enum.PropertyType;
 import com.caryanam.caryanam_broker.appconstant.AppConstants;
 import com.caryanam.caryanam_broker.dto.PropertyDto;
-import com.caryanam.caryanam_broker.dto.PropertyFilterDto;
 import com.caryanam.caryanam_broker.dto.ResponseHandler;
-import com.caryanam.caryanam_broker.entity.Admin;
 import com.caryanam.caryanam_broker.entity.PropertyOwner;
 import com.caryanam.caryanam_broker.messageconfig.MessageConfig;
-import com.caryanam.caryanam_broker.repository.AdminRepository;
 import com.caryanam.caryanam_broker.repository.PropertyImageRepository;
 import com.caryanam.caryanam_broker.repository.PropertyOwnerRepository;
 import com.caryanam.caryanam_broker.service.PropertyService;
@@ -24,7 +21,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
-public class AdminPropertyController {
+public class OwnerPropertyController {
 
     @Autowired
     private PropertyService propertyService;
@@ -35,9 +32,10 @@ public class AdminPropertyController {
     @Autowired
     private PropertyOwnerRepository propertyOwnerRepository;
 
-    @PostMapping("/addPropertyByAdmin/{adminId}")
+    @PostMapping("/addPropertyByOwner/{ownerId}")
     public ResponseEntity<Object> addProperty(
-            @PathVariable Long adminId, @RequestBody PropertyDto propertyDto) {
+            @PathVariable Long ownerId, @RequestBody PropertyDto propertyDto) {
+
         if (propertyDto.getTitle() == null || propertyDto.getTitle().trim().isEmpty()) {
             return ResponseHandler.generateResponse(MessageConfig.TITLE_REQUIRED, HttpStatus.BAD_REQUEST, null);
         }
@@ -116,7 +114,8 @@ public class AdminPropertyController {
         if (firstDigit < '6' || firstDigit > '9') {
             return ResponseHandler.generateResponse(MessageConfig.MOBILE_INVALID_START, HttpStatus.BAD_REQUEST, null);
         }
-        PropertyDto response = propertyService.addProperty(propertyDto, adminId);
+
+        PropertyDto response = propertyService.addProperty(propertyDto, ownerId);
         if (response == null) {
             return ResponseHandler.generateResponse(MessageConfig.PROPERTY_LIMIT_EXCEEDED, HttpStatus.BAD_REQUEST, null);
         }
@@ -190,32 +189,28 @@ public class AdminPropertyController {
         return ResponseHandler.generateResponse(response, HttpStatus.OK, null);
     }
 
-
     @PostMapping("/buyPremiumByAdminId/{ownerId}")
     public ResponseEntity<Object> buyPremium(@PathVariable Long ownerId) {
-
         PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
-
         if (owner == null) {
             return ResponseHandler.generateResponse("Owner not found", HttpStatus.BAD_REQUEST, null);
         }
-
-        if (owner.isPremiumActive()) {
-            return ResponseHandler.generateResponse("Premium already active", HttpStatus.BAD_REQUEST, null);
+        if ("APPROVED".equalsIgnoreCase(owner.getPremiumStatus())) {
+            owner.setPremiumStatus("NONE");
+            owner.setPremiumActive(false);
         }
-
+        if ("PENDING".equalsIgnoreCase(owner.getPremiumStatus())) {
+            return ResponseHandler.generateResponse("Payment already in process", HttpStatus.BAD_REQUEST, null);
+        }
         owner.setPremiumStatus("PENDING");
         owner.setPremiumActive(false);
-
+        owner.setPremiumCount(owner.getPremiumCount() + 1);
         propertyOwnerRepository.save(owner);
-
         String qrUrl = "http://localhost:8080/qr/payment.png";
-
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Scan QR & complete payment");
         response.put("qrCode", qrUrl);
         response.put("status", "PENDING");
-
         return ResponseHandler.generateResponse("Payment initiated", HttpStatus.OK, response);
     }
 
