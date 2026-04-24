@@ -1,8 +1,8 @@
 package com.caryanam.caryanam_broker.controller;
 
-import com.caryanam.caryanam_broker.entity.Admin;
+import com.caryanam.caryanam_broker.entity.PropertyOwner;
 import com.caryanam.caryanam_broker.entity.User;
-import com.caryanam.caryanam_broker.repository.AdminRepository;
+import com.caryanam.caryanam_broker.repository.PropertyOwnerRepository;
 import com.caryanam.caryanam_broker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +14,7 @@ import java.util.List;
 public class adminController {
 
     @Autowired
-    private AdminRepository adminRepository;
+    private PropertyOwnerRepository propertyOwnerRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -26,12 +26,27 @@ public class adminController {
     }
 
     @GetMapping("/pending-admins")
-    public List<Admin> getPendingAdmins() {
-        return adminRepository.findByPremiumStatus("PENDING");
+    public List<PropertyOwner> getPendingAdmins() {
+        return propertyOwnerRepository.findByPremiumStatus("PENDING");
     }
 
+    @PostMapping("/approveOwnerPremium/{ownerId}")
+    public ResponseEntity<?> approveOwner(@PathVariable Long ownerId) {
+        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
+        if (owner == null) {
+            return ResponseEntity.badRequest().body("Owner not found");
+        }
+        owner.setPremiumStatus("APPROVED");
+        owner.setPremiumActive(true);
+        propertyOwnerRepository.save(owner);
+        return ResponseEntity.ok("Owner premium approved");
+    }
+
+
     @PostMapping("/approvePremium")
-    public ResponseEntity<String> approvePremium(@RequestParam String type, @RequestParam Long id) {
+    public ResponseEntity<String> approvePremium(@RequestParam String type,
+                                                 @RequestParam Long id) {
+
         if (type.equalsIgnoreCase("USER")) {
             User user = userRepository.findById(id).orElse(null);
             if (user == null) {
@@ -41,15 +56,16 @@ public class adminController {
             user.setPremiumStatus("APPROVED");
             userRepository.save(user);
             return ResponseEntity.ok("User premium approved");
-        } else if (type.equalsIgnoreCase("ADMIN")) {
-            Admin admin = adminRepository.findById(id).orElse(null);
-            if (admin == null) {
-                return ResponseEntity.badRequest().body("Admin not found");
+        }
+        else if (type.equalsIgnoreCase("OWNER")) {
+            PropertyOwner owner = propertyOwnerRepository.findById(id).orElse(null);
+            if (owner == null) {
+                return ResponseEntity.badRequest().body("Owner not found");
             }
-            admin.setPremiumActive(true);
-            admin.setPremiumStatus("APPROVED");
-            adminRepository.save(admin);
-            return ResponseEntity.ok("Admin premium approved");
+            owner.setPremiumActive(true);
+            owner.setPremiumStatus("APPROVED");
+            propertyOwnerRepository.save(owner);
+            return ResponseEntity.ok("Owner premium approved");
         }
         return ResponseEntity.badRequest().body("Invalid type");
     }

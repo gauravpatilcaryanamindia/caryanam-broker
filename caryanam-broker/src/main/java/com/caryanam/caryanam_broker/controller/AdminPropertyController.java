@@ -7,9 +7,11 @@ import com.caryanam.caryanam_broker.dto.PropertyDto;
 import com.caryanam.caryanam_broker.dto.PropertyFilterDto;
 import com.caryanam.caryanam_broker.dto.ResponseHandler;
 import com.caryanam.caryanam_broker.entity.Admin;
+import com.caryanam.caryanam_broker.entity.PropertyOwner;
 import com.caryanam.caryanam_broker.messageconfig.MessageConfig;
 import com.caryanam.caryanam_broker.repository.AdminRepository;
 import com.caryanam.caryanam_broker.repository.PropertyImageRepository;
+import com.caryanam.caryanam_broker.repository.PropertyOwnerRepository;
 import com.caryanam.caryanam_broker.service.PropertyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,7 +33,7 @@ public class AdminPropertyController {
     private PropertyImageRepository propertyImageRepository;
 
     @Autowired
-    private AdminRepository adminRepository;
+    private PropertyOwnerRepository propertyOwnerRepository;
 
     @PostMapping("/addPropertyByAdmin/{adminId}")
     public ResponseEntity<Object> addProperty(
@@ -188,23 +190,32 @@ public class AdminPropertyController {
         return ResponseHandler.generateResponse(response, HttpStatus.OK, null);
     }
 
-    @PostMapping("/buyPremiumByAdminId/{adminId}")
-    public ResponseEntity<Object> buyPremium(@PathVariable Long adminId) {
-        Admin admin = adminRepository.findById(adminId).orElse(null);
-        if (admin == null) {
-            return ResponseHandler.generateResponse("Admin not found", HttpStatus.BAD_REQUEST, null);
+
+    @PostMapping("/buyPremiumByAdminId/{ownerId}")
+    public ResponseEntity<Object> buyPremium(@PathVariable Long ownerId) {
+
+        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
+
+        if (owner == null) {
+            return ResponseHandler.generateResponse("Owner not found", HttpStatus.BAD_REQUEST, null);
         }
-        if (admin.isPremiumActive()) {
+
+        if (owner.isPremiumActive()) {
             return ResponseHandler.generateResponse("Premium already active", HttpStatus.BAD_REQUEST, null);
         }
-        admin.setPremiumStatus("PENDING");
-        admin.setPremiumActive(false);
-        adminRepository.save(admin);
+
+        owner.setPremiumStatus("PENDING");
+        owner.setPremiumActive(false);
+
+        propertyOwnerRepository.save(owner);
+
         String qrUrl = "http://localhost:8080/qr/payment.png";
+
         Map<String, Object> response = new HashMap<>();
         response.put("message", "Scan QR & complete payment");
         response.put("qrCode", qrUrl);
         response.put("status", "PENDING");
+
         return ResponseHandler.generateResponse("Payment initiated", HttpStatus.OK, response);
     }
 

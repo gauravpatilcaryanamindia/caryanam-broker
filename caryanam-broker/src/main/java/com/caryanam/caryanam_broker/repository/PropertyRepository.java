@@ -12,8 +12,7 @@ import java.util.List;
 
 public interface PropertyRepository extends JpaRepository<Property, Long> {
 
-    int countByAdmin_AdminId(Long adminId);
-
+    int countByPropertyOwner_OwnerId(Long ownerId);
     List<Property> findByStatus(String active);
 
     List<Property> findByPropertyType(PropertyType propertyType);

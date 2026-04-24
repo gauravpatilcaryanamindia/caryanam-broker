@@ -45,9 +45,8 @@ public class Property {
     private String coverImage;
     private String doctypeImages;
     @ManyToOne
-    @JoinColumn(name = "admin_id")
-    private Admin admin;
-
+    @JoinColumn(name = "owner_id")
+    private PropertyOwner propertyOwner;
     private boolean isPremiumActive;   // access control
     private String paymentStatus;      // PENDING / SUCCESS / REJECTED
    }

@@ -3,15 +3,9 @@ package com.caryanam.caryanam_broker.serviceimpl;
 import com.caryanam.caryanam_broker.appconstant.AppConstants;
 import com.caryanam.caryanam_broker.dto.PropertyDto;
 import com.caryanam.caryanam_broker.dto.PropertyFilterDto;
-import com.caryanam.caryanam_broker.entity.Admin;
-import com.caryanam.caryanam_broker.entity.Property;
-import com.caryanam.caryanam_broker.entity.PropertyImage;
-import com.caryanam.caryanam_broker.entity.User;
+import com.caryanam.caryanam_broker.entity.*;
 import com.caryanam.caryanam_broker.messageconfig.MessageConfig;
-import com.caryanam.caryanam_broker.repository.AdminRepository;
-import com.caryanam.caryanam_broker.repository.PropertyImageRepository;
-import com.caryanam.caryanam_broker.repository.PropertyRepository;
-import com.caryanam.caryanam_broker.repository.UserRepository;
+import com.caryanam.caryanam_broker.repository.*;
 import com.caryanam.caryanam_broker.service.PropertyService;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,24 +25,83 @@ public class PropertyServiceImpl implements PropertyService {
     @Autowired
     private PropertyImageRepository propertyImageRepository;
 
-    @Autowired
-    private AdminRepository adminRepository;
 
+    @Autowired
+    private PropertyOwnerRepository propertyOwnerRepository;
     @Autowired
     private UserRepository userRepository;
 
+//    @Override
+//    public PropertyDto addProperty(PropertyDto propertyDto, Long adminId) {
+//        PropertyOwner propertyOwner = propertyOwnerRepository.findById(adminId).orElse(null);
+//        if (propertyOwner == null) {
+//            System.out.println("Admin not found");
+//            return null;
+//        }
+//        int propertyCount = propertyRepository.countByAdmin_AdminId(adminId);
+//        if (propertyCount >= propertyOwner.getPropertyLimit()) {
+//            return null;
+//        }
+//        Property property = new Property();
+//        property.setTitle(propertyDto.getTitle());
+//        property.setPrice(propertyDto.getPrice());
+//        property.setLocation(propertyDto.getLocation());
+//        property.setAddress(propertyDto.getAddress());
+//        property.setCity(propertyDto.getCity());
+//        property.setState(propertyDto.getState());
+//        property.setPincode(propertyDto.getPincode());
+//        property.setDescription(propertyDto.getDescription());
+//        property.setPropertyType(propertyDto.getPropertyType());
+//        property.setPgType(propertyDto.getPgType());
+//        property.setBhkType(propertyDto.getBhkType());
+//        property.setFurnishing(propertyDto.getFurnishing());
+//        property.setCarpetArea(propertyDto.getCarpetArea());
+//        property.setMobileNumber(propertyDto.getMobileNumber());
+//        property.setLikesCount(0);
+//        property.setViewsCount(0);
+//        property.setStatus(AppConstants.ACTIVE);
+//        property.setAdmin(propertyOwner);
+//        Property savedProperty = propertyRepository.save(property);
+//        PropertyDto responseDto = new PropertyDto();
+//        responseDto.setId(savedProperty.getId());
+//        responseDto.setTitle(savedProperty.getTitle());
+//        responseDto.setPrice(savedProperty.getPrice());
+//        responseDto.setLocation(savedProperty.getLocation());
+//        responseDto.setAddress(savedProperty.getAddress());
+//        responseDto.setCity(savedProperty.getCity());
+//        responseDto.setState(savedProperty.getState());
+//        responseDto.setPincode(savedProperty.getPincode());
+//        responseDto.setDescription(savedProperty.getDescription());
+//        responseDto.setPropertyType(savedProperty.getPropertyType());
+//        responseDto.setPgType(savedProperty.getPgType());
+//        responseDto.setBhkType(savedProperty.getBhkType());
+//        responseDto.setFurnishing(savedProperty.getFurnishing());
+//        responseDto.setCarpetArea(savedProperty.getCarpetArea());
+//        responseDto.setMobileNumber(savedProperty.getMobileNumber());
+//        responseDto.setStatus(savedProperty.getStatus());
+//        responseDto.setLikesCount(savedProperty.getLikesCount());
+//        responseDto.setViewsCount(savedProperty.getViewsCount());
+//        return responseDto;
+//    }
+
     @Override
-    public PropertyDto addProperty(PropertyDto propertyDto, Long adminId) {
-        Admin admin = adminRepository.findById(adminId).orElse(null);
-        if (admin == null) {
-            System.out.println("Admin not found");
+    public PropertyDto addProperty(PropertyDto propertyDto, Long ownerId) {
+
+        PropertyOwner propertyOwner = propertyOwnerRepository.findById(ownerId).orElse(null);
+
+        if (propertyOwner == null) {
+            System.out.println("Owner not found");
             return null;
         }
-        int propertyCount = propertyRepository.countByAdmin_AdminId(adminId);
-        if (propertyCount >= admin.getPropertyLimit()) {
+
+        int propertyCount = propertyRepository.countByPropertyOwner_OwnerId(ownerId);
+
+        if (propertyCount >= propertyOwner.getPropertyLimit()) {
             return null;
         }
+
         Property property = new Property();
+
         property.setTitle(propertyDto.getTitle());
         property.setPrice(propertyDto.getPrice());
         property.setLocation(propertyDto.getLocation());
@@ -63,11 +116,16 @@ public class PropertyServiceImpl implements PropertyService {
         property.setFurnishing(propertyDto.getFurnishing());
         property.setCarpetArea(propertyDto.getCarpetArea());
         property.setMobileNumber(propertyDto.getMobileNumber());
+
         property.setLikesCount(0);
         property.setViewsCount(0);
         property.setStatus(AppConstants.ACTIVE);
-        property.setAdmin(admin);
+
+        // ✅ FIXED LINE
+        property.setPropertyOwner(propertyOwner);
+
         Property savedProperty = propertyRepository.save(property);
+
         PropertyDto responseDto = new PropertyDto();
         responseDto.setId(savedProperty.getId());
         responseDto.setTitle(savedProperty.getTitle());
@@ -87,6 +145,7 @@ public class PropertyServiceImpl implements PropertyService {
         responseDto.setStatus(savedProperty.getStatus());
         responseDto.setLikesCount(savedProperty.getLikesCount());
         responseDto.setViewsCount(savedProperty.getViewsCount());
+
         return responseDto;
     }
 
