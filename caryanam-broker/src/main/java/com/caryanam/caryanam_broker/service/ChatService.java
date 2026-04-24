@@ -1,6 +1,7 @@
 package com.caryanam.caryanam_broker.service;
 
 
+import com.caryanam.caryanam_broker.socket.Message;
 import com.caryanam.caryanam_broker.socket.MessageRequestDTO;
 import com.caryanam.caryanam_broker.socket.MessageResponseDTO;
 import com.caryanam.caryanam_broker.socket.TypingDTO;
@@ -20,4 +21,6 @@ public interface ChatService {
     void rejectChat(String roomId);
 
     boolean isChatAccepted(String roomId);
+
+    MessageResponseDTO mapToDTO(Message msg);
 }

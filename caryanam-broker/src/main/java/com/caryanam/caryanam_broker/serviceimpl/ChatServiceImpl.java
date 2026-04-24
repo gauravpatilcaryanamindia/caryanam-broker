@@ -19,6 +19,8 @@ import com.corundumstudio.socketio.SocketIOServer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class ChatServiceImpl implements ChatService {
@@ -49,16 +51,27 @@ public class ChatServiceImpl implements ChatService {
         Long aId = Math.max(userId, adminId);
 
         String roomId = generateRoomId(uId, aId);
+
         return chatRoomRepo.findByUserIdAndAdminId(uId, aId)
                 .map(ChatRoom::getRoomId)
                 .orElseGet(() -> {
-                    ChatRoom room = new ChatRoom();
-                    room.setUserId(uId);
-                    room.setAdminId(aId);
-                    room.setRoomId(roomId);
-                    room.setFirstMessageSent(false);
-                    chatRoomRepo.save(room);
-                    return roomId;});
+                    try {
+                        ChatRoom room = new ChatRoom();
+                        room.setUserId(uId);
+                        room.setAdminId(aId);
+                        room.setRoomId(roomId);
+                        room.setFirstMessageSent(false);
+
+                        chatRoomRepo.save(room);
+                        return roomId;
+
+                    } catch (Exception e) {
+
+                        return chatRoomRepo.findByUserIdAndAdminId(uId, aId)
+                                .map(ChatRoom::getRoomId)
+                                .orElse(roomId);
+                    }
+                });
     }
 
     // ================= SEND MESSAGE =================
@@ -67,7 +80,6 @@ public class ChatServiceImpl implements ChatService {
 
         Long userId;
         Long adminId;
-
 
         if ("USER".equals(dto.getSenderRole())) {
             userId = dto.getSenderId();
@@ -83,15 +95,9 @@ public class ChatServiceImpl implements ChatService {
                 Math.max(userId, adminId)
         ).orElseThrow(() -> new RuntimeException("Room not found"));
 
-        List<Message> existingMessages = messageRepo.findByRoomId(roomId);
-//
-//        if (!existingMessages.isEmpty()) {
-//            // Already initialized → return first message
-//            Message first = existingMessages.get(0);
-//            return mapToDTO(first);
-//        }
-        if (existingMessages.isEmpty() && !room.isFirstMessageSent()) {
 
+        List<Message> existingMessages = messageRepo.findByRoomId(roomId);
+        if (existingMessages.isEmpty() && !room.isFirstMessageSent()) {
             Message firstMsg = new Message();
             firstMsg.setRoomId(roomId);
             firstMsg.setSenderId(userId);
@@ -113,26 +119,20 @@ public class ChatServiceImpl implements ChatService {
             adminReply.setStatus(MessageStatus.PENDING);
 
             messageRepo.save(adminReply);
-
             room.setFirstMessageSent(true);
             chatRoomRepo.save(room);
 
             if (existingMessages.isEmpty()) {
-                socketServer.getRoomOperations(roomId)
-                        .sendEvent("receive_message", mapToDTO(firstMsg));
-
-                socketServer.getRoomOperations(roomId)
-                        .sendEvent("receive_message", mapToDTO(adminReply));
-            }
-
+                socketServer.getRoomOperations(roomId).sendEvent("receive_message", mapToDTO(firstMsg));
+                socketServer.getRoomOperations(roomId).sendEvent("receive_message", mapToDTO(adminReply));}
             return mapToDTO(firstMsg);
         }
 
-
-        boolean isAccepted = isChatAccepted(roomId);
-        if (!isAccepted) {
+        // ✅ ADD HERE
+         if (room.isFirstMessageSent() && !isChatAccepted(roomId)) {
             throw new BadRequestException("Chat not accepted yet");
         }
+
 
         Message msg = new Message();
         msg.setRoomId(roomId);
@@ -148,7 +148,6 @@ public class ChatServiceImpl implements ChatService {
         socketServer.getRoomOperations(roomId).sendEvent("receive_message", response);
         return response;
     }
-
 
     @Override
     public void acceptChat(String roomId) {
@@ -214,13 +213,23 @@ public class ChatServiceImpl implements ChatService {
                 .sendEvent("user_status", status);
     }
 
-    private MessageResponseDTO mapToDTO(Message msg) {
+    @Override
+    public MessageResponseDTO mapToDTO(Message msg) {
+
+        String time = null;
+
+        if (msg.getTimestamp() != null) {
+            time = msg.getTimestamp().format(FORMATTER);
+        }
+
         return new MessageResponseDTO(
                 msg.getRoomId(),
                 msg.getSenderId(),
                 msg.getSenderRole(),
                 msg.getContent(),
-                msg.getTimestamp().format(FORMATTER));
+                time
+        );
     }
+
 
 }

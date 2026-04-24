@@ -47,6 +47,28 @@
                   ? CURRENT_ID + "_" + RECEIVER_ID
                   : RECEIVER_ID + "_" + CURRENT_ID;
 
+
+  // ✅ ADDED HISTORY CODE (no change to your existing logic)
+  fetch(`http://localhost:8080/chat/history/${ROOM_ID}`)
+          .then(res => res.json())
+          .then(messages => {
+            messages.forEach(msg => {
+              const li = document.createElement("li");
+
+              if (msg.senderId === CURRENT_ID) {
+                li.innerText = "YOU: " + msg.message;
+              } else {
+                li.innerText = msg.senderRole === "ADMIN"
+                        ? "ADMIN: " + msg.message
+                        : "USER: " + msg.message;
+              }
+
+              document.getElementById("messages").appendChild(li);
+            });
+          })
+          .catch(err => console.error("History error:", err));
+
+
   const socket = io("http://localhost:9092", {
     transports: ["websocket"],
     query: IS_ADMIN
@@ -79,11 +101,11 @@
     const li = document.createElement("li");
 
     if (data.senderId === CURRENT_ID) {
-         li.innerText = "YOU: " + data.message;
-        } else {
-            li.innerText = IS_ADMIN
-                  ? "USER: " + data.message
-                          : "ADMIN: " + data.message;
+      li.innerText = "YOU: " + data.message;
+    } else {
+      li.innerText = IS_ADMIN
+              ? "USER: " + data.message
+              : "ADMIN: " + data.message;
     }
 
     document.getElementById("messages").appendChild(li);

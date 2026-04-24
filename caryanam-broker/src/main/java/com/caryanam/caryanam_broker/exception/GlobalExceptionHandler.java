@@ -73,12 +73,12 @@ public class GlobalExceptionHandler {
             return ResponseEntity.status(400)
                     .body(new ResponseDto<>(400, "Email already exists", null));
         }
-        @ExceptionHandler(BadRequestException.class)
-        public ResponseEntity<ResponseDto<Object>> handleBadRequest(BadRequestException ex) {
-
-            return ResponseEntity.badRequest().body(
-                    new ResponseDto<>(400, "Duplicate entry found", null ));
-        }
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<?> handleBadRequest(BadRequestException ex) {
+        return ResponseEntity.badRequest().body(
+                new ResponseDto<>(400, ex.getMessage(), null)
+        );
+    }
 
     }
 

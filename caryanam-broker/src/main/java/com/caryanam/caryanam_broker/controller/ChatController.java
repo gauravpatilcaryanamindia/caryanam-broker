@@ -4,13 +4,11 @@ import com.caryanam.caryanam_broker.dto.ResponseDto;
 import com.caryanam.caryanam_broker.exception.BadRequestException;
 import com.caryanam.caryanam_broker.exception.InvalidOperationException;
 import com.caryanam.caryanam_broker.repository.AdminRepository;
+import com.caryanam.caryanam_broker.repository.MessageRepository;
 import com.caryanam.caryanam_broker.repository.UserRepository;
 import com.caryanam.caryanam_broker.service.ChatService;
-import com.caryanam.caryanam_broker.socket.MessageRequestDTO;
-import com.caryanam.caryanam_broker.socket.MessageResponseDTO;
-import com.caryanam.caryanam_broker.socket.RoomRequestDTO;
+import com.caryanam.caryanam_broker.socket.*;
 
-import com.caryanam.caryanam_broker.socket.TypingDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -18,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -30,6 +30,8 @@ public class ChatController {
     private  UserRepository userRepository;
     @Autowired
     private  AdminRepository adminRepository;
+    @Autowired
+    private MessageRepository messageRepo;
 
 
     @PostMapping("/send")
@@ -42,10 +44,6 @@ public class ChatController {
         if (!"USER".equals(dto.getSenderRole())) {
             throw new InvalidOperationException("Only USER can send message to ADMIN");
         }
-//        if (dto.getSenderId().equals(dto.getReceiverId())) {
-//            throw new InvalidOperationException("Sender and Receiver cannot be same");
-//        }
-
         Long userId = dto.getSenderId();
         Long adminId = dto.getReceiverId();
         if (!userRepository.existsById(userId)) {
@@ -63,13 +61,7 @@ public class ChatController {
     public ResponseEntity<ResponseDto<String>> createRoom(
             @Valid @RequestBody RoomRequestDTO request) {
 
-        if (request.getUserId() == null || request.getAdminId() == null) {
-            throw new BadRequestException("UserId and AdminId are required");
-        }
-        if (request.getUserId().equals(request.getAdminId())) {
-            throw new BadRequestException("User and Admin cannot be same");
-        }
-        String roomId = chatService.createOrGetRoom(
+         String roomId = chatService.createOrGetRoom(
                 request.getUserId(),
                 request.getAdminId());
 
@@ -121,4 +113,28 @@ public class ChatController {
         chatService.updateUserStatus(userId, online);
         return ResponseEntity.ok(new ResponseDto<>(200, "User status updated", userId.toString()));
     }
+    @GetMapping("/history/{roomId}")
+    public ResponseEntity<ResponseDto<List<MessageResponseDTO>>> getChatHistory(
+            @PathVariable String roomId) {
+
+        if (roomId == null || roomId.trim().isEmpty()) {
+            throw new BadRequestException("RoomId is required");
+        }
+
+        List<Message> messages = messageRepo.findByRoomId(roomId);
+        List<MessageResponseDTO> responseList = new ArrayList<>();
+
+        for (Message msg : messages) {
+            responseList.add(chatService.mapToDTO(msg));
+        }
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(
+                        200,
+                        "Chat history fetched successfully",
+                        responseList
+                )
+        );
+    }
+
 }
