@@ -33,22 +33,17 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public PropertyDto addProperty(PropertyDto propertyDto, Long ownerId) {
-
         PropertyOwner propertyOwner = propertyOwnerRepository.findById(ownerId).orElse(null);
-
         if (propertyOwner == null) {
-            System.out.println("Owner not found");
             return null;
         }
-
-        int propertyCount = propertyRepository.countByPropertyOwner_OwnerId(ownerId);
-
-        if (propertyCount >= propertyOwner.getPropertyLimit()) {
+        if (!propertyOwner.isPremiumActive()) {
             return null;
         }
-
+        propertyOwner.setPremiumActive(false);
+        propertyOwner.setPremiumStatus("NONE");
+        propertyOwnerRepository.save(propertyOwner);
         Property property = new Property();
-
         property.setTitle(propertyDto.getTitle());
         property.setPrice(propertyDto.getPrice());
         property.setLocation(propertyDto.getLocation());
@@ -63,16 +58,11 @@ public class PropertyServiceImpl implements PropertyService {
         property.setFurnishing(propertyDto.getFurnishing());
         property.setCarpetArea(propertyDto.getCarpetArea());
         property.setMobileNumber(propertyDto.getMobileNumber());
-
         property.setLikesCount(0);
         property.setViewsCount(0);
         property.setStatus(AppConstants.ACTIVE);
-
-        // ✅ FIXED LINE
         property.setPropertyOwner(propertyOwner);
-
         Property savedProperty = propertyRepository.save(property);
-
         PropertyDto responseDto = new PropertyDto();
         responseDto.setId(savedProperty.getId());
         responseDto.setTitle(savedProperty.getTitle());
@@ -92,26 +82,19 @@ public class PropertyServiceImpl implements PropertyService {
         responseDto.setStatus(savedProperty.getStatus());
         responseDto.setLikesCount(savedProperty.getLikesCount());
         responseDto.setViewsCount(savedProperty.getViewsCount());
-
         return responseDto;
     }
 
     @Override
     public List<PropertyDto> getAllProperties(Long Id) {
-
         User user = userRepository.findById(Id).orElse(null);
-
         if (user == null || !user.isPremiumActive()) {
-            return new ArrayList<>(); // premium नाही तर empty list
+            return new ArrayList<>();
         }
-
         List<Property> propertyList = propertyRepository.findByStatus(AppConstants.ACTIVE);
         List<PropertyDto> dtoList = new ArrayList<>();
-
         for (Property property : propertyList) {
-
             PropertyDto dto = new PropertyDto();
-
             dto.setId(property.getId());
             dto.setTitle(property.getTitle());
             dto.setPrice(property.getPrice());
@@ -130,10 +113,8 @@ public class PropertyServiceImpl implements PropertyService {
             dto.setLikesCount(property.getLikesCount());
             dto.setViewsCount(property.getViewsCount());
             dto.setStatus(property.getStatus());
-
             dtoList.add(dto);
         }
-
         return dtoList;
     }
 

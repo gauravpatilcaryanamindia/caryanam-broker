@@ -59,48 +59,32 @@ public class OwnerPropertyController {
                 return ResponseHandler.generateResponse(MessageConfig.LOCATION_INVALID, HttpStatus.BAD_REQUEST, null);
             }
         }
-
         if (propertyDto.getCity() == null || propertyDto.getCity().trim().isEmpty()) {
             return ResponseHandler.generateResponse(MessageConfig.CITY_IS_REQUIRED, HttpStatus.BAD_REQUEST, null);
         }
-
         if (propertyDto.getAddress() == null || propertyDto.getAddress().trim().isEmpty()) {
             return ResponseHandler.generateResponse(MessageConfig.ADDRESS_IS_REQUIRED, HttpStatus.BAD_REQUEST, null);
         }
-
         if (propertyDto.getState() == null || propertyDto.getState().trim().isEmpty()) {
             return ResponseHandler.generateResponse(MessageConfig.STATE_IS_REQUIRED , HttpStatus.BAD_REQUEST, null);
         }
-
         String pincode = propertyDto.getPincode();
-
-
         if (pincode == null || pincode.trim().isEmpty()) {
             return ResponseHandler.generateResponse(MessageConfig.INVALID_PINCODE, HttpStatus.BAD_REQUEST, null);
         }
-
         pincode = pincode.trim();
-
         if (!pincode.matches("[1-9][0-9]{5}")) {
             return ResponseHandler.generateResponse(MessageConfig.INVALID_PINCODE, HttpStatus.BAD_REQUEST, null);
         }
         if (propertyDto.getDescription() == null || propertyDto.getDescription().trim().isEmpty()) {
             return ResponseHandler.generateResponse(MessageConfig.DESCRIPTION_REQUIRED, HttpStatus.BAD_REQUEST, null);
         }
-        if (propertyDto.getPropertyType() == null) {
-            return ResponseHandler.generateResponse(MessageConfig.PROPERTY_TYPE_REQUIRED, HttpStatus.BAD_REQUEST, null);
+        if (propertyDto.getPropertyType() == null && propertyDto.getPgType() == null) {
+            return ResponseHandler.generateResponse("Either PropertyType or PgType is required", HttpStatus.BAD_REQUEST, null);
         }
-        if (propertyDto.getPropertyType() == PropertyType.ALL) {
-            return ResponseHandler.generateResponse(MessageConfig.PROPERTY_TYPE_INVALID, HttpStatus.BAD_REQUEST, null);
+        if (propertyDto.getPropertyType() != null && propertyDto.getPropertyType() == PropertyType.ALL) {return ResponseHandler.generateResponse(MessageConfig.PROPERTY_TYPE_INVALID, HttpStatus.BAD_REQUEST, null);
         }
-        if(propertyDto.getPgType()== null){
-            return ResponseHandler.generateResponse(MessageConfig.PG_TYPE_REQUIRED, HttpStatus.BAD_REQUEST, null);
-        }
-        if(propertyDto.getPgType()== PgType.ALL){
-            return ResponseHandler.generateResponse(MessageConfig.PG_TYPE_INVALID, HttpStatus.BAD_REQUEST, null);
-
-        }
-
+        if (propertyDto.getPgType() != null && propertyDto.getPgType() == PgType.ALL) {return ResponseHandler.generateResponse(MessageConfig.PG_TYPE_INVALID, HttpStatus.BAD_REQUEST, null);}
         if (propertyDto.getBhkType() == null) {
             return ResponseHandler.generateResponse(MessageConfig.BHK_REQUIRED, HttpStatus.BAD_REQUEST, null);
         }
@@ -114,7 +98,6 @@ public class OwnerPropertyController {
         if (firstDigit < '6' || firstDigit > '9') {
             return ResponseHandler.generateResponse(MessageConfig.MOBILE_INVALID_START, HttpStatus.BAD_REQUEST, null);
         }
-
         PropertyDto response = propertyService.addProperty(propertyDto, ownerId);
         if (response == null) {
             return ResponseHandler.generateResponse(MessageConfig.PROPERTY_LIMIT_EXCEEDED, HttpStatus.BAD_REQUEST, null);
@@ -179,7 +162,7 @@ public class OwnerPropertyController {
         return ResponseHandler.generateResponse(response, HttpStatus.OK, null);
     }
 
-    @PostMapping("/buyPremiumByAdminId/{ownerId}")
+    @PostMapping("/buyPremiumByOwner/{ownerId}")
     public ResponseEntity<Object> buyPremium(@PathVariable Long ownerId) {
         PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
         if (owner == null) {

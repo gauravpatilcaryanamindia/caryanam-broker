@@ -58,18 +58,6 @@ public class UserController {
         return ResponseEntity.ok(propertyService.getAllProperties(userId));
     }
 
-    @PostMapping("/approveUserPremium/{userId}")
-    public ResponseEntity<?> approveUser(@PathVariable Long userId) {
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) {
-            return ResponseEntity.badRequest().body("User not found");
-        }
-        user.setPremiumStatus("APPROVED");
-        user.setPremiumActive(true);
-        userRepository.save(user);
-        return ResponseEntity.ok("User premium approved");
-    }
-
     @PostMapping("/filter-properties/{userId}")
     public ResponseEntity<Object> filterProperties(@RequestBody PropertyFilterDto dto, @PathVariable Long userId) {
         List<PropertyDto> data = propertyService.filterProperties(dto, userId);

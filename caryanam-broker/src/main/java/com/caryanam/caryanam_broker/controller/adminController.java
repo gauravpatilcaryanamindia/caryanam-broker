@@ -43,9 +43,7 @@ public class adminController {
     }
 
     @PostMapping("/approvePremium")
-    public ResponseEntity<String> approvePremium(@RequestParam String type,
-                                                 @RequestParam Long id) {
-
+    public ResponseEntity<String> approvePremium(@RequestParam String type, @RequestParam Long id) {
         if (type.equalsIgnoreCase("USER")) {
             User user = userRepository.findById(id).orElse(null);
             if (user == null) {
@@ -68,5 +66,17 @@ public class adminController {
             return ResponseEntity.ok("Owner premium approved");
         }
         return ResponseEntity.badRequest().body("Invalid type");
+    }
+
+    @PostMapping("/approveUserPremium/{userId}")
+    public ResponseEntity<?> approveUser(@PathVariable Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+        user.setPremiumStatus("APPROVED");
+        user.setPremiumActive(true);
+        userRepository.save(user);
+        return ResponseEntity.ok("User premium approved");
     }
 }
