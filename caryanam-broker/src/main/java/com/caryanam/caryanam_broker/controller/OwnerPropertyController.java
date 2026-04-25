@@ -164,16 +164,19 @@ public class OwnerPropertyController {
 
     @PostMapping("/buyPremiumByOwner/{ownerId}")
     public ResponseEntity<Object> buyPremium(@PathVariable Long ownerId) {
+        if (ownerId == null || ownerId <= 0) {
+            return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
+        }
         PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
         if (owner == null) {
-            return ResponseHandler.generateResponse("Owner not found", HttpStatus.BAD_REQUEST, null);
+            return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
         if ("APPROVED".equalsIgnoreCase(owner.getPremiumStatus())) {
             owner.setPremiumStatus("NONE");
             owner.setPremiumActive(false);
         }
         if ("PENDING".equalsIgnoreCase(owner.getPremiumStatus())) {
-            return ResponseHandler.generateResponse("Payment already in process", HttpStatus.BAD_REQUEST, null);
+            return ResponseHandler.generateResponse(MessageConfig.PAYMENT_ALREADY_IN_PROCESS, HttpStatus.BAD_REQUEST, null);
         }
         owner.setPremiumStatus("PENDING");
         owner.setPremiumActive(false);
@@ -181,10 +184,9 @@ public class OwnerPropertyController {
         propertyOwnerRepository.save(owner);
         String qrUrl = "http://localhost:8080/qr/payment.png";
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "Scan QR & complete payment");
+        response.put("message", MessageConfig.SCAN_QR);
         response.put("qrCode", qrUrl);
         response.put("status", "PENDING");
-        return ResponseHandler.generateResponse("Payment initiated", HttpStatus.OK, response);
+        return ResponseHandler.generateResponse(MessageConfig.PAYMENT_INITIATED, HttpStatus.OK, response);
     }
-
 }

@@ -54,5 +54,5 @@ public class PropertyOwner {
     private boolean premiumActive = false;
     @Column(nullable = false)
     private String premiumStatus = "NONE";
-
+    private String isActive;
 }

@@ -167,4 +167,61 @@ public class AuthServiceImpl implements AuthService {
         return tokenBlacklist.contains(token);
     }
 
+    public Object updateUser(Long id, RegisterRequestDTO dto) {
+        User user = userRepository.findById(id).orElse(null);
+        if (user == null) return null;
+        if (dto.getFullName() != null) user.setFullName(dto.getFullName());
+        if (dto.getMobileNumber() != null) user.setMobileNumber(dto.getMobileNumber());
+        if (dto.getEmail() != null) user.setEmail(dto.getEmail());
+        if (dto.getPassword() != null) user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        userRepository.save(user);
+        return user;
+    }
+
+    public Object updateOwner(Long id, RegisterRequestDTO dto) {
+        PropertyOwner propertyOwner = propertyOwerRepository.findById(id).orElse(null);
+        if (propertyOwner == null) return null;
+        if (dto.getFullName() != null) propertyOwner.setFullName(dto.getFullName());
+        if (dto.getMobileNumber() != null) propertyOwner.setMobileNumber(dto.getMobileNumber());
+        if (dto.getEmail() != null) propertyOwner.setEmail(dto.getEmail());
+        if (dto.getPassword() != null) propertyOwner.setPassword(passwordEncoder.encode(dto.getPassword()));
+        propertyOwerRepository.save(propertyOwner);
+        return propertyOwner;
+    }
+
+    public Object updateAdmin(Long id, RegisterRequestDTO dto) {
+        Admin admin = adminRepository.findById(id).orElse(null);
+        if (admin == null) return null;
+        if (dto.getFullName() != null) admin.setFullName(dto.getFullName());
+        if (dto.getMobileNumber() != null) admin.setMobileNumber(dto.getMobileNumber());
+        if (dto.getEmail() != null) admin.setEmail(dto.getEmail());
+        if (dto.getPassword() != null) admin.setPassword(passwordEncoder.encode(dto.getPassword()));
+        adminRepository.save(admin);
+        return admin;
+    }
+
+    public boolean deactivateUser(Long id) {
+        User user = userRepository.findById(id).orElse(null);
+        if (user == null) return false;
+        user.setIsActive("false");
+        userRepository.save(user);
+        return true;
+    }
+
+    public boolean deactivateOwner(Long id) {
+        PropertyOwner propertyOwner = propertyOwerRepository.findById(id).orElse(null);
+        if (propertyOwner == null) return false;
+        propertyOwner.setIsActive("false");
+        propertyOwerRepository.save(propertyOwner);
+        return true;
+    }
+
+    public boolean deactivateAdmin(Long id) {
+        Admin admin = adminRepository.findById(id).orElse(null);
+        if (admin == null) return false;
+        admin.setIsActive("false");
+        adminRepository.save(admin);
+        return true;
+    }
+
 }

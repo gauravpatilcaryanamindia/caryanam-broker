@@ -25,5 +25,10 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
 
     List<Property> findByPriceLessThanEqual(Double maxPrice);
 
+    List<Property> findByPropertyOwner_OwnerId(Long ownerId);
 
-}
+    // All properties by city
+    List<Property> findByCityIgnoreCase(String city);
+
+    // All properties by city + location
+    List<Property> findByCityIgnoreCaseAndAddressIgnoreCase(String city, String address);}

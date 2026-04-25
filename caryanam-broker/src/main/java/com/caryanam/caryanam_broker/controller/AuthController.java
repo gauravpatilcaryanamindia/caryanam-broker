@@ -2,6 +2,7 @@ package com.caryanam.caryanam_broker.controller;
 
 
 import com.caryanam.caryanam_broker.dto.*;
+import com.caryanam.caryanam_broker.messageconfig.MessageConfig;
 import com.caryanam.caryanam_broker.service.AuthService;
 
 import lombok.RequiredArgsConstructor;
@@ -116,22 +117,120 @@ public class AuthController {
             return ResponseEntity.badRequest().body(new LoginResponseDTO(400, "Password is required", null));}
         if (request.getPassword().length() < 6) {
             return ResponseEntity.badRequest().body(new LoginResponseDTO(400, "Password must be at least 6 characters", null));}
-
         request.setEmail(request.getEmail().toLowerCase().trim());
         String token = authService.login(request);
-        return ResponseEntity.ok(
-                new LoginResponseDTO(200, "Login Successful", token));
+        return ResponseEntity.ok(new LoginResponseDTO(200, "Login Successful", token));
     }
 
-    // LOGOUT USER / ADMIN
     @PostMapping("/logout")
-    public ResponseEntity<ResponseDto<String>> logout(
-            @RequestHeader(value = "Authorization", required = false) String token) {
-
+    public ResponseEntity<ResponseDto<String>> logout(@RequestHeader(value = "Authorization", required = false) String token) {
         if (token == null || token.isEmpty()) {
             return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Authorization token is missing", null));}
-
         authService.logout(token);
         return ResponseEntity.ok(new ResponseDto<>(200, "Logged out successfully", null));
+    }
+
+    @PutMapping("/update/user/{id}")
+    public ResponseEntity<ResponseDto<?>> updateUser(@PathVariable Long id, @RequestBody RegisterRequestDTO dto) {
+        if (id == null || id <= 0) {return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.INVALID_ID, null));
+        }
+        if (dto.getFullName() != null && !dto.getFullName().matches("^[A-Za-z ]+$")) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.NAME_INVALID, null));
+        }
+        if (dto.getMobileNumber() != null && !dto.getMobileNumber().matches("\\d{10}")) {return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.MOBILE_INVALID, null));
+        }
+        if (dto.getEmail() != null && !dto.getEmail().matches("^[A-Za-z0-9._%+-]+@gmail\\.com$")) {return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.EMAIL_INVALID, null));
+        }
+        if (dto.getPassword() != null && dto.getPassword().length() < 6) {return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.PASSWORD_INVALID, null));
+        }
+        Object res = authService.updateUser(id, dto);
+        if (res == null) {return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.USER_NOT_FOUND, null));
+        }
+        return ResponseEntity.ok(new ResponseDto<>(200, MessageConfig.USER_UPDATED, res));
+    }
+
+    @PutMapping("/update/admin/{id}")
+    public ResponseEntity<ResponseDto<?>> updateAdmin(@PathVariable Long id, @RequestBody RegisterRequestDTO dto) {
+        if (id == null || id <= 0) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.INVALID_ID, null));
+        }
+        if (dto.getFullName() != null &&
+                !dto.getFullName().matches("^[A-Za-z ]+$")) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.NAME_INVALID, null));
+        }
+        if (dto.getMobileNumber() != null && !dto.getMobileNumber().matches("\\d{10}")) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.MOBILE_INVALID, null));
+        }
+        if (dto.getEmail() != null && !dto.getEmail().matches("^[A-Za-z0-9._%+-]+@gmail\\.com$")) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.EMAIL_INVALID, null));
+        }
+        if (dto.getPassword() != null && dto.getPassword().length() < 6) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.PASSWORD_INVALID, null));
+        }
+        Object res = authService.updateAdmin(id, dto);
+        if (res == null) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.ADMIN_NOT_FOUND, null));
+        }
+        return ResponseEntity.ok(new ResponseDto<>(200, MessageConfig.ADMIN_UPDATED, res));
+    }
+
+    @PutMapping("/update/owner/{id}")
+    public ResponseEntity<ResponseDto<?>> updateOwner(@PathVariable Long id, @RequestBody RegisterRequestDTO dto) {
+        if (id == null || id <= 0) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.INVALID_ID, null));
+        }
+        if (dto.getFullName() != null && !dto.getFullName().matches("^[A-Za-z ]+$")) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.NAME_INVALID, null));
+        }
+        if (dto.getMobileNumber() != null && !dto.getMobileNumber().matches("\\d{10}")) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.MOBILE_INVALID, null));
+        }
+        if (dto.getEmail() != null && !dto.getEmail().matches("^[A-Za-z0-9._%+-]+@gmail\\.com$")) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.EMAIL_INVALID, null));
+        }
+        if (dto.getPassword() != null && dto.getPassword().length() < 6) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.PASSWORD_INVALID, null));
+        }
+        Object res = authService.updateOwner(id, dto);
+        if (res == null) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.OWNER_NOT_FOUND, null));
+        }
+        return ResponseEntity.ok(new ResponseDto<>(200, MessageConfig.OWNER_UPDATED, res));
+    }
+
+    @PutMapping("/deactivate/user/{id}")
+    public ResponseEntity<?> deactivateUser(@PathVariable Long id) {
+        if (id == null || id <= 0) {
+            return ResponseEntity.badRequest().body("Invalid ID");
+        }
+        boolean result = authService.deactivateOwner(id);
+        if (!result) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+        return ResponseEntity.ok("User deactivated successfully");
+    }
+
+    @PutMapping("/deactivate/owner/{id}")
+    public ResponseEntity<?> deactivateOwner(@PathVariable Long id) {
+        if (id == null || id <= 0) {
+            return ResponseEntity.badRequest().body("Invalid ID");
+        }
+        boolean result = authService.deactivateAdmin(id);
+        if (!result) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+        return ResponseEntity.ok("User deactivated successfully");
+    }
+
+    @PutMapping("/deactivate/admin/{id}")
+    public ResponseEntity<?> deactivateAdmin(@PathVariable Long id) {
+        if (id == null || id <= 0) {
+            return ResponseEntity.badRequest().body("Invalid ID");
+        }
+        boolean result = authService.deactivateUser(id);
+        if (!result) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+        return ResponseEntity.ok("User deactivated successfully");
     }
 }

@@ -313,12 +313,9 @@ public class PropertyServiceImpl implements PropertyService {
                 filteredList.add(property);
             }
         }
-
-        // sorting same as before
         if (filterDto.getSortBy() != null) {
             for (int i = 0; i < filteredList.size(); i++) {
                 for (int j = i + 1; j < filteredList.size(); j++) {
-
                     if (filterDto.getSortBy().equalsIgnoreCase(AppConstants.ASC)) {
                         if (filteredList.get(i).getPrice() > filteredList.get(j).getPrice()) {
                             Property temp = filteredList.get(i);
@@ -326,7 +323,6 @@ public class PropertyServiceImpl implements PropertyService {
                             filteredList.set(j, temp);
                         }
                     }
-
                     if (filterDto.getSortBy().equalsIgnoreCase(AppConstants.DESC)) {
                         if (filteredList.get(i).getPrice() < filteredList.get(j).getPrice()) {
                             Property temp = filteredList.get(i);
@@ -339,10 +335,8 @@ public class PropertyServiceImpl implements PropertyService {
         }
 
         List<PropertyDto> dtoList = new ArrayList<>();
-
         for (Property property : filteredList) {
             PropertyDto dto = new PropertyDto();
-
             dto.setId(property.getId());
             dto.setTitle(property.getTitle());
             dto.setPrice(property.getPrice());
@@ -357,10 +351,37 @@ public class PropertyServiceImpl implements PropertyService {
             dto.setLikesCount(property.getLikesCount());
             dto.setViewsCount(property.getViewsCount());
             dto.setStatus(property.getStatus());
-
             dtoList.add(dto);
         }
-
         return dtoList;
+    }
+
+    public List<PropertyDto> getPropertiesByCityAndAddress(String city, String address) {
+        List<Property> list;
+        if (address == null || address.isEmpty()) {
+            list = propertyRepository.findByCityIgnoreCase(city);
+        } else {
+            list = propertyRepository
+                    .findByCityIgnoreCaseAndAddressIgnoreCase(city, address);
+        }
+        List<PropertyDto> dtoList = new ArrayList<>();
+        for (Property property : list) {
+            PropertyDto dto = new PropertyDto();
+            dto.setId(property.getId());
+            dto.setTitle(property.getTitle());
+            dto.setPrice(property.getPrice());
+            dto.setAddress(property.getAddress());
+            dto.setCity(property.getCity());
+            dtoList.add(dto);
+        }
+        return dtoList;
+    }
+
+    public List<String> getAddressesByCity(String city) {
+        List<Property> list = propertyRepository.findByCityIgnoreCase(city);
+        return list.stream()
+                .map(Property::getAddress)
+                .distinct()
+                .toList();
     }
 }

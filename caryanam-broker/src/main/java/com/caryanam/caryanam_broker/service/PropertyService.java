@@ -21,6 +21,8 @@ public interface PropertyService {
     String uploadPropertyImages(Long propertyId, MultipartFile[] files);
 
     List<PropertyDto> filterProperties(PropertyFilterDto filterDto, Long userId);
+    
+    List<String> getAddressesByCity(String city);
 
-
+    Object getPropertiesByCityAndAddress(String city, String address);
 }

@@ -26,34 +26,31 @@ public class UserController {
     private PropertyService propertyService;
 
     @PostMapping("/buyPremium/{userId}")
-    public ResponseEntity<String> buyPremium(@PathVariable Long userId) {
+    public ResponseEntity<Object> buyPremium(@PathVariable Long userId) {
         User user = userRepository.findById(userId).orElse(null);
-        if (user == null) {
-            return ResponseEntity.badRequest().body("User not found");
+        if(user == null) {
+            return ResponseHandler.generateResponse(MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
-        if ("APPROVED".equalsIgnoreCase(user.getPremiumStatus())) {
-            user.setPremiumStatus("NONE");
-            user.setPremiumActive(false);
+        if ("APPROVED".equalsIgnoreCase(user.getPremiumStatus())) {user.setPremiumStatus("NONE");user.setPremiumActive(false);
         }
         if ("PENDING".equalsIgnoreCase(user.getPremiumStatus())) {
-            return ResponseEntity.badRequest().body("Payment already in process");
+            return ResponseHandler.generateResponse(MessageConfig.PAYMENT_ALREADY_IN_PROCESS, HttpStatus.BAD_REQUEST, null);
         }
         user.setPremiumStatus("PENDING");
         user.setPremiumActive(false);
         user.setPremiumCount(user.getPremiumCount() + 1);
         userRepository.save(user);
-
-        return ResponseEntity.ok("User premium request sent");
+        return ResponseHandler.generateResponse(MessageConfig.PREMIUM_REQUEST_SENT, HttpStatus.OK, null);
     }
 
     @GetMapping("/properties/{userId}")
     public ResponseEntity<?> getProperties(@PathVariable Long userId) {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
-            return ResponseEntity.badRequest().body("User not found");
+            return ResponseHandler.generateResponse(MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
         if (!user.isPremiumActive()) {
-            return ResponseEntity.badRequest().body("Premium not active");
+            return ResponseHandler.generateResponse(MessageConfig.PREMIUM_NOT_ACTIVE, HttpStatus.BAD_REQUEST, null);
         }
         return ResponseEntity.ok(propertyService.getAllProperties(userId));
     }
@@ -64,5 +61,14 @@ public class UserController {
         return ResponseHandler.generateResponse(MessageConfig.PROPERTY_FILTERED, HttpStatus.OK, data);
     }
 
-
+    @GetMapping("/properties-by-city")
+    public ResponseEntity<?> getProperties(@RequestParam String city, @RequestParam(required = false) String address) {
+        if (city == null || city.trim().isEmpty()) {
+            return ResponseHandler.generateResponse(MessageConfig.CITY_REQUIRED, HttpStatus.BAD_REQUEST, null);
+        }
+        if (address == null) {
+            List<String> addresses = propertyService.getAddressesByCity(city);
+            return ResponseEntity.ok(addresses);
+        }return ResponseEntity.ok(propertyService.getPropertiesByCityAndAddress(city, address));
+    }
 }

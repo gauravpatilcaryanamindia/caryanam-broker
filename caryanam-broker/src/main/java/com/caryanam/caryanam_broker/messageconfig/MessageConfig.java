@@ -39,6 +39,26 @@ public class MessageConfig {
     public static final String CITY_IS_REQUIRED="City is required";
     public static final String PG_TYPE_REQUIRED="Pg not found";
     public static final String PG_TYPE_INVALID="Invalid PG Type";
+    public static final String USER_NOT_FOUND = "User not found";
+    public static final String OWNER_NOT_FOUND = "Owner not found";
 
+    public static final String NAME_INVALID = "Full name must contain only letters";
+    public static final String MOBILE_INVALID = "Mobile must be 10 digits";
+    public static final String EMAIL_INVALID = "Only Gmail allowed";
+    public static final String PASSWORD_INVALID = "Password must be at least 6 characters";
 
+    public static final String USER_UPDATED = "User updated successfully";
+    public static final String ADMIN_UPDATED = "Admin updated successfully";
+    public static final String OWNER_UPDATED = "Owner updated successfully";
+
+    public static final String CITY_REQUIRED = "City is required";
+    public static final String PAYMENT_ALREADY_IN_PROCESS = "Payment already in process";
+    public static final String PREMIUM_REQUEST_SENT = "User premium request sent";
+    public static final String PREMIUM_NOT_ACTIVE = "Premium not active";
+    public static final String OWNER_PREMIUM_APPROVED = "Owner premium approved successfully";
+    public static final String USER_PREMIUM_APPROVED = "User premium approved successfully";
+    public static final String OWNER_PREMIUM_REJECTED = "Owner premium rejected successfully";
+    public static final String USER_PREMIUM_REJECTED = "User premium rejected successfully";
+    public static final String PAYMENT_INITIATED = "Payment initiated";
+    public static final String SCAN_QR = "Scan QR & complete payment";
 }

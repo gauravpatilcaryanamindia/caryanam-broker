@@ -33,4 +33,5 @@ public class User {
 
     @Column(nullable = false)
     private String premiumStatus = "NONE";
+    private String isActive;
 }

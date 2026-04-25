@@ -17,4 +17,16 @@ public interface AuthService {
     public String login(LoginRequestDTO dto);
 
     void logout(String token);
+
+    Object updateUser(Long id, RegisterRequestDTO dto);
+
+    Object updateAdmin(Long id, RegisterRequestDTO dto);
+
+    Object updateOwner(Long id, RegisterRequestDTO dto);
+
+    boolean deactivateOwner(Long id);
+
+    boolean deactivateAdmin(Long id);
+
+    boolean deactivateUser(Long id);
 }

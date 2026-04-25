@@ -67,4 +67,5 @@ public class Admin {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+    private String isActive;
 }
