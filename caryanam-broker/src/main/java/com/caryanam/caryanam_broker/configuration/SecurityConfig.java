@@ -48,6 +48,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/user/buyPremium/**").permitAll()
+                                .requestMatchers("/api/auth/**","/api/auth/register").permitAll()
+                        .requestMatchers("/chat/**","/socket.io/**").permitAll()
                         .requestMatchers("/api/owner/buyPremiumByOwner/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
