@@ -1,7 +1,8 @@
 package com.caryanam.caryanam_broker.configuration;
 
+import com.caryanam.caryanam_broker.repository.PropertyOwnerRepository;
 import com.caryanam.caryanam_broker.repository.UserRepository;
-import com.caryanam.caryanam_broker.repository.AdminRepository;
+
 import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.AuthorizationResult;
 
@@ -13,7 +14,7 @@ import org.springframework.context.annotation.Bean;
 public class SocketConfig {
 
     private final UserRepository userRepo;
-    private final AdminRepository adminRepo;
+    private final PropertyOwnerRepository ownerRepo;
 
     @Bean
     public SocketIOServer socketIOServer() {
@@ -30,15 +31,15 @@ public class SocketConfig {
         config.setAuthorizationListener(data -> {
 
             String userIdStr = data.getSingleUrlParam("userId");
-            String adminIdStr = data.getSingleUrlParam("adminId");
+            String ownerIdStr = data.getSingleUrlParam("ownerId");
 
 
-            if (userIdStr != null && adminIdStr != null) {
-                System.out.println(" BOTH userId & adminId present");
+            if (userIdStr != null && ownerIdStr != null) {
+                System.out.println(" BOTH userId & ownerId present");
                 return AuthorizationResult.FAILED_AUTHORIZATION;
             }
 
-            if (userIdStr == null && adminIdStr == null) {
+            if (userIdStr == null && ownerIdStr == null) {
                 System.out.println(" No ID provided");
                 return AuthorizationResult.FAILED_AUTHORIZATION;
             }
@@ -62,19 +63,19 @@ public class SocketConfig {
             }
 
 
-            if (adminIdStr != null) {
+            if (ownerIdStr != null) {
                 try {
-                    Long adminId = Long.valueOf(adminIdStr);
+                    Long ownerId = Long.valueOf(ownerIdStr);
 
-                    if (adminRepo.existsById(adminId)) {
-                        System.out.println(" Connected ADMIN: " + adminId);
+                    if (ownerRepo.existsById(ownerId)) {
+                        System.out.println(" Connected PROPERTY OWNER: " + ownerId);
                         return AuthorizationResult.SUCCESSFUL_AUTHORIZATION;
                     }
 
-                    System.out.println("ADMIN not found: " + adminId);
+                    System.out.println("OWNER not found: " + ownerId);
 
                 } catch (Exception e) {
-                    System.out.println(" Invalid ADMIN ID");
+                    System.out.println(" Invalid OWNER ID");
                 }
                 return AuthorizationResult.FAILED_AUTHORIZATION;
             }

@@ -28,12 +28,12 @@ public class SocketModule {
 
         server.addConnectListener(client -> {
             String userId = client.getHandshakeData().getSingleUrlParam("userId");
-            String adminId = client.getHandshakeData().getSingleUrlParam("adminId");
+            String ownerId = client.getHandshakeData().getSingleUrlParam("ownerId");
 
             if (userId != null) {
                 System.out.println("USER Connected: " + userId);
-            } else if (adminId != null) {
-                System.out.println("ADMIN Connected: " + adminId);
+            } else if (ownerId != null) {
+                System.out.println("PROPERTY OWNER Connected: " + ownerId);
             }
 
             System.out.println("Session ID: " + client.getSessionId());

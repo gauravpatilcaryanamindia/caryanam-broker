@@ -35,78 +35,64 @@ public class SecurityConfig {
     @Autowired
     private PremiumCheckFilter premiumCheckFilter;
 
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//
-//        http
-//
-//                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-//                .csrf(csrf -> csrf.disable())
-//                .authorizeHttpRequests(auth -> auth
-//
-//                        .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
-//                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-//                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-//                        .requestMatchers("/sockettest.html", "/**/*.html", "/**/*.js", "/**/*.css").permitAll()
-//                        .requestMatchers("/api/auth/**","/api/auth/register").permitAll()
-//                        .requestMatchers("/chat/**","/socket.io/**").permitAll()
-//                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-//                        .requestMatchers("/api/admin/**").hasRole("USER")
-//
-//
-//
-//
-//                        .anyRequest().authenticated()
-//                )
-//
-//
-//                .sessionManagement(session ->
-//                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//                )
-//
-//               .authenticationProvider(authenticationProvider())
-//               .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-//
-//        return http.build();
-//    }
-//
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
+
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
 
                 .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers("/api/auth/**").permitAll()
-
-                        .requestMatchers("/api/user/buyPremium/**").permitAll()
-                        .requestMatchers("/api/owner/buyPremiumByOwner/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html").permitAll()
-
+                        .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        .requestMatchers("/api/user/**").hasRole("USER")
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/sockettest.html", "/**/*.html", "/**/*.js", "/**/*.css").permitAll()
+                        .requestMatchers("/api/auth/**","/api/auth/register").permitAll()
+                        .requestMatchers("/chat/**","/socket.io/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/owner/**").hasRole("PROPERTY_OWNER")
+                        .requestMatchers("/api/admin/**").hasRole("USER")
+
+
+
 
                         .anyRequest().authenticated()
                 )
+
 
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                .authenticationProvider(authenticationProvider())
+               .authenticationProvider(authenticationProvider())
+               .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
 
-                // 🔥 premium check only AFTER JWT
-                .addFilterAfter(premiumCheckFilter, JwtFilter.class);
+//    @Bean
+//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+//
+//        http
+//                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+//                .csrf(csrf -> csrf.disable())
+//                .authorizeHttpRequests(auth -> auth
+//
+//                        // 🔓 EVERYTHING OPEN
+//                        .anyRequest().permitAll()
+//                )
+//
+//                .sessionManagement(session ->
+//                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//                )
+//
+//                .authenticationProvider(authenticationProvider())
+//                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+//
+//        return http.build();
+//    }
+
 
         return http.build();
     }
