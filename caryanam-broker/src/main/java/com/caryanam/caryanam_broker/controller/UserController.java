@@ -7,12 +7,15 @@ import com.caryanam.caryanam_broker.entity.User;
 import com.caryanam.caryanam_broker.messageconfig.MessageConfig;
 import com.caryanam.caryanam_broker.repository.UserRepository;
 import com.caryanam.caryanam_broker.service.PropertyService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -44,15 +47,21 @@ public class UserController {
     }
 
     @GetMapping("/properties/{userId}")
-    public ResponseEntity<?> getProperties(@PathVariable Long userId) {
+    public ResponseEntity<Object> getProperties(
+            @PathVariable Long userId, HttpServletRequest request) {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
             return ResponseHandler.generateResponse(MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
+        List<PropertyDto> data = propertyService.getAllProperties(userId, request);
         if (!user.isPremiumActive()) {
-            return ResponseHandler.generateResponse(MessageConfig.PREMIUM_NOT_ACTIVE, HttpStatus.BAD_REQUEST, null);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", MessageConfig.PREMIUM_REQUIRED);
+            response.put("data", data);
+            return ResponseEntity.ok(response);
         }
-        return ResponseEntity.ok(propertyService.getAllProperties(userId));
+
+        return ResponseEntity.ok(data);
     }
 
     @PostMapping("/filter-properties/{userId}")

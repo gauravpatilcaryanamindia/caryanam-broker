@@ -1,0 +1,51 @@
+package com.caryanam.caryanam_broker.configuration;
+
+
+import com.caryanam.caryanam_broker.entity.User;
+import com.caryanam.caryanam_broker.repository.UserRepository;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+
+@Component
+public class PremiumCheckFilter extends OncePerRequestFilter {
+
+    @Autowired
+    private UserRepository userRepository;
+
+//
+@Override
+protected void doFilterInternal(HttpServletRequest request,
+                                HttpServletResponse response,
+                                FilterChain filterChain)
+        throws ServletException, IOException {
+
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+    if (auth != null && auth.isAuthenticated()
+            && !auth.getPrincipal().equals("anonymousUser")) {
+
+        String email = auth.getName();
+
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        if (user != null) {
+
+            boolean isPremium = "APPROVED".equalsIgnoreCase(user.getPremiumStatus());
+
+            // 🔥 IMPORTANT: just store flag, DON'T BLOCK
+            request.setAttribute("isPremium", isPremium);
+        }
+    }
+
+    filterChain.doFilter(request, response);
+}
+}

@@ -32,6 +32,8 @@ public class SecurityConfig {
 
     @Autowired
     private CustomUserDetailsService userDetailsService;
+    @Autowired
+    private PremiumCheckFilter premiumCheckFilter;
 
 
     @Bean
@@ -41,6 +43,7 @@ public class SecurityConfig {
 
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
+
                 .authorizeHttpRequests(auth -> auth
 
                         .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
@@ -66,8 +69,7 @@ public class SecurityConfig {
                .authenticationProvider(authenticationProvider())
                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
 
 //    @Bean
 //    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -92,6 +94,8 @@ public class SecurityConfig {
 //    }
 
 
+        return http.build();
+    }
     //  Authentication Manager
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
