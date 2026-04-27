@@ -3,10 +3,15 @@ package com.caryanam.caryanam_broker.controller;
 
 import com.caryanam.caryanam_broker.dto.*;
 import com.caryanam.caryanam_broker.messageconfig.MessageConfig;
+import com.caryanam.caryanam_broker.repository.AdminRepository;
+import com.caryanam.caryanam_broker.repository.PropertyOwnerRepository;
+import com.caryanam.caryanam_broker.repository.UserRepository;
 import com.caryanam.caryanam_broker.service.AuthService;
 
 import lombok.RequiredArgsConstructor;
 import com.caryanam.caryanam_broker.enums.Role;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,8 +19,18 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
+    @Autowired
+    private AuthService authService;
 
-    private final AuthService authService;
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private AdminRepository adminRepository;
+
+    @Autowired
+    private PropertyOwnerRepository ownerRepository;
+
 
     //  USER REGISTER
     @PostMapping("/register/user")
@@ -23,22 +38,43 @@ public class AuthController {
             @RequestBody RegisterRequestDTO dto) {
 
         if (dto == null) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Request body is missing", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Request body is missing", null));
+        }
         if (dto.getFullName() == null || dto.getFullName().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Full name is required", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Full name is required", null));
+        }
         if (!dto.getFullName().matches("^[A-Za-z ]+$")) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Full name must contain only letters and spaces", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Full name must contain only letters and spaces", null));
+        }
         if (dto.getMobileNumber() == null || !dto.getMobileNumber().matches("\\d{10}")) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number must be 10 digits", null));}
-        if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Email is required", null));}
-        if (!dto.getEmail().matches("^[A-Za-z0-9._%+-]+@gmail\\.com$")) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Only Gmail format allowed (example: user@gmail.com)", null));}
-        if (dto.getPassword() == null || dto.getPassword().length() < 6) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Password must be at least 6 characters", null));}
-        if (dto.getRole() == null) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Role is required", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number must be 10 digits", null));
+        }
+        if (dto.getMobileNumber() == null ||
+                !dto.getMobileNumber().matches("^[6-9]\\d{9}$")) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number must be Starts with 6, 7, 8, or 9", null));
+        }
+        if (dto.getMobileNumber() == null || dto.getMobileNumber().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number is required", null));
+        }
+        if (userRepository.existsByMobileNumber(dto.getMobileNumber())) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number already exists", null));
+        }
 
+        if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Email is required", null));
+        }
+        if (!dto.getEmail().matches("^[A-Za-z0-9._%+-]+@gmail\\.com$")) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Only Gmail format allowed (example: user@gmail.com)", null));
+        }
+        if (dto.getPassword() == null || dto.getPassword().length() < 6) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Password must be at least 6 characters", null));
+        }
+        if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Password is required", null));
+        }
+        if (dto.getRole() == null) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Role is required", null));
+        }
         dto.setEmail(dto.getEmail().toLowerCase().trim());
         RegisterResponseDTO response = authService.registerUser(dto);
         return ResponseEntity.status(201).body(new ResponseDto<>(201, "User Registered Successfully", response));
@@ -50,27 +86,51 @@ public class AuthController {
             @RequestBody RegisterRequestDTO dto) {
 
         if (dto == null) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Request body is missing", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Request body is missing", null));
+        }
         if (dto.getFullName() == null || dto.getFullName().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Full name is required", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Full name is required", null));
+        }
         if (!dto.getFullName().matches("^[a-zA-Z\\s.-]+$")) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Full name contains invalid characters", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Full name contains invalid characters", null));
+        }
         if (dto.getMobileNumber() == null || !dto.getMobileNumber().matches("\\d{10}")) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number must be 10 digits", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number must be 10 digits", null));
+        }
+        if (dto.getMobileNumber() == null ||
+                !dto.getMobileNumber().matches("^[6-9]\\d{9}$")) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number must be Starts with 6, 7, 8, or 9", null));
+        }
+        if (dto.getMobileNumber() == null || dto.getMobileNumber().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number is required", null));
+        }
+        if (adminRepository.existsByMobileNumber(dto.getMobileNumber())) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number already exists", null));
+        }
+
         if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Email is required", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Email is required", null));
+        }
         if (!dto.getEmail().matches("^[A-Za-z0-9._%+-]+@gmail\\.com$")) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Only Gmail format allowed", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Only Gmail format allowed", null));
+        }
         if (dto.getPassword() == null || dto.getPassword().length() < 6) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Password must be at least 6 characters", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Password must be at least 6 characters", null));
+        }
+        if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Password is required", null));
+        }
         if (dto.getRole() == null) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Role is required", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Role is required", null));
+        }
         if (dto.getRole() != Role.ADMIN) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Only ADMIN role allowed", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Only ADMIN role allowed", null));
+        }
 
         dto.setEmail(dto.getEmail().toLowerCase().trim());
         RegisterResponseDTO response = authService.registerAdmin(dto);
-        return ResponseEntity.status(201).body(new ResponseDto<>(201, "Admin Registered Successfully", response));}
+        return ResponseEntity.status(201).body(new ResponseDto<>(201, "Admin Registered Successfully", response));
+    }
 
     //  ADMIN REGISTER
     @PostMapping("/register/POwner")
@@ -78,23 +138,46 @@ public class AuthController {
             @RequestBody RegisterRequestDTO dto) {
 
         if (dto == null) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Request body is missing", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Request body is missing", null));
+        }
         if (dto.getFullName() == null || dto.getFullName().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Full name is required", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Full name is required", null));
+        }
         if (!dto.getFullName().matches("^[a-zA-Z\\s.-]+$")) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Full name contains invalid characters", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Full name contains invalid characters", null));
+        }
         if (dto.getMobileNumber() == null || !dto.getMobileNumber().matches("\\d{10}")) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number must be 10 digits", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number must be 10 digits", null));
+        }
+        if (dto.getMobileNumber() == null ||
+                !dto.getMobileNumber().matches("^[6-9]\\d{9}$")) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number must be Starts with 6, 7, 8, or 9", null));
+        }
+        if (dto.getMobileNumber() == null || dto.getMobileNumber().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number is required", null));
+        }
+        if (ownerRepository.existsByMobileNumber(dto.getMobileNumber())) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number already exists", null));
+        }
+
         if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Email is required", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Email is required", null));
+        }
         if (!dto.getEmail().matches("^[A-Za-z0-9._%+-]+@gmail\\.com$")) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Only Gmail format allowed", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Only Gmail format allowed", null));
+        }
         if (dto.getPassword() == null || dto.getPassword().length() < 6) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Password must be at least 6 characters", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Password must be at least 6 characters", null));
+        }
+        if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Password is required", null));
+        }
         if (dto.getRole() == null) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Role is required", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Role is required", null));
+        }
         if (dto.getRole() != Role.PROPERTY_OWNER) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Only PROPERTY_OWNER role allowed", null));}
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Only PROPERTY_OWNER role allowed", null));
+        }
 
         dto.setEmail(dto.getEmail().toLowerCase().trim());
         RegisterResponseDTO response = authService.registerPropertyOwner(dto);
@@ -108,15 +191,20 @@ public class AuthController {
             @RequestBody LoginRequestDTO request) {
 
         if (request == null) {
-            return ResponseEntity.badRequest().body(new LoginResponseDTO(400, "Request body is missing", null));}
+            return ResponseEntity.badRequest().body(new LoginResponseDTO(400, "Request body is missing", null));
+        }
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(new LoginResponseDTO(400, "Email is required", null));}
+            return ResponseEntity.badRequest().body(new LoginResponseDTO(400, "Email is required", null));
+        }
         if (!request.getEmail().matches("^[A-Za-z0-9._%+-]+@gmail\\.com$")) {
-            return ResponseEntity.badRequest().body(new LoginResponseDTO(400, "Invalid email (only gmail format allowed)", null));}
+            return ResponseEntity.badRequest().body(new LoginResponseDTO(400, "Invalid email (only gmail format allowed)", null));
+        }
         if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(new LoginResponseDTO(400, "Password is required", null));}
+            return ResponseEntity.badRequest().body(new LoginResponseDTO(400, "Password is required", null));
+        }
         if (request.getPassword().length() < 6) {
-            return ResponseEntity.badRequest().body(new LoginResponseDTO(400, "Password must be at least 6 characters", null));}
+            return ResponseEntity.badRequest().body(new LoginResponseDTO(400, "Password must be at least 6 characters", null));
+        }
         request.setEmail(request.getEmail().toLowerCase().trim());
         String token = authService.login(request);
         return ResponseEntity.ok(new LoginResponseDTO(200, "Login Successful", token));
@@ -140,19 +228,24 @@ public class AuthController {
 
     @PutMapping("/update/user/{id}")
     public ResponseEntity<ResponseDto<?>> updateUser(@PathVariable Long id, @RequestBody RegisterRequestDTO dto) {
-        if (id == null || id <= 0) {return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.INVALID_ID, null));
+        if (id == null || id <= 0) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.INVALID_ID, null));
         }
         if (dto.getFullName() != null && !dto.getFullName().matches("^[A-Za-z ]+$")) {
             return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.NAME_INVALID, null));
         }
-        if (dto.getMobileNumber() != null && !dto.getMobileNumber().matches("\\d{10}")) {return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.MOBILE_INVALID, null));
+        if (dto.getMobileNumber() != null && !dto.getMobileNumber().matches("\\d{10}")) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.MOBILE_INVALID, null));
         }
-        if (dto.getEmail() != null && !dto.getEmail().matches("^[A-Za-z0-9._%+-]+@gmail\\.com$")) {return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.EMAIL_INVALID, null));
+        if (dto.getEmail() != null && !dto.getEmail().matches("^[A-Za-z0-9._%+-]+@gmail\\.com$")) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.EMAIL_INVALID, null));
         }
-        if (dto.getPassword() != null && dto.getPassword().length() < 6) {return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.PASSWORD_INVALID, null));
+        if (dto.getPassword() != null && dto.getPassword().length() < 6) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.PASSWORD_INVALID, null));
         }
         Object res = authService.updateUser(id, dto);
-        if (res == null) {return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.USER_NOT_FOUND, null));
+        if (res == null) {
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, MessageConfig.USER_NOT_FOUND, null));
         }
         return ResponseEntity.ok(new ResponseDto<>(200, MessageConfig.USER_UPDATED, res));
     }

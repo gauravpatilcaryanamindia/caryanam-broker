@@ -63,5 +63,6 @@ public class MessageConfig {
     public static final String SCAN_QR = "Scan QR & complete payment";
     public static final String PREMIUM_REQUIRED =
             "🔒 Buy Premium to unlock full property details & images";
-    public static final Object PROPERTY_NOT_ADDED = "Proprty notfounf";
+    public static final String NO_ALPHABETS_ALLOWED ="No alphabets allowed " ;
+    public static final String PROPERTY_NOT_ADDED = "property not added ";
 }

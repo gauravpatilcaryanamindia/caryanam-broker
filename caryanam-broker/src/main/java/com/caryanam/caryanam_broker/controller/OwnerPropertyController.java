@@ -45,8 +45,15 @@ public class OwnerPropertyController {
                 return ResponseHandler.generateResponse(MessageConfig.TITLE_INVALID, HttpStatus.BAD_REQUEST, null);
             }
         }
-        if (propertyDto.getPrice() == null || propertyDto.getPrice() <= 0) {
+        if (propertyDto.getPrice() == null) {
             return ResponseHandler.generateResponse(MessageConfig.PRICE_REQUIRED, HttpStatus.BAD_REQUEST, null);
+        }
+        String priceStr = String.valueOf(propertyDto.getPrice());
+        if (!priceStr.matches("\\d+(\\.\\d+)?")) {
+            return ResponseHandler.generateResponse(MessageConfig.NO_ALPHABETS_ALLOWED, HttpStatus.BAD_REQUEST, null);
+        }
+        if (propertyDto.getPrice() <= 0) {
+            return ResponseHandler.generateResponse(MessageConfig.NO_ALPHABETS_ALLOWED, HttpStatus.BAD_REQUEST, null);
         }
         if (propertyDto.getLocation() == null || propertyDto.getLocation().trim().isEmpty()) {
             return ResponseHandler.generateResponse(MessageConfig.LOCATION_REQUIRED, HttpStatus.BAD_REQUEST, null);

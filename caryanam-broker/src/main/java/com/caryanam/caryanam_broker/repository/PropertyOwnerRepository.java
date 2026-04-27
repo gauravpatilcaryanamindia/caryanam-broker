@@ -13,4 +13,6 @@ public interface PropertyOwnerRepository extends JpaRepository<PropertyOwner, Lo
     Optional<PropertyOwner> findByEmail(String email);
 
     List<PropertyOwner> findByPremiumStatus(String status);
+
+    boolean existsByMobileNumber(String mobileNumber);
 }
