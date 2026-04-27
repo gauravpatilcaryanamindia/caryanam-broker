@@ -1,5 +1,7 @@
+
 package com.caryanam.caryanam_broker.configuration;
 
+import org.apache.catalina.filters.CorsFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,10 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.cors.*;
 
 import java.util.Arrays;
 
@@ -32,123 +31,81 @@ public class SecurityConfig {
 
     @Autowired
     private CustomUserDetailsService userDetailsService;
+
     @Autowired
     private PremiumCheckFilter premiumCheckFilter;
-
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
 
                 .authorizeHttpRequests(auth -> auth
-
-                        .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/user/buyPremium/**").permitAll()
+                        .requestMatchers("/api/owner/buyPremiumByOwner/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/sockettest.html", "/**/*.html", "/**/*.js", "/**/*.css").permitAll()
-                        .requestMatchers("/api/auth/**","/api/auth/register").permitAll()
-                        .requestMatchers("/chat/**","/socket.io/**").permitAll()
+                        .requestMatchers("/api/user/**").hasRole("USER")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/admin/**").hasRole("USER")
-
-
-
+                        .requestMatchers("/api/owner/**").hasRole("PROPERTY_OWNER")
 
                         .anyRequest().authenticated()
                 )
-
 
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-               .authenticationProvider(authenticationProvider())
-               .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
+                .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-
-//    @Bean
-//    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//
-//        http
-//                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-//                .csrf(csrf -> csrf.disable())
-//                .authorizeHttpRequests(auth -> auth
-//
-//                        // 🔓 EVERYTHING OPEN
-//                        .anyRequest().permitAll()
-//                )
-//
-//                .sessionManagement(session ->
-//                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//                )
-//
-//                .authenticationProvider(authenticationProvider())
-//                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-//
-//        return http.build();
-//    }
-
+                .addFilterAfter(premiumCheckFilter, JwtFilter.class);
 
         return http.build();
     }
-    //  Authentication Manager
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    //  Authentication Provider
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider =
                 new DaoAuthenticationProvider(userDetailsService);
 
         provider.setPasswordEncoder(passwordEncoder());
-
         return provider;
     }
 
-    //  Password Encoder
     @Bean
     public PasswordEncoder passwordEncoder() {
-
         return new BCryptPasswordEncoder();
     }
 
-    //  FINAL CORS FIX
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        //  IMPORTANT FIX (handles credentials + avoids CORS issues)
         config.setAllowedOriginPatterns(Arrays.asList("*"));
-
         config.setAllowedMethods(Arrays.asList(
                 "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));
-
         config.setAllowedHeaders(Arrays.asList("*"));
-
         config.setAllowCredentials(true);
-
         config.setExposedHeaders(Arrays.asList("Authorization"));
-
         config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-
-
         source.registerCorsConfiguration("/**", config);
 
         return source;
     }
-
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
@@ -162,6 +119,6 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
 
-        return new CorsFilter(source);
+        return new CorsFilter();
     }
 }
