@@ -1,10 +1,12 @@
 package com.caryanam.caryanam_broker.controller;
 
 import com.caryanam.caryanam_broker.dto.ResponseDto;
+import com.caryanam.caryanam_broker.enums.Role;
 import com.caryanam.caryanam_broker.exception.BadRequestException;
 import com.caryanam.caryanam_broker.exception.InvalidOperationException;
 import com.caryanam.caryanam_broker.repository.AdminRepository;
 import com.caryanam.caryanam_broker.repository.MessageRepository;
+import com.caryanam.caryanam_broker.repository.PropertyOwnerRepository;
 import com.caryanam.caryanam_broker.repository.UserRepository;
 import com.caryanam.caryanam_broker.service.ChatService;
 import com.caryanam.caryanam_broker.socket.*;
@@ -29,33 +31,57 @@ public class ChatController {
     @Autowired
     private  UserRepository userRepository;
     @Autowired
-    private  AdminRepository adminRepository;
+    private PropertyOwnerRepository ownerRepository;
+
     @Autowired
     private MessageRepository messageRepo;
 
 
-    @PostMapping("/send")
-    public ResponseEntity<?> sendMessage(@RequestBody MessageRequestDTO dto) {
 
-        if (dto == null) {throw new InvalidOperationException("Request body is missing");}
-        if (dto.getSenderId() == null || dto.getReceiverId() == null) {
-            throw new InvalidOperationException("SenderId and ReceiverId are required");
-        }
-        if (!"USER".equals(dto.getSenderRole())) {
-            throw new InvalidOperationException("Only USER can send message to ADMIN");
-        }
-        Long userId = dto.getSenderId();
-        Long adminId = dto.getReceiverId();
-        if (!userRepository.existsById(userId)) {
-            throw new InvalidOperationException("User not found with id: " + userId);}
-        if (!adminRepository.existsById(adminId)) {
-            throw new InvalidOperationException("Admin not found with id: " + adminId);}
+@PostMapping("/send")
+public ResponseEntity<?> sendMessage(@RequestBody MessageRequestDTO dto) {
 
-        MessageResponseDTO response = chatService.sendMessage(dto);
-        return ResponseEntity.ok(
-                new ResponseDto<>(
-                        200, "Message processed successfully", response));
+    if (dto == null) {
+        throw new InvalidOperationException("Request body is missing");
     }
+
+    if (dto.getSenderId() == null || dto.getReceiverId() == null) {
+        throw new InvalidOperationException("SenderId and ReceiverId are required");
+    }
+    if (dto.getMessage() == null || dto.getMessage().trim().isEmpty()) {
+        throw new InvalidOperationException("Message cannot be empty");
+    }
+    if (!"USER".equals(dto.getSenderRole()) && !"PROPERTY_OWNER".equals(dto.getSenderRole())) {
+        throw new InvalidOperationException("Invalid sender role");
+    }
+
+
+
+    Long userId;
+    Long ownerId;
+
+    if ("USER".equals(dto.getSenderRole())) {
+        userId = dto.getSenderId();
+        ownerId = dto.getReceiverId();
+    } else {
+        ownerId = dto.getSenderId();
+        userId = dto.getReceiverId();
+    }
+
+    if (!userRepository.existsById(userId)) {
+        throw new InvalidOperationException("User not found with id: " + userId);
+    }
+
+    if (!ownerRepository.existsById(ownerId)) {
+        throw new InvalidOperationException("Property Owner not found with id: " + ownerId);
+    }
+
+    MessageResponseDTO response = chatService.sendMessage(dto);
+
+    return ResponseEntity.ok(
+            new ResponseDto<>(200, "Message processed successfully", response)
+    );
+}
 
     @PostMapping("/room")
     public ResponseEntity<ResponseDto<String>> createRoom(
@@ -63,7 +89,7 @@ public class ChatController {
 
          String roomId = chatService.createOrGetRoom(
                 request.getUserId(),
-                request.getAdminId());
+                request.getOwnerId());
 
         return ResponseEntity.ok(new ResponseDto<>(200, "Room created/fetched successfully", roomId));
     }
@@ -76,8 +102,14 @@ public class ChatController {
         if (request.getRoomId() == null || request.getRoomId().trim().isEmpty()) {
             throw new BadRequestException("RoomId is required");
         }
+
+        if (request.getSenderRole() != Role.PROPERTY_OWNER) {
+            throw new BadRequestException("Only owner can accept chat");
+        }
+
         chatService.acceptChat(request.getRoomId());
-        return ResponseEntity.ok(new ResponseDto<>(200, "Chat accepted. Conversation started", request.getRoomId()));
+        return ResponseEntity.ok(
+                new ResponseDto<>(200, "Chat accepted. Conversation started", request.getRoomId()));
     }
 
 
@@ -85,15 +117,25 @@ public class ChatController {
     public ResponseEntity<ResponseDto<String>> reject(
             @Valid @RequestBody RoomRequestDTO request) {
 
+        System.out.println("ROOM ID: " + request.getRoomId());
+        System.out.println("ROLE: " + request.getSenderRole());
+
         if (request.getRoomId() == null || request.getRoomId().trim().isEmpty()) {
             throw new BadRequestException("RoomId is required");
         }
+
+        if (request.getSenderRole() != Role.PROPERTY_OWNER) {
+            throw new BadRequestException("Only owner can reject chat");
+        }
+
         chatService.rejectChat(request.getRoomId());
-        return ResponseEntity.ok(new ResponseDto<>(200, "Chat rejected", request.getRoomId()));
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(200, "Chat rejected successfully", request.getRoomId()));
     }
 
     @PostMapping("/typing")
-    public ResponseEntity<ResponseDto<String>> typing(
+            public ResponseEntity<ResponseDto<String>> typing(
             @RequestBody TypingDTO dto) {
 
         if (dto.getRoomId() == null) {
@@ -113,6 +155,7 @@ public class ChatController {
         chatService.updateUserStatus(userId, online);
         return ResponseEntity.ok(new ResponseDto<>(200, "User status updated", userId.toString()));
     }
+
     @GetMapping("/history/{roomId}")
     public ResponseEntity<ResponseDto<List<MessageResponseDTO>>> getChatHistory(
             @PathVariable String roomId) {
@@ -127,14 +170,41 @@ public class ChatController {
         for (Message msg : messages) {
             responseList.add(chatService.mapToDTO(msg));
         }
+        return ResponseEntity.ok(new ResponseDto<>(200, "Chat history fetched successfully", responseList));
+    }
 
-        return ResponseEntity.ok(
-                new ResponseDto<>(
-                        200,
-                        "Chat history fetched successfully",
-                        responseList
-                )
-        );
+    @GetMapping("/pending/{ownerId}")
+    public ResponseEntity<ResponseDto<List<PendingChatDTO>>> getPendingChats(
+            @PathVariable Long ownerId) {
+
+        if (ownerId == null) {
+            throw new BadRequestException("OwnerId is required");
+        }
+        List<PendingChatDTO> chats = chatService.getPendingChats(ownerId);
+        return ResponseEntity.ok(new ResponseDto<>(200, "Pending chats fetched successfully", chats));
+    }
+
+    @GetMapping("/accepted/{ownerId}")
+    public ResponseEntity<ResponseDto<List<AcceptedChatDTO>>> getAcceptedChats(
+            @PathVariable Long ownerId) {
+
+        if (ownerId == null) {
+            throw new BadRequestException("OwnerId is required");
+        }
+
+        List<AcceptedChatDTO> chats = chatService.getAcceptedChats(ownerId);
+        return ResponseEntity.ok(new ResponseDto<>(200, "Accepted chats fetched successfully", chats));
+    }
+
+    @GetMapping("/rejected/{ownerId}")
+    public ResponseEntity<ResponseDto<List<PendingChatDTO>>> getRejectedChats(
+            @PathVariable Long ownerId) {
+         if (ownerId == null) {
+            throw new BadRequestException("OwnerId is required");
+             }
+
+         List<PendingChatDTO> chats = chatService.getRejectedChats(ownerId);
+         return ResponseEntity.ok(new ResponseDto<>(200, "Rejected chats fetched successfully", chats));
     }
 
 }

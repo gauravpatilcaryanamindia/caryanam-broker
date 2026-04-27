@@ -13,12 +13,17 @@ public class ChatRoom {
     private Long id;
 
     private Long userId;
-    private Long adminId;
+    private Long ownerId;
 
     @Column(unique = true)
-    private String roomId; // userId_adminId
-
+    private String roomId; // userId_ownerId
 
     @Column(nullable = false)
     private boolean firstMessageSent = false;
+
+    @Column(nullable = false)
+    private boolean accepted = false;
+
+    private boolean isRejected;
+
 }

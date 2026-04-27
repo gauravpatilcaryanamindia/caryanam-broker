@@ -18,6 +18,7 @@ import com.corundumstudio.socketio.SocketIOServer;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,40 +26,40 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ChatServiceImpl implements ChatService {
     @Autowired
-    private  ChatRoomRepository chatRoomRepo;
+    private ChatRoomRepository chatRoomRepo;
     @Autowired
-    private  MessageRepository messageRepo;
+    private MessageRepository messageRepo;
     @Autowired
-    private  SocketIOServer socketServer;
+    private SocketIOServer socketServer;
     @Autowired
-    private  UserStatusRepository  statusRepo;
+    private UserStatusRepository statusRepo;
 
 
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    // ================= ROOM =================
-    private String generateRoomId(Long userId, Long adminId) {
-        return (userId < adminId)
-                ? userId + "_" + adminId
-                : adminId + "_" + userId;
+
+    private String generateRoomId(Long userId, Long ownerId) {
+        return (userId < ownerId)
+                ? userId + "_" + ownerId
+                : ownerId + "_" + userId;
     }
 
     @Override
-    public String createOrGetRoom(Long userId, Long adminId) {
+    public String createOrGetRoom(Long userId, Long ownerId) {
 
-        Long uId = Math.min(userId, adminId);
-        Long aId = Math.max(userId, adminId);
+        Long uId = Math.min(userId, ownerId);
+        Long oId = Math.max(userId, ownerId);
 
-        String roomId = generateRoomId(uId, aId);
+        String roomId = generateRoomId(uId, oId);
 
-        return chatRoomRepo.findByUserIdAndAdminId(uId, aId)
+        return chatRoomRepo.findByUserIdAndOwnerId(uId, oId)
                 .map(ChatRoom::getRoomId)
                 .orElseGet(() -> {
                     try {
                         ChatRoom room = new ChatRoom();
                         room.setUserId(uId);
-                        room.setAdminId(aId);
+                        room.setOwnerId(oId);
                         room.setRoomId(roomId);
                         room.setFirstMessageSent(false);
 
@@ -67,37 +68,40 @@ public class ChatServiceImpl implements ChatService {
 
                     } catch (Exception e) {
 
-                        return chatRoomRepo.findByUserIdAndAdminId(uId, aId)
+                        return chatRoomRepo.findByUserIdAndOwnerId(uId, oId)
                                 .map(ChatRoom::getRoomId)
                                 .orElse(roomId);
                     }
                 });
     }
 
-    // ================= SEND MESSAGE =================
+
+
     @Override
     public MessageResponseDTO sendMessage(MessageRequestDTO dto) {
 
+        if (dto == null || dto.getSenderId() == null || dto.getReceiverId() == null) {throw new BadRequestException("Invalid request");}
+        if (!"USER".equals(dto.getSenderRole()) && !"PROPERTY_OWNER".equals(dto.getSenderRole())) {throw new BadRequestException("Invalid sender role");}
+
         Long userId;
-        Long adminId;
+        Long ownerId;
 
         if ("USER".equals(dto.getSenderRole())) {
             userId = dto.getSenderId();
-            adminId = dto.getReceiverId();
+            ownerId = dto.getReceiverId();
         } else {
-            adminId = dto.getSenderId();
+            ownerId = dto.getSenderId();
             userId = dto.getReceiverId();
         }
 
-        String roomId = createOrGetRoom(userId, adminId);
-        ChatRoom room = chatRoomRepo.findByUserIdAndAdminId(
-                Math.min(userId, adminId),
-                Math.max(userId, adminId)
-        ).orElseThrow(() -> new RuntimeException("Room not found"));
+        String roomId = createOrGetRoom(userId, ownerId);
+        ChatRoom room = chatRoomRepo.findByRoomId(roomId).orElseThrow(() -> new RuntimeException("Room not found"));
 
 
-        List<Message> existingMessages = messageRepo.findByRoomId(roomId);
-        if (existingMessages.isEmpty() && !room.isFirstMessageSent()) {
+        if (!room.isFirstMessageSent()) {
+
+            if (!"USER".equals(dto.getSenderRole())) {throw new BadRequestException("First message must be sent by USER");}
+
             Message firstMsg = new Message();
             firstMsg.setRoomId(roomId);
             firstMsg.setSenderId(userId);
@@ -108,31 +112,22 @@ public class ChatServiceImpl implements ChatService {
             firstMsg.setStatus(MessageStatus.PENDING);
 
             messageRepo.save(firstMsg);
-
-            Message adminReply = new Message();
-            adminReply.setRoomId(roomId);
-            adminReply.setSenderId(adminId);
-            adminReply.setSenderRole("ADMIN");
-            adminReply.setContent("Please wait, someone will connect with you shortly.");
-            adminReply.setTimestamp(LocalDateTime.now());
-            adminReply.setRead(false);
-            adminReply.setStatus(MessageStatus.PENDING);
-
-            messageRepo.save(adminReply);
             room.setFirstMessageSent(true);
             chatRoomRepo.save(room);
-
-            if (existingMessages.isEmpty()) {
-                socketServer.getRoomOperations(roomId).sendEvent("receive_message", mapToDTO(firstMsg));
-                socketServer.getRoomOperations(roomId).sendEvent("receive_message", mapToDTO(adminReply));}
-            return mapToDTO(firstMsg);
+            MessageResponseDTO response = mapToDTO(firstMsg);
+            socketServer.getRoomOperations(roomId).sendEvent("receive_message", response);
+            return response;
         }
 
-        // ✅ ADD HERE
-         if (room.isFirstMessageSent() && !isChatAccepted(roomId)) {
-            throw new BadRequestException("Chat not accepted yet");
+        if (!room.isAccepted() && room.isFirstMessageSent() && "USER".equals(dto.getSenderRole())) {
+            throw new BadRequestException("Please wait until owner accepts the chat");
         }
-
+        if (!room.isAccepted() && "PROPERTY_OWNER".equals(dto.getSenderRole())) {
+            throw new BadRequestException("Owner cannot send message until chat is accepted");
+        }
+        if (room.isRejected()) {
+            throw new BadRequestException("Chat is rejected. You cannot send messages.");
+        }
 
         Message msg = new Message();
         msg.setRoomId(roomId);
@@ -141,7 +136,7 @@ public class ChatServiceImpl implements ChatService {
         msg.setContent(dto.getMessage());
         msg.setTimestamp(LocalDateTime.now());
         msg.setRead(false);
-        msg.setStatus(MessageStatus.ACCEPTED);
+        msg.setStatus(room.isAccepted() ? MessageStatus.ACCEPTED : MessageStatus.PENDING);
 
         messageRepo.save(msg);
         MessageResponseDTO response = mapToDTO(msg);
@@ -152,83 +147,175 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public void acceptChat(String roomId) {
 
-        List<Message> messages = messageRepo.findByRoomId(roomId);
-        for (Message msg : messages) {
-            if (msg.getStatus() == MessageStatus.PENDING) {
-                msg.setStatus(MessageStatus.ACCEPTED);
-            }
-        }
+        ChatRoom room = chatRoomRepo.findByRoomId(roomId)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
 
-        messageRepo.saveAll(messages);
+        room.setAccepted(true);
+        chatRoomRepo.save(room);
+
+
+        Message autoReply = new Message();
+        autoReply.setRoomId(roomId);
+        autoReply.setSenderId(room.getOwnerId());
+        autoReply.setSenderRole("PROPERTY_OWNER");
+        autoReply.setContent("Please wait, someone will connect with you shortly.");
+        autoReply.setTimestamp(LocalDateTime.now());
+        autoReply.setRead(false);
+        autoReply.setStatus(MessageStatus.ACCEPTED);
+
+        messageRepo.save(autoReply);
+        MessageResponseDTO response = mapToDTO(autoReply);
         socketServer.getRoomOperations(roomId)
                 .sendEvent("chat_accepted", roomId);
+        socketServer.getRoomOperations(roomId)
+                .sendEvent("receive_message", response);
     }
 
-    // ================= REJECT =================
+
     @Override
     public void rejectChat(String roomId) {
 
-        List<Message> messages = messageRepo.findByRoomId(roomId);
-        for (Message msg : messages) {
-            if (msg.getStatus() == MessageStatus.PENDING) {
-                msg.setStatus(MessageStatus.REJECTED);
-            }
-        }
+        ChatRoom room = chatRoomRepo.findByRoomId(roomId)
+                .orElseThrow(() -> new RuntimeException("Room not found"));
 
-        messageRepo.saveAll(messages);
+        room.setAccepted(false);
+        room.setRejected(true);
+        chatRoomRepo.save(room);
+
+        Message rejectMsg = new Message();
+        rejectMsg.setRoomId(roomId);
+        rejectMsg.setSenderId(room.getOwnerId());
+        rejectMsg.setSenderRole("SYSTEM");
+        rejectMsg.setContent("Chat has been rejected by the owner.");
+        rejectMsg.setTimestamp(LocalDateTime.now());
+        rejectMsg.setStatus(MessageStatus.REJECTED);
+
+        messageRepo.save(rejectMsg);
         socketServer.getRoomOperations(roomId)
-                .sendEvent("chat_rejected", roomId);
+                .sendEvent("chat_rejected", mapToDTO(rejectMsg));
     }
 
-    @Override
-    public boolean isChatAccepted(String roomId) {
-        return messageRepo.existsByRoomIdAndStatus(roomId, MessageStatus.ACCEPTED);
-    }
+
 
     @Override
     public void handleTyping(TypingDTO dto) {
-
-        if (dto.getRoomId() == null) {
-            return;
-        }
-        socketServer.getRoomOperations(dto.getRoomId())
-                .sendEvent("typing", dto);
+        if (dto.getRoomId() == null) {return;}
+        socketServer.getRoomOperations(dto.getRoomId()).sendEvent("typing", dto);
     }
-
-
 
     @Override
     public void updateUserStatus(Long userId, boolean online) {
         if (userId == null) return;
-
         UserStatus status = statusRepo.findById(userId)
-                .orElseGet(() -> {
-                    UserStatus s = new UserStatus();
+                .orElseGet(() -> {UserStatus s = new UserStatus();
                     s.setUserId(userId);
                     return s;});
 
         status.setOnline(online);
         statusRepo.save(status);
-        socketServer.getBroadcastOperations()
-                .sendEvent("user_status", status);
+        socketServer.getBroadcastOperations().sendEvent("user_status", status);
     }
 
     @Override
     public MessageResponseDTO mapToDTO(Message msg) {
 
         String time = null;
-
         if (msg.getTimestamp() != null) {
-            time = msg.getTimestamp().format(FORMATTER);
-        }
+            time = msg.getTimestamp().format(FORMATTER);}
 
         return new MessageResponseDTO(
                 msg.getRoomId(),
                 msg.getSenderId(),
                 msg.getSenderRole(),
                 msg.getContent(),
-                time
-        );
+                time);
+    }
+
+    @Override
+    public List<PendingChatDTO> getPendingChats(Long ownerId) {
+
+        List<ChatRoom> rooms = chatRoomRepo.findByOwnerIdAndFirstMessageSentTrueAndAcceptedFalseAndIsRejectedFalse(ownerId);
+        List<PendingChatDTO> response = new ArrayList<>();
+
+        for (ChatRoom room : rooms) {
+
+            List<Message> messages = messageRepo.findByRoomId(room.getRoomId());
+            String lastMessage = "";
+            String time = "";
+
+            if (!messages.isEmpty()) {
+                Message lastMsg = messages.get(messages.size() - 1);
+                lastMessage = lastMsg.getContent();
+                if (lastMsg.getTimestamp() != null) {
+                    time = lastMsg.getTimestamp().toString();
+                }
+            }
+            response.add(new PendingChatDTO(
+                    room.getRoomId(),
+                    room.getUserId(),
+                    room.getOwnerId(),
+                    lastMessage,
+                    time));
+        }
+
+        return response;
+    }
+
+    @Override
+    public List<AcceptedChatDTO> getAcceptedChats(Long ownerId) {
+
+        List<ChatRoom> rooms = chatRoomRepo.findByOwnerIdAndAcceptedTrue(ownerId);
+        List<AcceptedChatDTO> response = new ArrayList<>();
+
+        for (ChatRoom room : rooms) {
+            Message lastMsg = messageRepo.findTopByRoomIdOrderByTimestampDesc(room.getRoomId());
+            String lastMessage = "";
+            String time = "";
+
+            if (lastMsg != null) {
+                lastMessage = lastMsg.getContent();
+                if (lastMsg.getTimestamp() != null) {
+                    time = lastMsg.getTimestamp().toString();
+                }
+            }
+
+            response.add(new AcceptedChatDTO(
+                    room.getRoomId(),
+                    room.getUserId(),
+                    room.getOwnerId(),
+                    lastMessage,
+                    time));
+        }
+
+        return response;
+    }
+
+    @Override
+    public List<PendingChatDTO> getRejectedChats(Long ownerId) {
+
+        List<ChatRoom> rooms = chatRoomRepo.findByOwnerIdAndIsRejectedTrue(ownerId);
+        List<PendingChatDTO> response = new ArrayList<>();
+
+        for (ChatRoom room : rooms) {
+            Message lastMsg = messageRepo.findTopByRoomIdOrderByTimestampDesc(room.getRoomId());
+
+            String lastMessage = "";
+            String time = "";
+            if (lastMsg != null) {
+                lastMessage = lastMsg.getContent();
+                if (lastMsg.getTimestamp() != null) {
+                    time = lastMsg.getTimestamp().toString();
+                }
+            }
+
+            response.add(new PendingChatDTO(
+                    room.getRoomId(),
+                    room.getUserId(),
+                    room.getOwnerId(),
+                    lastMessage,
+                    time));
+        }
+        return response;
     }
 
 

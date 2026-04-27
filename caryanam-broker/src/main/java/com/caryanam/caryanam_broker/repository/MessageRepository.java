@@ -14,6 +14,5 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     boolean existsByRoomIdAndStatus(String roomId, MessageStatus status);
 
-
-
+    Message findTopByRoomIdOrderByTimestampDesc(String roomId);
 }

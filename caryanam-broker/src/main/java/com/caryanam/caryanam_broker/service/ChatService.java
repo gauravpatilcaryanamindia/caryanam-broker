@@ -1,16 +1,15 @@
 package com.caryanam.caryanam_broker.service;
 
 
-import com.caryanam.caryanam_broker.socket.Message;
-import com.caryanam.caryanam_broker.socket.MessageRequestDTO;
-import com.caryanam.caryanam_broker.socket.MessageResponseDTO;
-import com.caryanam.caryanam_broker.socket.TypingDTO;
+import com.caryanam.caryanam_broker.socket.*;
+
+import java.util.List;
 
 public interface ChatService {
 
     MessageResponseDTO sendMessage(MessageRequestDTO dto);
 
-    String createOrGetRoom(Long userId, Long adminId);
+    String createOrGetRoom(Long userId, Long ownerId);
 
     void handleTyping(TypingDTO dto);
 
@@ -20,7 +19,11 @@ public interface ChatService {
 
     void rejectChat(String roomId);
 
-    boolean isChatAccepted(String roomId);
-
     MessageResponseDTO mapToDTO(Message msg);
+
+    List<PendingChatDTO> getPendingChats(Long ownerId);
+
+    List<AcceptedChatDTO> getAcceptedChats(Long ownerId);
+
+    List<PendingChatDTO> getRejectedChats(Long ownerId);
 }

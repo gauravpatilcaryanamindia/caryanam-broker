@@ -18,7 +18,7 @@ public class Message {
     private String roomId;
 
     private Long senderId;
-    private String senderRole; // ADMIN / USER
+    private String senderRole; // owner/ USER
 
     private String content;
 
