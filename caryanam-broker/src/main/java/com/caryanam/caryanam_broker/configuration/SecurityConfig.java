@@ -32,8 +32,9 @@ public class SecurityConfig {
 
     @Autowired
     private CustomUserDetailsService userDetailsService;
+    @Autowired
+    private PremiumCheckFilter premiumCheckFilter;
 
-    //  Security Filter
 //    @Bean
 //    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 //
@@ -68,6 +69,7 @@ public class SecurityConfig {
 //
 //        return http.build();
 //    }
+//
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -75,10 +77,24 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
+
                 .authorizeHttpRequests(auth -> auth
 
-                        // 🔓 EVERYTHING OPEN
-                        .anyRequest().permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+
+                        .requestMatchers("/api/user/buyPremium/**").permitAll()
+                        .requestMatchers("/api/owner/buyPremiumByOwner/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html").permitAll()
+
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        .requestMatchers("/api/user/**").hasRole("USER")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/owner/**").hasRole("PROPERTY_OWNER")
+
+                        .anyRequest().authenticated()
                 )
 
                 .sessionManagement(session ->
@@ -86,12 +102,14 @@ public class SecurityConfig {
                 )
 
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+
+                // 🔥 premium check only AFTER JWT
+                .addFilterAfter(premiumCheckFilter, JwtFilter.class);
 
         return http.build();
     }
-
-
     //  Authentication Manager
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
