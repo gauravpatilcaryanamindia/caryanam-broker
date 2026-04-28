@@ -46,7 +46,7 @@ public ResponseEntity<?> sendMessage(@RequestBody MessageRequestDTO dto) {
     }
 
     if (dto.getUserId() == null || dto.getOwnerId() == null) {
-        throw new InvalidOperationException("SenderId and ReceiverId are required");
+        throw new InvalidOperationException("UserId and OwnerId are required");
     }
     if (dto.getMessage() == null || dto.getMessage().trim().isEmpty()) {
         throw new InvalidOperationException("Message cannot be empty");
