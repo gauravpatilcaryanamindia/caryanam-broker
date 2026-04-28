@@ -26,4 +26,7 @@ public interface ChatService {
     List<AcceptedChatDTO> getAcceptedChats(Long ownerId);
 
     List<PendingChatDTO> getRejectedChats(Long ownerId);
+
+    List<MessageResponseDTO> getMessagesByRoom(String roomId);
+
 }

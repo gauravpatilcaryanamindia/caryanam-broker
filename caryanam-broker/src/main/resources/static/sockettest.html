@@ -1,174 +1,120 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Socket Chat Test</title>
+  <title>Socket Chat</title>
 </head>
 <body>
 
-<h2>Socket Chat</h2>
-
+<h2>Chat</h2>
 <p id="info"></p>
 
 <input type="text" id="msg" placeholder="Enter message">
-<button id="sendBtn">Send</button>
+<button onclick="sendMessage()">Send</button>
 
 <ul id="messages"></ul>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
 
 <script>
+
   const urlParams = new URLSearchParams(window.location.search);
 
+  // ✅ REQUIRED PARAMS
   const USER_ID = urlParams.get("userId");
-  const OWNER_ID = urlParams.get("ownerId"); // ✅ FIX
+  const OWNER_ID = urlParams.get("ownerId");
 
-  let CURRENT_ID = null;
-  let RECEIVER_ID = null;
-  let IS_OWNER = false;
+  // ❌ Stop if missing
+  if (!USER_ID && !OWNER_ID) {
+    alert("Pass either userId or ownerId in URL");
+    throw new Error("Missing params");
+  }
 
-  // ================= ROLE SET =================
+  const RECEIVER_ID_PARAM = urlParams.get("receiverId");
+
+  // ❌ Stop if receiverId missing
+  if (!RECEIVER_ID_PARAM || isNaN(RECEIVER_ID_PARAM)) {
+    alert("Pass receiverId in URL");
+    throw new Error("Missing receiverId");
+  }
+
+  const RECEIVER_ID = Number(RECEIVER_ID_PARAM);
+
+  let CURRENT_ID, IS_OWNER = false;
+
+  // ✅ determine role
   if (USER_ID) {
     CURRENT_ID = Number(USER_ID);
-    RECEIVER_ID = 2; // owner id
     document.getElementById("info").innerText = "USER: " + CURRENT_ID;
-  }
-  else if (OWNER_ID) {
+  } else {
     CURRENT_ID = Number(OWNER_ID);
-    RECEIVER_ID = 1; // user id
     IS_OWNER = true;
     document.getElementById("info").innerText = "OWNER: " + CURRENT_ID;
-  } else {
-    alert("Pass userId or ownerId");
-    throw new Error("Missing ID");
   }
 
-  // ================= ROOM =================
-  const ROOM_ID =
-          CURRENT_ID < RECEIVER_ID
-                  ? CURRENT_ID + "_" + RECEIVER_ID
-                  : RECEIVER_ID + "_" + CURRENT_ID;
+  // ❌ Prevent 0 IDs
+  if (CURRENT_ID <= 0 || RECEIVER_ID <= 0) {
+    alert("Invalid IDs");
+    throw new Error("Invalid ID");
+  }
 
-  // ================= HISTORY =================
-  fetch(`http://localhost:8080/chat/history/${ROOM_ID}`)
-          .then(res => res.json())
-          .then(messages => {
-            messages.forEach(msg => {
-              const li = document.createElement("li");
+  // ✅ correct roomId
+  const ROOM_ID = `USER_${Math.min(CURRENT_ID, RECEIVER_ID)}_OWNER_${Math.max(CURRENT_ID, RECEIVER_ID)}`;
 
-              if (msg.senderId === CURRENT_ID) {
-                li.innerText = "YOU: " + msg.message;
-              } else {
-                li.innerText = msg.senderRole === "OWNER"
-                        ? "OWNER: " + msg.message
-                        : "USER: " + msg.message;
-              }
-
-              document.getElementById("messages").appendChild(li);
-            });
-          })
-          .catch(err => console.error("History error:", err));
+  console.log("CURRENT_ID:", CURRENT_ID);
+  console.log("RECEIVER_ID:", RECEIVER_ID);
+  console.log("ROOM_ID:", ROOM_ID);
 
   // ================= SOCKET =================
   const socket = io("http://localhost:9092", {
-    transports: ["websocket"],
-    query: IS_OWNER
-            ? { ownerId: CURRENT_ID }   // ✅ FIX
-            : { userId: CURRENT_ID }
+    transports: ["polling", "websocket"],
+    query: IS_OWNER ? { ownerId: CURRENT_ID } : { userId: CURRENT_ID }
   });
 
+  // ================= CONNECT =================
   socket.on("connect", () => {
     console.log("Connected:", socket.id);
     socket.emit("join_room", ROOM_ID);
   });
 
-  socket.off("receive_message");
-
-  let lastMessageKey = "";
-
+  // ================= RECEIVE =================
   socket.on("receive_message", (data) => {
 
-    if (data.roomId !== ROOM_ID) return;
+    console.log("RECEIVED:", data);
 
-    const messageKey = data.senderId + "_" + data.message + "_" + data.time;
-    if (messageKey === lastMessageKey) return;
-    lastMessageKey = messageKey;
+    if (data.roomId !== ROOM_ID) return;
 
     const li = document.createElement("li");
 
     if (data.senderId === CURRENT_ID) {
       li.innerText = "YOU: " + data.message;
     } else {
-      li.innerText = IS_OWNER
-              ? "USER: " + data.message
-              : "OWNER: " + data.message;
+      li.innerText = IS_OWNER ? "USER: " : "OWNER: ";
+      li.innerText += data.message;
     }
 
     document.getElementById("messages").appendChild(li);
   });
 
-  // ================= TYPING =================
-  socket.on("typing", (data) => {
-    if (data.roomId !== ROOM_ID) return;
-
-    let typingEl = document.getElementById("typing");
-
-    if (!typingEl) {
-      typingEl = document.createElement("p");
-      typingEl.id = "typing";
-      document.body.appendChild(typingEl);
-    }
-
-    if (data.typing && data.userId !== CURRENT_ID) {
-      typingEl.innerText = IS_OWNER ? "User typing..." : "Owner typing...";
-    } else {
-      typingEl.innerText = "";
-    }
-  });
-
   // ================= SEND =================
   function sendMessage() {
-    const input = document.getElementById("msg");
-    const msg = input.value.trim();
+    const msg = document.getElementById("msg").value.trim();
 
     if (!msg) return;
 
     const payload = {
-      roomId: ROOM_ID,
-      senderId: CURRENT_ID,
-      receiverId: RECEIVER_ID,
-      senderRole: IS_OWNER ? "OWNER" : "USER", // ✅ FIX
+      userId: IS_OWNER ? RECEIVER_ID : CURRENT_ID,
+      ownerId: IS_OWNER ? CURRENT_ID : RECEIVER_ID,
+      senderRole: IS_OWNER ? "PROPERTY_OWNER" : "USER",
       message: msg
     };
 
+    console.log("SENDING:", payload);
+
     socket.emit("send_message", payload);
-    input.value = "";
+
+    document.getElementById("msg").value = "";
   }
 
-  document.getElementById("sendBtn").onclick = sendMessage;
-
-  document.getElementById("msg").addEventListener("keypress", function(e) {
-    if (e.key === "Enter") sendMessage();
-  });
-
-  // ================= TYPING EVENT =================
-  document.getElementById("msg").addEventListener("input", function() {
-
-    socket.emit("typing", {
-      roomId: ROOM_ID,
-      userId: CURRENT_ID,
-      typing: true
-    });
-
-    clearTimeout(window.typingTimeout);
-
-    window.typingTimeout = setTimeout(() => {
-      socket.emit("typing", {
-        roomId: ROOM_ID,
-        userId: CURRENT_ID,
-        typing: false
-      });
-    }, 800);
-  });
 
 </script>
 

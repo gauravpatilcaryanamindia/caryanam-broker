@@ -44,29 +44,15 @@ public ResponseEntity<?> sendMessage(@RequestBody MessageRequestDTO dto) {
     if (dto == null) {
         throw new InvalidOperationException("Request body is missing");
     }
-
     if (dto.getUserId() == null || dto.getOwnerId() == null) {
         throw new InvalidOperationException("UserId and OwnerId are required");
-    }
-    if (dto.getMessage() == null || dto.getMessage().trim().isEmpty()) {
-        throw new InvalidOperationException("Message cannot be empty");
     }
     if (!"USER".equals(dto.getSenderRole()) && !"PROPERTY_OWNER".equals(dto.getSenderRole())) {
         throw new InvalidOperationException("Invalid sender role");
     }
 
-
-
-    Long userId;
-    Long ownerId;
-
-    if ("USER".equals(dto.getSenderRole())) {
-        userId = dto.getUserId();
-        ownerId = dto.getOwnerId();
-    } else {
-        ownerId = dto.getUserId();
-        userId = dto.getOwnerId();
-    }
+    Long userId = dto.getUserId();
+    Long ownerId = dto.getOwnerId();
 
     if (!userRepository.existsById(userId)) {
         throw new InvalidOperationException("User not found with id: " + userId);
@@ -79,24 +65,23 @@ public ResponseEntity<?> sendMessage(@RequestBody MessageRequestDTO dto) {
     MessageResponseDTO response = chatService.sendMessage(dto);
 
     return ResponseEntity.ok(
-            new ResponseDto<>(200, "Message processed successfully", response)
-    );
+            new ResponseDto<>(200, "Message processed successfully", response));
 }
 
-    @PostMapping("/room")
-    public ResponseEntity<ResponseDto<String>> createRoom(
-            @Valid @RequestBody RoomRequestDTO request) {
-
-
-        if (request.getUserId() == null || request.getOwnerId() == null) {throw new BadRequestException("UserId and OwnerId are required");}
-        if (!userRepository.existsById(request.getUserId())) {throw new BadRequestException("User not found: " + request.getUserId());}
-        if (!ownerRepository.existsById(request.getOwnerId())) {throw new BadRequestException("Owner not found: " + request.getOwnerId());}
-        String roomId = chatService.createOrGetRoom(
-                request.getUserId(),
-                request.getOwnerId());
-
-        return ResponseEntity.ok(new ResponseDto<>(200, "Room created/fetched successfully", roomId));
-    }
+//    @PostMapping("/room")
+//    public ResponseEntity<ResponseDto<String>> createRoom(
+//            @Valid @RequestBody RoomRequestDTO request) {
+//
+//
+//        if (request.getUserId() == null || request.getOwnerId() == null) {throw new BadRequestException("UserId and OwnerId are required");}
+//        if (!userRepository.existsById(request.getUserId())) {throw new BadRequestException("User not found: " + request.getUserId());}
+//        if (!ownerRepository.existsById(request.getOwnerId())) {throw new BadRequestException("Owner not found: " + request.getOwnerId());}
+//        String roomId = chatService.createOrGetRoom(
+//                request.getUserId(),
+//                request.getOwnerId());
+//
+//        return ResponseEntity.ok(new ResponseDto<>(200, "Room created/fetched successfully", roomId));
+//    }
 
 
     @PostMapping("/accept")

@@ -1,13 +1,10 @@
 package com.caryanam.caryanam_broker.configuration;
-
 import com.caryanam.caryanam_broker.service.ChatService;
 import com.caryanam.caryanam_broker.socket.MessageRequestDTO;
 import com.caryanam.caryanam_broker.socket.MessageResponseDTO;
 import com.caryanam.caryanam_broker.socket.TypingDTO;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
-
-
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
@@ -25,7 +22,7 @@ public class SocketModule {
     @PostConstruct
     public void init() {
 
-
+        // ================= CONNECT =================
         server.addConnectListener(client -> {
             String userId = client.getHandshakeData().getSingleUrlParam("userId");
             String ownerId = client.getHandshakeData().getSingleUrlParam("ownerId");
@@ -39,29 +36,33 @@ public class SocketModule {
             System.out.println("Session ID: " + client.getSessionId());
         });
 
-
+        // ================= DISCONNECT =================
         server.addDisconnectListener(client -> {
             System.out.println("Client Disconnected: " + client.getSessionId());
         });
 
-
+        // ================= JOIN ROOM =================
         server.addEventListener("join_room", String.class, (client, roomId, ackSender) -> {
 
-
-            client.leaveRoom(roomId);
             client.joinRoom(roomId);
 
             System.out.println("Joined Room: " + roomId);
 
             int count = server.getRoomOperations(roomId).getClients().size();
             System.out.println("TOTAL CLIENTS IN ROOM: " + count);
+
+            // ✅ SEND HISTORY ONLY ON JOIN (separate event)
+            try {
+                client.sendEvent("chat_history", chatService.getMessagesByRoom(roomId));
+            } catch (Exception e) {
+                System.out.println("Error sending history: " + e.getMessage());
+            }
         });
 
-
+        // ================= SEND MESSAGE =================
         server.addEventListener("send_message", MessageRequestDTO.class, (client, dto, ackSender) -> {
 
             System.out.println("Message received: " + dto);
-
 
             MessageResponseDTO response = chatService.sendMessage(dto);
 
@@ -69,26 +70,20 @@ public class SocketModule {
 
             System.out.println("Broadcasting to ROOM: " + roomId);
 
-
-            server.getRoomOperations(roomId).sendEvent("receive_message", response);
+            // ✅ ONLY REAL-TIME EVENT
+           // server.getRoomOperations(roomId).sendEvent("receive_message", response);
         });
 
-
+        // ================= TYPING =================
         server.addEventListener("typing", TypingDTO.class, (client, dto, ackSender) -> {
 
-            System.out.println("Typing event: " + dto);
-
-            if (dto.getRoomId() == null) {
-                System.out.println("roomId is null");
-                return;
-            }
+            if (dto.getRoomId() == null) return;
 
             for (SocketIOClient c : server.getRoomOperations(dto.getRoomId()).getClients()) {
                 if (!c.getSessionId().equals(client.getSessionId())) {
                     c.sendEvent("typing", dto);
                 }
             }
-
 
             chatService.handleTyping(dto);
         });

@@ -2,14 +2,13 @@ package com.caryanam.caryanam_broker.configuration;
 
 import com.caryanam.caryanam_broker.repository.PropertyOwnerRepository;
 import com.caryanam.caryanam_broker.repository.UserRepository;
-
-import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.AuthorizationResult;
-
+import com.corundumstudio.socketio.SocketIOServer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@org.springframework.context.annotation.Configuration
+@Configuration
 @RequiredArgsConstructor
 public class SocketConfig {
 
@@ -19,35 +18,47 @@ public class SocketConfig {
     @Bean
     public SocketIOServer socketIOServer() {
 
-
         com.corundumstudio.socketio.Configuration config =
                 new com.corundumstudio.socketio.Configuration();
 
+        //  BASIC CONFIG
         config.setHostname("localhost");
         config.setPort(9092);
-        config.setOrigin("*");
 
 
+        config.setOrigin("http://localhost:63342");
+
+        //  IMPORTANT (avoid connection issues)
+        config.setPingInterval(25000);
+        config.setPingTimeout(60000);
+
+        // ================= AUTH =================
         config.setAuthorizationListener(data -> {
 
             String userIdStr = data.getSingleUrlParam("userId");
             String ownerIdStr = data.getSingleUrlParam("ownerId");
 
-
+            //  both present
             if (userIdStr != null && ownerIdStr != null) {
                 System.out.println(" BOTH userId & ownerId present");
                 return AuthorizationResult.FAILED_AUTHORIZATION;
             }
 
+            //  none present
             if (userIdStr == null && ownerIdStr == null) {
                 System.out.println(" No ID provided");
                 return AuthorizationResult.FAILED_AUTHORIZATION;
             }
 
-
+            // ================= USER =================
             if (userIdStr != null) {
                 try {
                     Long userId = Long.valueOf(userIdStr);
+
+                    if (userId <= 0) {
+                        System.out.println(" Invalid USER ID (<=0)");
+                        return AuthorizationResult.FAILED_AUTHORIZATION;
+                    }
 
                     if (userRepo.existsById(userId)) {
                         System.out.println(" Connected USER: " + userId);
@@ -57,25 +68,30 @@ public class SocketConfig {
                     System.out.println(" USER not found: " + userId);
 
                 } catch (Exception e) {
-                    System.out.println(" Invalid USER ID");
+                    System.out.println(" Invalid USER ID format");
                 }
                 return AuthorizationResult.FAILED_AUTHORIZATION;
             }
 
-
+            // ================= OWNER =================
             if (ownerIdStr != null) {
                 try {
                     Long ownerId = Long.valueOf(ownerIdStr);
 
+                    if (ownerId <= 0) {
+                        System.out.println(" Invalid OWNER ID (<=0)");
+                        return AuthorizationResult.FAILED_AUTHORIZATION;
+                    }
+
                     if (ownerRepo.existsById(ownerId)) {
-                        System.out.println(" Connected PROPERTY OWNER: " + ownerId);
+                        System.out.println(" Connected OWNER: " + ownerId);
                         return AuthorizationResult.SUCCESSFUL_AUTHORIZATION;
                     }
 
-                    System.out.println("OWNER not found: " + ownerId);
+                    System.out.println(" OWNER not found: " + ownerId);
 
                 } catch (Exception e) {
-                    System.out.println(" Invalid OWNER ID");
+                    System.out.println(" Invalid OWNER ID format");
                 }
                 return AuthorizationResult.FAILED_AUTHORIZATION;
             }

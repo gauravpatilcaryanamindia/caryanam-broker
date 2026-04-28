@@ -21,7 +21,7 @@ public class PremiumCheckFilter extends OncePerRequestFilter {
     @Autowired
     private UserRepository userRepository;
 
-//
+
 @Override
 protected void doFilterInternal(HttpServletRequest request,
                                 HttpServletResponse response,
@@ -40,8 +40,6 @@ protected void doFilterInternal(HttpServletRequest request,
         if (user != null) {
 
             boolean isPremium = "APPROVED".equalsIgnoreCase(user.getPremiumStatus());
-
-            // 🔥 IMPORTANT: just store flag, DON'T BLOCK
             request.setAttribute("isPremium", isPremium);
         }
     }

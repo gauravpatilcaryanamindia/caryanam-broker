@@ -68,16 +68,19 @@ public class ChatServiceImpl implements ChatService {
         if (dto == null || dto.getUserId() == null || dto.getOwnerId() == null) {throw new BadRequestException("Invalid request");}
         if (!"USER".equals(dto.getSenderRole()) && !"PROPERTY_OWNER".equals(dto.getSenderRole())) {throw new BadRequestException("Invalid sender role");}
 
-        Long userId;
-        Long ownerId;
-
-        if ("USER".equals(dto.getSenderRole())) {
-            userId = dto.getUserId();
-            ownerId = dto.getOwnerId();
-        } else {
-            ownerId = dto.getUserId();
-            userId = dto.getOwnerId();
-        }
+//        Long userId;
+//        Long ownerId;
+//
+//        if ("USER".equals(dto.getSenderRole())) {
+//            userId = dto.getUserId();
+//            ownerId = dto.getOwnerId();
+//        } else {
+//            ownerId = dto.getUserId();
+//            userId = dto.getOwnerId();
+//        }
+        // ✅ NO SWAP
+        Long userId = dto.getUserId();
+        Long ownerId = dto.getOwnerId();
 
         String roomId = createOrGetRoom(userId, ownerId);
         ChatRoom room = chatRoomRepo.findByRoomId(roomId).orElseThrow(() -> new RuntimeException("Room not found"));
@@ -91,7 +94,12 @@ public class ChatServiceImpl implements ChatService {
             firstMsg.setRoomId(roomId);
             firstMsg.setSenderId(userId);
             firstMsg.setSenderRole("USER");
-            firstMsg.setContent("Hi, I’m interested in your property. Could you please share more information?");
+            String message = (dto.getMessage() == null || dto.getMessage().trim().split("\\s+").length < 10)
+                    ? "Hi, I’m interested in your property. Could you please share more information?"
+                    : dto.getMessage();
+
+            firstMsg.setContent(message);
+           // firstMsg.setContent("Hi, I’m interested in your property. Could you please share more information?");
             firstMsg.setTimestamp(LocalDateTime.now());
             firstMsg.setRead(false);
             firstMsg.setStatus(MessageStatus.PENDING);
@@ -116,7 +124,14 @@ public class ChatServiceImpl implements ChatService {
 
         Message msg = new Message();
         msg.setRoomId(roomId);
-        msg.setSenderId(dto.getUserId());
+
+        // ✅ FIXED senderId
+        Long senderId = "USER".equals(dto.getSenderRole())
+                ? userId
+                : ownerId;
+
+        msg.setSenderId(senderId);
+       // msg.setSenderId(dto.getUserId());
         msg.setSenderRole(dto.getSenderRole());
         msg.setContent(dto.getMessage());
         msg.setTimestamp(LocalDateTime.now());
@@ -310,5 +325,12 @@ public class ChatServiceImpl implements ChatService {
         return response;
     }
 
+    @Override
+    public List<MessageResponseDTO> getMessagesByRoom(String roomId) {
 
+        return messageRepo.findByRoomId(roomId)
+                .stream()
+                .map(this::mapToDTO)   // your existing method
+                .toList();
+    }
 }
