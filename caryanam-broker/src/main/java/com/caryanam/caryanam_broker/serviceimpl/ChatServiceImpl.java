@@ -38,60 +38,45 @@ public class ChatServiceImpl implements ChatService {
     private static final DateTimeFormatter FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-
     private String generateRoomId(Long userId, Long ownerId) {
-        return (userId < ownerId)
-                ? userId + "_" + ownerId
-                : ownerId + "_" + userId;
+        return "USER_" + userId + "_OWNER_" + ownerId;
     }
 
     @Override
     public String createOrGetRoom(Long userId, Long ownerId) {
 
-        Long uId = Math.min(userId, ownerId);
-        Long oId = Math.max(userId, ownerId);
+    String roomId = generateRoomId(userId, ownerId);
 
-        String roomId = generateRoomId(uId, oId);
+    return chatRoomRepo.findByUserIdAndOwnerId(userId, ownerId)
+            .map(ChatRoom::getRoomId)
+            .orElseGet(() -> {
+                ChatRoom room = new ChatRoom();
+                room.setUserId(userId);
+                room.setOwnerId(ownerId);
+                room.setRoomId(roomId);
+                room.setFirstMessageSent(false);
 
-        return chatRoomRepo.findByUserIdAndOwnerId(uId, oId)
-                .map(ChatRoom::getRoomId)
-                .orElseGet(() -> {
-                    try {
-                        ChatRoom room = new ChatRoom();
-                        room.setUserId(uId);
-                        room.setOwnerId(oId);
-                        room.setRoomId(roomId);
-                        room.setFirstMessageSent(false);
-
-                        chatRoomRepo.save(room);
-                        return roomId;
-
-                    } catch (Exception e) {
-
-                        return chatRoomRepo.findByUserIdAndOwnerId(uId, oId)
-                                .map(ChatRoom::getRoomId)
-                                .orElse(roomId);
-                    }
-                });
-    }
-
+                chatRoomRepo.save(room);
+                return roomId;
+            });
+}
 
 
     @Override
     public MessageResponseDTO sendMessage(MessageRequestDTO dto) {
 
-        if (dto == null || dto.getSenderId() == null || dto.getReceiverId() == null) {throw new BadRequestException("Invalid request");}
+        if (dto == null || dto.getUserId() == null || dto.getOwnerId() == null) {throw new BadRequestException("Invalid request");}
         if (!"USER".equals(dto.getSenderRole()) && !"PROPERTY_OWNER".equals(dto.getSenderRole())) {throw new BadRequestException("Invalid sender role");}
 
         Long userId;
         Long ownerId;
 
         if ("USER".equals(dto.getSenderRole())) {
-            userId = dto.getSenderId();
-            ownerId = dto.getReceiverId();
+            userId = dto.getUserId();
+            ownerId = dto.getOwnerId();
         } else {
-            ownerId = dto.getSenderId();
-            userId = dto.getReceiverId();
+            ownerId = dto.getUserId();
+            userId = dto.getOwnerId();
         }
 
         String roomId = createOrGetRoom(userId, ownerId);
@@ -131,7 +116,7 @@ public class ChatServiceImpl implements ChatService {
 
         Message msg = new Message();
         msg.setRoomId(roomId);
-        msg.setSenderId(dto.getSenderId());
+        msg.setSenderId(dto.getUserId());
         msg.setSenderRole(dto.getSenderRole());
         msg.setContent(dto.getMessage());
         msg.setTimestamp(LocalDateTime.now());
@@ -147,12 +132,19 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public void acceptChat(String roomId) {
 
-        ChatRoom room = chatRoomRepo.findByRoomId(roomId)
-                .orElseThrow(() -> new RuntimeException("Room not found"));
+        ChatRoom room = chatRoomRepo.findByRoomId(roomId).orElseThrow(() -> new RuntimeException("Room not found"));
+        if (room.isAccepted()) {
+            throw new BadRequestException("Chat is already accepted");
+        }
+        if (room.isRejected()) {
+            throw new BadRequestException("Rejected chat cannot be accepted");
+        }
+        if (!room.isFirstMessageSent()) {
+            throw new BadRequestException("No chat request to accept");
+        }
 
         room.setAccepted(true);
         chatRoomRepo.save(room);
-
 
         Message autoReply = new Message();
         autoReply.setRoomId(roomId);
@@ -165,37 +157,37 @@ public class ChatServiceImpl implements ChatService {
 
         messageRepo.save(autoReply);
         MessageResponseDTO response = mapToDTO(autoReply);
-        socketServer.getRoomOperations(roomId)
-                .sendEvent("chat_accepted", roomId);
-        socketServer.getRoomOperations(roomId)
-                .sendEvent("receive_message", response);
-    }
 
+        socketServer.getRoomOperations(roomId).sendEvent("chat_accepted", response);
+        socketServer.getRoomOperations(roomId).sendEvent("receive_message", response);
+    }
 
     @Override
     public void rejectChat(String roomId) {
 
-        ChatRoom room = chatRoomRepo.findByRoomId(roomId)
-                .orElseThrow(() -> new RuntimeException("Room not found"));
+    ChatRoom room = chatRoomRepo.findByRoomId(roomId)
+            .orElseThrow(() -> new RuntimeException("Room not found"));
 
-        room.setAccepted(false);
-        room.setRejected(true);
-        chatRoomRepo.save(room);
+    if (room.isRejected()) {throw new BadRequestException("Chat is already rejected");}
+    if (room.isAccepted()) {throw new BadRequestException("Accepted chat cannot be rejected");}
+    if (!room.isFirstMessageSent()) {throw new BadRequestException("No chat exists to reject");}
 
-        Message rejectMsg = new Message();
-        rejectMsg.setRoomId(roomId);
-        rejectMsg.setSenderId(room.getOwnerId());
-        rejectMsg.setSenderRole("SYSTEM");
-        rejectMsg.setContent("Chat has been rejected by the owner.");
-        rejectMsg.setTimestamp(LocalDateTime.now());
-        rejectMsg.setStatus(MessageStatus.REJECTED);
-
-        messageRepo.save(rejectMsg);
-        socketServer.getRoomOperations(roomId)
-                .sendEvent("chat_rejected", mapToDTO(rejectMsg));
-    }
+    room.setRejected(true);
+    room.setAccepted(false);
+    chatRoomRepo.save(room);
 
 
+    Message rejectMsg = new Message();
+    rejectMsg.setRoomId(roomId);
+    rejectMsg.setSenderId(room.getOwnerId());
+    rejectMsg.setSenderRole("SYSTEM");
+    rejectMsg.setContent("Chat has been rejected by the owner.");
+    rejectMsg.setTimestamp(LocalDateTime.now());
+    rejectMsg.setStatus(MessageStatus.REJECTED);
+
+    messageRepo.save(rejectMsg);
+    socketServer.getRoomOperations(roomId).sendEvent("chat_rejected", mapToDTO(rejectMsg));
+}
 
     @Override
     public void handleTyping(TypingDTO dto) {
