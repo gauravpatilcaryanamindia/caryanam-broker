@@ -47,6 +47,11 @@ public class AuthServiceImpl implements AuthService {
      @Autowired
     private AuthenticationManager authenticationManager;
 
+
+    @Autowired
+    private PropertyOwnerRepository propertyOwnerRepository;
+
+
     private static final Set<String> tokenBlacklist = new HashSet<>();
 
     //  USER REGISTRATION
@@ -122,25 +127,38 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-
-
     @Override
     public String login(LoginRequestDTO request) {
-
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
                         request.getPassword()));
-
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
         String role = userDetails.getAuthorities()
                 .stream()
                 .findFirst()
                 .map(granted -> granted.getAuthority())
                 .orElse("USER");
 
-
+        Long id = null;
+        if ("ROLE_USER".equals(role)) {
+            User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+            if (user != null) {
+                id = user.getUserId();
+            }
+        }
+        else if ("ROLE_PROPERTY_OWNER".equals(role)) {
+            PropertyOwner owner = propertyOwnerRepository.findByEmail(request.getEmail()).orElse(null);
+            if (owner != null) {
+                id = owner.getOwnerId();
+            }
+        }
+        else if ("ROLE_ADMIN".equals(role)) {
+            Admin admin = adminRepository.findByEmail(request.getEmail()).orElse(null);
+            if (admin != null) {
+                id = admin.getAdminId();
+            }
+        }
         String deviceType = request.getDeviceType();
         if (deviceType == null || deviceType.isEmpty()) {
             deviceType = "WEB";
@@ -148,7 +166,8 @@ public class AuthServiceImpl implements AuthService {
         return jwtUtil.generateToken(
                 userDetails.getUsername(),
                 role,
-                deviceType
+                deviceType,
+                id
         );
     }
 
