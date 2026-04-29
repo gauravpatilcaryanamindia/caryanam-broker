@@ -44,7 +44,7 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-     @Autowired
+    @Autowired
     private AuthenticationManager authenticationManager;
 
 
@@ -58,8 +58,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public RegisterResponseDTO registerUser(RegisterRequestDTO dto) {
 
-        if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("User email already exists");
+        if (isEmailAlreadyUsed(dto.getEmail())) {
+            throw new RuntimeException("Email already exists");
         }
 
         User user = new User();
@@ -82,8 +82,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public RegisterResponseDTO registerPropertyOwner(RegisterRequestDTO dto) {
-        if (propertyOwerRepository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("propertyOwer email already exists");
+        if (isEmailAlreadyUsed(dto.getEmail())) {
+            throw new RuntimeException("Email already exists");
         }
         PropertyOwner owner = new PropertyOwner();
         owner.setFullName(dto.getFullName());
@@ -105,10 +105,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public RegisterResponseDTO registerAdmin(RegisterRequestDTO dto) {
 
-        if (adminRepository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("Admin email already exists");
+        if (isEmailAlreadyUsed(dto.getEmail())) {
+            throw new RuntimeException("Email already exists");
         }
-
         Admin admin = new Admin();
         admin.setFullName(dto.getFullName());
         admin.setMobileNumber(String.valueOf(dto.getMobileNumber()));
@@ -191,8 +190,12 @@ public class AuthServiceImpl implements AuthService {
         if (user == null) return null;
         if (dto.getFullName() != null) user.setFullName(dto.getFullName());
         if (dto.getMobileNumber() != null) user.setMobileNumber(dto.getMobileNumber());
-        if (dto.getEmail() != null) user.setEmail(dto.getEmail());
-        if (dto.getPassword() != null) user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        if (dto.getEmail() != null) {
+            if (!dto.getEmail().equals(user.getEmail()) && isEmailAlreadyUsed(dto.getEmail())) {
+                throw new RuntimeException("Email already exists");
+            }
+            user.setEmail(dto.getEmail());
+        }        if (dto.getPassword() != null) user.setPassword(passwordEncoder.encode(dto.getPassword()));
         userRepository.save(user);
         return user;
     }
@@ -202,8 +205,12 @@ public class AuthServiceImpl implements AuthService {
         if (propertyOwner == null) return null;
         if (dto.getFullName() != null) propertyOwner.setFullName(dto.getFullName());
         if (dto.getMobileNumber() != null) propertyOwner.setMobileNumber(dto.getMobileNumber());
-        if (dto.getEmail() != null) propertyOwner.setEmail(dto.getEmail());
-        if (dto.getPassword() != null) propertyOwner.setPassword(passwordEncoder.encode(dto.getPassword()));
+        if (dto.getEmail() != null) {
+            if (!dto.getEmail().equals(propertyOwner.getEmail()) && isEmailAlreadyUsed(dto.getEmail())) {
+                throw new RuntimeException("Email already exists");
+            }
+            propertyOwner.setEmail(dto.getEmail());
+        }        if (dto.getPassword() != null) propertyOwner.setPassword(passwordEncoder.encode(dto.getPassword()));
         propertyOwerRepository.save(propertyOwner);
         return propertyOwner;
     }
@@ -213,8 +220,12 @@ public class AuthServiceImpl implements AuthService {
         if (admin == null) return null;
         if (dto.getFullName() != null) admin.setFullName(dto.getFullName());
         if (dto.getMobileNumber() != null) admin.setMobileNumber(dto.getMobileNumber());
-        if (dto.getEmail() != null) admin.setEmail(dto.getEmail());
-        if (dto.getPassword() != null) admin.setPassword(passwordEncoder.encode(dto.getPassword()));
+        if (dto.getEmail() != null) {
+            if (!dto.getEmail().equals(admin.getEmail()) && isEmailAlreadyUsed(dto.getEmail())) {
+                throw new RuntimeException("Email already exists");
+            }
+            admin.setEmail(dto.getEmail());
+        }        if (dto.getPassword() != null) admin.setPassword(passwordEncoder.encode(dto.getPassword()));
         adminRepository.save(admin);
         return admin;
     }
@@ -243,4 +254,9 @@ public class AuthServiceImpl implements AuthService {
         return true;
     }
 
+    private boolean isEmailAlreadyUsed(String email) {
+        return userRepository.existsByEmail(email)
+                || propertyOwerRepository.existsByEmail(email)
+                || adminRepository.existsByEmail(email);
+    }
 }
