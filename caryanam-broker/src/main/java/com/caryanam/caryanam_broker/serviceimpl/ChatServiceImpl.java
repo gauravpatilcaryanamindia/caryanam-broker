@@ -8,6 +8,7 @@ import com.caryanam.caryanam_broker.repository.*;
 import com.caryanam.caryanam_broker.service.ChatService;
 import com.caryanam.caryanam_broker.socket.*;
 
+import com.corundumstudio.socketio.SocketIOClient;
 import jdk.jshell.Snippet;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.misc.LogManager;
@@ -19,6 +20,7 @@ import com.corundumstudio.socketio.SocketIOServer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -206,7 +208,15 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public void handleTyping(TypingDTO dto) {
-        if (dto.getRoomId() == null) {return;}
+        if (dto.getRoomId() == null) {
+            throw new BadRequestException("RoomId is required");
+        }
+        Collection<SocketIOClient> clients =
+                socketServer.getRoomOperations(dto.getRoomId()).getClients();
+
+        if (clients == null || clients.isEmpty()) {
+            throw new RuntimeException("Room does not exist or no users connected");
+        }
         socketServer.getRoomOperations(dto.getRoomId()).sendEvent("typing", dto);
     }
 
