@@ -79,7 +79,6 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public List<PropertyDto> getAllProperties(Long userId, HttpServletRequest request) {
-        User user = userRepository.findById(userId).orElse(null);
         boolean isPremium = false;
         if (request.getAttribute("isPremium") != null) {
             isPremium = (boolean) request.getAttribute("isPremium");
@@ -88,40 +87,42 @@ public class PropertyServiceImpl implements PropertyService {
         List<PropertyDto> dtoList = new ArrayList<>();
         for (Property property : properties) {
             PropertyDto dto = new PropertyDto();
+            List<PropertyImage> images =
+                    propertyImageRepository.findByPropertyId(property.getId());
+            List<String> imageList = new ArrayList<>();
+            for (PropertyImage img : images) {
+                imageList.add(img.getImagePath());
+            }
             if (!isPremium) {
-                List<PropertyImage> images =
-                        propertyImageRepository.findByPropertyId(property.getId());
-                List<String> imageList = new ArrayList<>();
-
-                for (PropertyImage img : images) {
-                    imageList.add(img.getImagePath());
-                }
-
+                dto.setTitle(property.getTitle());
+                dto.setPropertyType(property.getPropertyType());
                 dto.setDoctypeImages(imageList.toString());
             }
             else {
-
+                dto.setId(property.getId());
+                dto.setTitle(property.getTitle());
+                dto.setPrice(property.getPrice());
                 dto.setLocation(property.getLocation());
                 dto.setAddress(property.getAddress());
                 dto.setCity(property.getCity());
                 dto.setState(property.getState());
+                dto.setPincode(property.getPincode());
                 dto.setDescription(property.getDescription());
                 dto.setPropertyType(property.getPropertyType());
-                List<PropertyImage> images =
-                        propertyImageRepository.findByPropertyId(property.getId());
-                List<String> imageList = new ArrayList<>();
-                for (PropertyImage img : images) {
-                    imageList.add(img.getImagePath());
-                }
+                dto.setPgType(property.getPgType());
+                dto.setBhkType(property.getBhkType());
+                dto.setFurnishing(property.getFurnishing());
+                dto.setCarpetArea(property.getCarpetArea());
+                dto.setMobileNumber(property.getMobileNumber());
+                dto.setLikesCount(property.getLikesCount());
+                dto.setViewsCount(property.getViewsCount());
+                dto.setStatus(property.getStatus());
                 dto.setDoctypeImages(imageList.toString());
             }
-
             dtoList.add(dto);
         }
-
         return dtoList;
     }
-
 
     @Override
     public PropertyDto getPropertyById(Long id) {
