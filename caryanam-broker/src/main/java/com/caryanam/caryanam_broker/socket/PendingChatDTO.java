@@ -11,7 +11,6 @@ public class PendingChatDTO {
     private String lastMessage;
     private String time;
 
-
     public PendingChatDTO(String roomId, Long userId, Long ownerId, String lastMessage, String time) {
         this.roomId = roomId;
         this.userId = userId;
@@ -19,4 +18,7 @@ public class PendingChatDTO {
         this.lastMessage = lastMessage;
         this.time = time;
     }
+
+
+
 }

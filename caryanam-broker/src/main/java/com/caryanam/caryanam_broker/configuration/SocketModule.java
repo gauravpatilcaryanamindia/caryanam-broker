@@ -51,7 +51,7 @@ public class SocketModule {
             int count = server.getRoomOperations(roomId).getClients().size();
             System.out.println("TOTAL CLIENTS IN ROOM: " + count);
 
-            // ✅ SEND HISTORY ONLY ON JOIN (separate event)
+            //  SEND HISTORY ONLY ON JOIN (separate event)
             try {
                 client.sendEvent("chat_history", chatService.getMessagesByRoom(roomId));
             } catch (Exception e) {
@@ -70,7 +70,7 @@ public class SocketModule {
 
             System.out.println("Broadcasting to ROOM: " + roomId);
 
-            // ✅ ONLY REAL-TIME EVENT
+            //  ONLY REAL-TIME EVENT
            // server.getRoomOperations(roomId).sendEvent("receive_message", response);
         });
 

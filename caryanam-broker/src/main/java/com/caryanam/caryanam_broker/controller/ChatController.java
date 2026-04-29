@@ -169,8 +169,12 @@ public ResponseEntity<?> sendMessage(@RequestBody MessageRequestDTO dto) {
         if (ownerId == null) {
             throw new BadRequestException("OwnerId is required");
         }
+
         List<PendingChatDTO> chats = chatService.getPendingChats(ownerId);
-        return ResponseEntity.ok(new ResponseDto<>(200, "Pending chats fetched successfully", chats));
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(200, "Pending chats fetched successfully", chats)
+        );
     }
 
     @GetMapping("/accepted/{ownerId}")

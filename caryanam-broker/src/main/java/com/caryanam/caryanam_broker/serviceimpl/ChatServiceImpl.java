@@ -241,18 +241,23 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public List<PendingChatDTO> getPendingChats(Long ownerId) {
 
-        List<ChatRoom> rooms = chatRoomRepo.findByOwnerIdAndFirstMessageSentTrueAndAcceptedFalseAndIsRejectedFalse(ownerId);
-        List<PendingChatDTO> response = new ArrayList<>();
+        if (ownerId == null) {
+            throw new RuntimeException("OwnerId is required");
+        }
 
+        List<ChatRoom> rooms = chatRoomRepo.findByOwnerIdAndFirstMessageSentTrueAndAcceptedFalseAndIsRejectedFalse(ownerId);
+
+        List<PendingChatDTO> response = new ArrayList<>();
         for (ChatRoom room : rooms) {
 
-            List<Message> messages = messageRepo.findByRoomId(room.getRoomId());
+
+            Message lastMsg = messageRepo.findTopByRoomIdOrderByTimestampDesc(room.getRoomId());
+
             String lastMessage = "";
             String time = "";
-
-            if (!messages.isEmpty()) {
-                Message lastMsg = messages.get(messages.size() - 1);
+            if (lastMsg != null) {
                 lastMessage = lastMsg.getContent();
+
                 if (lastMsg.getTimestamp() != null) {
                     time = lastMsg.getTimestamp().toString();
                 }
@@ -264,10 +269,8 @@ public class ChatServiceImpl implements ChatService {
                     lastMessage,
                     time));
         }
-
         return response;
     }
-
     @Override
     public List<AcceptedChatDTO> getAcceptedChats(Long ownerId) {
 
