@@ -282,26 +282,22 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public List<PropertyDto> filterProperties(PropertyFilterDto filterDto, Long userId) {
-
         User user = userRepository.findById(userId).orElse(null);
-
         if (user == null || !user.isPremiumActive()) {
             return new ArrayList<>();
         }
-
         List<Property> allProperties = propertyRepository.findAll();
         List<Property> filteredList = new ArrayList<>();
-
         for (Property property : allProperties) {
-
             boolean match = true;
+            if (filterDto.getPropertyType() != null
+                    && !filterDto.getPropertyType().isEmpty()
+                    && !filterDto.getPropertyType().equalsIgnoreCase("ALL")) {
 
-            if (filterDto.getPropertyType() != null && !filterDto.getPropertyType().isEmpty()) {
                 if (!property.getPropertyType().name().equalsIgnoreCase(filterDto.getPropertyType())) {
                     match = false;
                 }
             }
-
             if (filterDto.getMinPrice() != null) {
                 if (property.getPrice() < filterDto.getMinPrice()) {
                     match = false;
