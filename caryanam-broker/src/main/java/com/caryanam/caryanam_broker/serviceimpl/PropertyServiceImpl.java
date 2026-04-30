@@ -335,7 +335,6 @@ public class PropertyServiceImpl implements PropertyService {
                 }
             }
         }
-
         List<PropertyDto> dtoList = new ArrayList<>();
         for (Property property : filteredList) {
             PropertyDto dto = new PropertyDto();
@@ -353,6 +352,17 @@ public class PropertyServiceImpl implements PropertyService {
             dto.setLikesCount(property.getLikesCount());
             dto.setViewsCount(property.getViewsCount());
             dto.setStatus(property.getStatus());
+            List<PropertyImage> images = propertyImageRepository.findByPropertyId(property.getId());
+            List<String> imageList = new ArrayList<>();
+            for (int i = 0; i < images.size(); i++) {
+                String path = images.get(i).getImagePath();
+                if (i == 0) {
+                    dto.setCoverImage(path);
+                } else {
+                    imageList.add(path);
+                }
+            }
+            dto.setDoctypeImages(imageList.toString());
             dtoList.add(dto);
         }
         return dtoList;
