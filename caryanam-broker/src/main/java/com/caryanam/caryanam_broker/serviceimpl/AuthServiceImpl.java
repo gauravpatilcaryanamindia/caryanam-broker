@@ -68,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
         user.setEmail(dto.getEmail());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setRole(Role.USER);
-
+        user.setIsActive("true");
         User saved = userRepository.save(user);
 
         return RegisterResponseDTO.builder()
@@ -92,6 +92,7 @@ public class AuthServiceImpl implements AuthService {
         owner.setEmail(dto.getEmail());
         owner.setPassword(passwordEncoder.encode(dto.getPassword()));
         owner.setRole(Role.PROPERTY_OWNER);
+        owner.setIsActive("true");
         PropertyOwner saved = propertyOwerRepository.save(owner);
         return RegisterResponseDTO.builder()
                 .id(saved.getOwnerId())
