@@ -26,49 +26,98 @@ public class CustomUserDetailsService implements UserDetailsService {
     private PropertyOwnerRepository propertyOwnerRepository;
 
 
+//    @Override
+//    public UserDetails loadUserByUsername(String email)
+//            throws UsernameNotFoundException {
+//
+//        //  Check USER
+//        User user = userRepository.findByEmail(email).orElse(null);
+//        if (user != null) {
+//
+//            String role = user.getRole() != null ? user.getRole().name() : "USER";
+//
+//            return new org.springframework.security.core.userdetails.User(
+//                    user.getEmail(),
+//                    user.getPassword(),
+//                    List.of(new SimpleGrantedAuthority("ROLE_" + role))
+//            );
+//        }
+//
+//        //  Check ADMIN
+//        Admin admin = adminRepository.findByEmail(email).orElse(null);
+//        if (admin != null) {
+//
+//            String role = admin.getRole() != null ? admin.getRole().name() : "ADMIN";
+//
+//            return new org.springframework.security.core.userdetails.User(
+//                    admin.getEmail(),
+//                    admin.getPassword(),
+//                    List.of(new SimpleGrantedAuthority("ROLE_" + role))
+//            );
+//        }
+//
+//        //  Check PROPERTY OWNER
+//        PropertyOwner owner = propertyOwnerRepository.findByEmail(email).orElse(null);
+//        if (owner != null) {
+//
+//            String role = owner.getRole() != null ? owner.getRole().name() : "PROPERTY_OWNER";
+//
+//            return new org.springframework.security.core.userdetails.User(
+//                    owner.getEmail(),
+//                    owner.getPassword(),
+//                    List.of(new SimpleGrantedAuthority("ROLE_" + role))
+//            );
+//        }
+//
+//
+//        throw new UsernameNotFoundException("User not found with email: " + email);
+//    }}
+
     @Override
     public UserDetails loadUserByUsername(String email)
             throws UsernameNotFoundException {
 
-        //  Check USER
+        // USER
         User user = userRepository.findByEmail(email).orElse(null);
         if (user != null) {
 
             String role = user.getRole() != null ? user.getRole().name() : "USER";
 
-            return new org.springframework.security.core.userdetails.User(
+            return new CustomUserDetails(
+                    user.getUserId(),
                     user.getEmail(),
                     user.getPassword(),
                     List.of(new SimpleGrantedAuthority("ROLE_" + role))
             );
         }
 
-        //  Check ADMIN
+        // ADMIN
         Admin admin = adminRepository.findByEmail(email).orElse(null);
         if (admin != null) {
 
             String role = admin.getRole() != null ? admin.getRole().name() : "ADMIN";
 
-            return new org.springframework.security.core.userdetails.User(
+            return new CustomUserDetails(
+                    admin.getAdminId(),
                     admin.getEmail(),
                     admin.getPassword(),
                     List.of(new SimpleGrantedAuthority("ROLE_" + role))
             );
         }
 
-        //  Check PROPERTY OWNER
+        // OWNER
         PropertyOwner owner = propertyOwnerRepository.findByEmail(email).orElse(null);
         if (owner != null) {
 
             String role = owner.getRole() != null ? owner.getRole().name() : "PROPERTY_OWNER";
 
-            return new org.springframework.security.core.userdetails.User(
+            return new CustomUserDetails(
+                    owner.getOwnerId(),
                     owner.getEmail(),
                     owner.getPassword(),
                     List.of(new SimpleGrantedAuthority("ROLE_" + role))
             );
         }
-
 
         throw new UsernameNotFoundException("User not found with email: " + email);
     }

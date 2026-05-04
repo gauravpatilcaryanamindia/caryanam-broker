@@ -65,4 +65,7 @@ public class MessageConfig {
             "🔒 Buy Premium to unlock full property details & images";
     public static final String NO_ALPHABETS_ALLOWED ="No alphabets allowed " ;
     public static final String PROPERTY_NOT_ADDED = "property not added ";
+    public static final String UNAUTHORIZED = "Unauthorized access";
+    public static final String FORBIDDEN = "You can only perform action on your own account";
+    public static final String USER_DEACTIVATED = "User deactivated successfully";
 }
