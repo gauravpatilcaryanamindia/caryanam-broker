@@ -22,7 +22,7 @@ public class SocketModule {
     @PostConstruct
     public void init() {
 
-        // ================= CONNECT =================
+
         server.addConnectListener(client -> {
             String userId = client.getHandshakeData().getSingleUrlParam("userId");
             String ownerId = client.getHandshakeData().getSingleUrlParam("ownerId");
@@ -36,12 +36,12 @@ public class SocketModule {
             System.out.println("Session ID: " + client.getSessionId());
         });
 
-        // ================= DISCONNECT =================
+
         server.addDisconnectListener(client -> {
             System.out.println("Client Disconnected: " + client.getSessionId());
         });
 
-        // ================= JOIN ROOM =================
+
         server.addEventListener("join_room", String.class, (client, roomId, ackSender) -> {
 
             client.joinRoom(roomId);
@@ -51,7 +51,7 @@ public class SocketModule {
             int count = server.getRoomOperations(roomId).getClients().size();
             System.out.println("TOTAL CLIENTS IN ROOM: " + count);
 
-            //  SEND HISTORY ONLY ON JOIN (separate event)
+
             try {
                 client.sendEvent("chat_history", chatService.getMessagesByRoom(roomId));
             } catch (Exception e) {
@@ -59,7 +59,7 @@ public class SocketModule {
             }
         });
 
-        // ================= SEND MESSAGE =================
+
         server.addEventListener("send_message", MessageRequestDTO.class, (client, dto, ackSender) -> {
 
             System.out.println("Message received: " + dto);
@@ -70,11 +70,10 @@ public class SocketModule {
 
             System.out.println("Broadcasting to ROOM: " + roomId);
 
-            //  ONLY REAL-TIME EVENT
-           // server.getRoomOperations(roomId).sendEvent("receive_message", response);
+
         });
 
-        // ================= TYPING =================
+
         server.addEventListener("typing", TypingDTO.class, (client, dto, ackSender) -> {
 
             if (dto.getRoomId() == null) return;

@@ -28,29 +28,29 @@ public class SocketConfig {
 
         config.setOrigin("http://localhost:63342");
 
-        //  IMPORTANT (avoid connection issues)
+
         config.setPingInterval(25000);
         config.setPingTimeout(60000);
 
-        // ================= AUTH =================
+
         config.setAuthorizationListener(data -> {
 
             String userIdStr = data.getSingleUrlParam("userId");
             String ownerIdStr = data.getSingleUrlParam("ownerId");
 
-            //  both present
+
             if (userIdStr != null && ownerIdStr != null) {
                 System.out.println(" BOTH userId & ownerId present");
                 return AuthorizationResult.FAILED_AUTHORIZATION;
             }
 
-            //  none present
+
             if (userIdStr == null && ownerIdStr == null) {
                 System.out.println(" No ID provided");
                 return AuthorizationResult.FAILED_AUTHORIZATION;
             }
 
-            // ================= USER =================
+
             if (userIdStr != null) {
                 try {
                     Long userId = Long.valueOf(userIdStr);
@@ -73,7 +73,7 @@ public class SocketConfig {
                 return AuthorizationResult.FAILED_AUTHORIZATION;
             }
 
-            // ================= OWNER =================
+
             if (ownerIdStr != null) {
                 try {
                     Long ownerId = Long.valueOf(ownerIdStr);

@@ -22,7 +22,7 @@ public class Message {
 
     private String content;
 
-    private boolean isRead;
+   private boolean isRead;
 
     private LocalDateTime timestamp;
 

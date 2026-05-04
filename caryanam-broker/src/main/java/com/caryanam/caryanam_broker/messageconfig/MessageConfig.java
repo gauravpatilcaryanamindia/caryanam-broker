@@ -6,7 +6,7 @@ public class MessageConfig {
     public static final String PRICE_REQUIRED = "Valid price is required";
     public static final String LOCATION_REQUIRED = "Location is required";
     public static final String DESCRIPTION_REQUIRED = "Description is required";
-    public static final String PROPERTY_TYPE_REQUIRED = "Property type is required";
+
     public static final String PROPERTY_TYPE_INVALID = "ALL is only for filter";
     public static final String BHK_REQUIRED = "BHK type is required";
     public static final String FURNISHING_REQUIRED = "Furnishing is required";
@@ -27,17 +27,17 @@ public class MessageConfig {
     public static final String PROPERTY_NOT_FOUND = "Property not found";
     public static final String IMAGE_UPLOAD_FAILED = "Image upload failed";
     public static final String MOBILE_INVALID_START =  "Invalid mobile number format";
-    public static final String PROPERTY_LIMIT_EXCEEDED = "Cannot add more properties. Please purchase premium.";
+
     public static final String PROPERTY_IMAGE_INCOMPLETE = "Add at least 4 images to activate property";
     public static final String TITLE_INVALID = "Title should not contain numbers";
     public static final String LOCATION_INVALID = "Location should not contain numbers";
     public static final String ADMIN_NOT_FOUND = "Admin not Found.";
-    public static final String PREMIUM_ACTIVE="Premium activated";
+
     public static final String STATE_IS_REQUIRED="State is required";
     public static final String INVALID_PINCODE="Invalid pincode";
     public static final String ADDRESS_IS_REQUIRED="Address is required";
     public static final String CITY_IS_REQUIRED="City is required";
-    public static final String PG_TYPE_REQUIRED="Pg not found";
+
     public static final String PG_TYPE_INVALID="Invalid PG Type";
     public static final String USER_NOT_FOUND = "User not found";
     public static final String OWNER_NOT_FOUND = "Owner not found";
@@ -54,7 +54,7 @@ public class MessageConfig {
     public static final String CITY_REQUIRED = "City is required";
     public static final String PAYMENT_ALREADY_IN_PROCESS = "Payment already in process";
     public static final String PREMIUM_REQUEST_SENT = "User premium request sent";
-    public static final String PREMIUM_NOT_ACTIVE = "Premium not active";
+
     public static final String OWNER_PREMIUM_APPROVED = "Owner premium approved successfully";
     public static final String USER_PREMIUM_APPROVED = "User premium approved successfully";
     public static final String OWNER_PREMIUM_REJECTED = "Owner premium rejected successfully";

@@ -115,7 +115,7 @@ public class OwnerPropertyController {
         return ResponseHandler.generateResponse(MessageConfig.PROPERTY_ADDED, HttpStatus.OK, response);
     }
 
-    // 3. Get Property By Id
+
     @GetMapping("/getPropertyById/{id}")
     public ResponseEntity<Object> getPropertyById(@PathVariable Long id) {
         if (id == null || id <= 0) {
@@ -124,7 +124,7 @@ public class OwnerPropertyController {
         return ResponseHandler.generateResponse(MessageConfig.PROPERTY_FETCHED, HttpStatus.OK, propertyService.getPropertyById(id));
     }
 
-    // 4. Update Property
+
     @PutMapping("/updatePropertyById/{id}")
     public ResponseEntity<Object> updateProperty(@PathVariable Long id, @RequestBody PropertyDto propertyDto) {
         if (id == null || id <= 0) {
@@ -133,7 +133,7 @@ public class OwnerPropertyController {
         return ResponseHandler.generateResponse(MessageConfig.PROPERTY_UPDATED, HttpStatus.OK, propertyService.updateProperty(id, propertyDto));
     }
 
-    // 5. Delete Property
+
     @DeleteMapping("deletePropertyById/{id}")
     public ResponseEntity<Object> deleteProperty(@PathVariable Long id) {
         if (id == null || id <= 0) {

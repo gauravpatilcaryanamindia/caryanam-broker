@@ -1,6 +1,8 @@
 package com.caryanam.caryanam_broker.controller;
 
 import com.caryanam.caryanam_broker.dto.ResponseDto;
+import com.caryanam.caryanam_broker.dto.ResponseHandler;
+import com.caryanam.caryanam_broker.dto.UserStatusDTO;
 import com.caryanam.caryanam_broker.enums.Role;
 import com.caryanam.caryanam_broker.exception.BadRequestException;
 import com.caryanam.caryanam_broker.exception.InvalidOperationException;
@@ -15,6 +17,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -134,15 +137,27 @@ public ResponseEntity<?> sendMessage(@RequestBody MessageRequestDTO dto) {
         return ResponseEntity.ok(new ResponseDto<>(200, "Typing event sent", dto.getRoomId()));
     }
 
+//    @PostMapping("/status")
+//    public ResponseEntity<ResponseDto<String>> updateStatus(
+//            @RequestParam Long userId,
+//            @RequestParam boolean online) {
+//
+//        if (userId == null) {throw new BadRequestException("UserId is required");}
+//
+//        chatService.updateUserStatus(userId, online);
+//        return ResponseEntity.ok(new ResponseDto<>(200, "User status updated", userId.toString()));
+//    }
+
     @PostMapping("/status")
-    public ResponseEntity<ResponseDto<String>> updateStatus(
-            @RequestParam Long userId,
-            @RequestParam boolean online) {
+    public ResponseEntity<ResponseDto<String>> updateStatus(@RequestBody UserStatusDTO dto) {
 
-        if (userId == null) {throw new BadRequestException("UserId is required");}
+        if (dto.getUserId() == null) {
+            throw new BadRequestException("UserId is required");
+        }
 
-        chatService.updateUserStatus(userId, online);
-        return ResponseEntity.ok(new ResponseDto<>(200, "User status updated", userId.toString()));
+        chatService.updateUserStatus(dto.getUserId(), dto.isOnline());
+
+        return ResponseEntity.ok(new ResponseDto<>(200, "status successfully", null));
     }
 
     @GetMapping("/history/{roomId}")
