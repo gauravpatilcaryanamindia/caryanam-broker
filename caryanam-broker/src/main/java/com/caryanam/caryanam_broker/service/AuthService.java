@@ -10,8 +10,6 @@ public interface AuthService {
 
     RegisterResponseDTO registerUser(RegisterRequestDTO dto);
 
-    RegisterResponseDTO registerAdmin(RegisterRequestDTO dto);
-
     RegisterResponseDTO registerPropertyOwner(RegisterRequestDTO dto);
 
     public String login(LoginRequestDTO dto);

@@ -101,30 +101,6 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-    // ADMIN REGISTRATION
-    @Override
-    public RegisterResponseDTO registerAdmin(RegisterRequestDTO dto) {
-
-        if (isEmailAlreadyUsed(dto.getEmail())) {
-            throw new RuntimeException("Email already exists");
-        }
-        Admin admin = new Admin();
-        admin.setFullName(dto.getFullName());
-        admin.setMobileNumber(String.valueOf(dto.getMobileNumber()));
-        admin.setEmail(dto.getEmail());
-        admin.setPassword(passwordEncoder.encode(dto.getPassword()));
-        admin.setRole(Role.ADMIN);
-
-        Admin saved = adminRepository.save(admin);
-
-        return RegisterResponseDTO.builder()
-                .id(saved.getAdminId())
-                .fullName(saved.getFullName())
-                .email(saved.getEmail())
-                .role(saved.getRole().name())
-
-                .build();
-    }
 
     @Override
     public String login(LoginRequestDTO request) {

@@ -80,59 +80,6 @@ public class AuthController {
         return ResponseEntity.status(201).body(new ResponseDto<>(201, "User Registered Successfully", response));
     }
 
-
-    @PostMapping("/register/admin")
-    public ResponseEntity<ResponseDto<RegisterResponseDTO>> registerAdmin(
-            @RequestBody RegisterRequestDTO dto) {
-
-        if (dto == null) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Request body is missing", null));
-        }
-        if (dto.getFullName() == null || dto.getFullName().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Full name is required", null));
-        }
-        if (!dto.getFullName().matches("^[a-zA-Z\\s.-]+$")) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Full name contains invalid characters", null));
-        }
-        if (dto.getMobileNumber() == null || !dto.getMobileNumber().matches("\\d{10}")) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number must be 10 digits", null));
-        }
-        if (dto.getMobileNumber() == null ||
-                !dto.getMobileNumber().matches("^[6-9]\\d{9}$")) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number must be Starts with 6, 7, 8, or 9", null));
-        }
-        if (dto.getMobileNumber() == null || dto.getMobileNumber().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number is required", null));
-        }
-        if (adminRepository.existsByMobileNumber(dto.getMobileNumber())) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number already exists", null));
-        }
-
-        if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Email is required", null));
-        }
-        if (!dto.getEmail().matches("^[A-Za-z0-9._%+-]+@gmail\\.com$")) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Only Gmail format allowed", null));
-        }
-        if (dto.getPassword() == null || dto.getPassword().length() < 6) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Password must be at least 6 characters", null));
-        }
-        if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Password is required", null));
-        }
-        if (dto.getRole() == null) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Role is required", null));
-        }
-        if (dto.getRole() != Role.ADMIN) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Only ADMIN role allowed", null));
-        }
-
-        dto.setEmail(dto.getEmail().toLowerCase().trim());
-        RegisterResponseDTO response = authService.registerAdmin(dto);
-        return ResponseEntity.status(201).body(new ResponseDto<>(201, "Admin Registered Successfully", response));
-    }
-
-
     @PostMapping("/register/POwner")
     public ResponseEntity<ResponseDto<RegisterResponseDTO>> registerOwner(
             @RequestBody RegisterRequestDTO dto) {
@@ -304,7 +251,7 @@ public class AuthController {
         if (id == null || id <= 0) {
             return ResponseEntity.badRequest().body("Invalid ID");
         }
-        boolean result = authService.deactivateOwner(id);
+        boolean result = authService.deactivateUser(id);
         if (!result) {
             return ResponseEntity.badRequest().body("User not found");
         }
@@ -316,7 +263,7 @@ public class AuthController {
         if (id == null || id <= 0) {
             return ResponseEntity.badRequest().body("Invalid ID");
         }
-        boolean result = authService.deactivateAdmin(id);
+        boolean result = authService.deactivateOwner(id);
         if (!result) {
             return ResponseEntity.badRequest().body("User not found");
         }
@@ -328,7 +275,7 @@ public class AuthController {
         if (id == null || id <= 0) {
             return ResponseEntity.badRequest().body("Invalid ID");
         }
-        boolean result = authService.deactivateUser(id);
+        boolean result = authService.deactivateAdmin(id);
         if (!result) {
             return ResponseEntity.badRequest().body("User not found");
         }
