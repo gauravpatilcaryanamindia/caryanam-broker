@@ -32,7 +32,7 @@ public class AuthController {
     private PropertyOwnerRepository ownerRepository;
 
 
-    //  USER REGISTER
+
     @PostMapping("/register/user")
     public ResponseEntity<ResponseDto<RegisterResponseDTO>> registerUser(
             @RequestBody RegisterRequestDTO dto) {
@@ -80,7 +80,7 @@ public class AuthController {
         return ResponseEntity.status(201).body(new ResponseDto<>(201, "User Registered Successfully", response));
     }
 
-    //  ADMIN REGISTER
+
     @PostMapping("/register/admin")
     public ResponseEntity<ResponseDto<RegisterResponseDTO>> registerAdmin(
             @RequestBody RegisterRequestDTO dto) {
@@ -132,7 +132,7 @@ public class AuthController {
         return ResponseEntity.status(201).body(new ResponseDto<>(201, "Admin Registered Successfully", response));
     }
 
-    //  ADMIN REGISTER
+
     @PostMapping("/register/POwner")
     public ResponseEntity<ResponseDto<RegisterResponseDTO>> registerOwner(
             @RequestBody RegisterRequestDTO dto) {
@@ -185,7 +185,7 @@ public class AuthController {
     }
 
 
-    //LOGIN USER,ADMIN
+
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(
             @RequestBody LoginRequestDTO request) {

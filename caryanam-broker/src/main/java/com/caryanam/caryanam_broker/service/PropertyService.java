@@ -12,8 +12,8 @@ public interface PropertyService {
 
     PropertyDto addProperty(PropertyDto propertyDto, Long adminId);
 
-//    List<PropertyDto> getAllProperties(Long Id);
-List<PropertyDto> getAllProperties(Long userId, HttpServletRequest request);
+    List<PropertyDto> getAllProperties(Long userId, HttpServletRequest request);
+
     PropertyDto getPropertyById(Long id);
 
     PropertyDto updateProperty(Long id, PropertyDto propertyDto);

@@ -63,88 +63,99 @@ public class ChatServiceImpl implements ChatService {
             });
 }
 
-
-    @Override
-    public MessageResponseDTO sendMessage(MessageRequestDTO dto) {
-
-        if (dto == null || dto.getUserId() == null || dto.getOwnerId() == null) {throw new BadRequestException("Invalid request");}
-        if (!"USER".equals(dto.getSenderRole()) && !"PROPERTY_OWNER".equals(dto.getSenderRole())) {throw new BadRequestException("Invalid sender role");}
-
-//        Long userId;
-//        Long ownerId;
-//
-//        if ("USER".equals(dto.getSenderRole())) {
-//            userId = dto.getUserId();
-//            ownerId = dto.getOwnerId();
-//        } else {
-//            ownerId = dto.getUserId();
-//            userId = dto.getOwnerId();
-//        }
-        // ✅ NO SWAP
-        Long userId = dto.getUserId();
-        Long ownerId = dto.getOwnerId();
-
-        String roomId = createOrGetRoom(userId, ownerId);
-        ChatRoom room = chatRoomRepo.findByRoomId(roomId).orElseThrow(() -> new RuntimeException("Room not found"));
+@Override
+public MessageResponseDTO sendMessage(MessageRequestDTO dto) {
 
 
-        if (!room.isFirstMessageSent()) {
+    if (dto == null || dto.getUserId() == null || dto.getOwnerId() == null) {
+        throw new BadRequestException("Invalid request");
+    }
 
-            if (!"USER".equals(dto.getSenderRole())) {throw new BadRequestException("First message must be sent by USER");}
+    if (!"USER".equals(dto.getSenderRole()) && !"PROPERTY_OWNER".equals(dto.getSenderRole())) {
+        throw new BadRequestException("Invalid sender role");
+    }
 
-            Message firstMsg = new Message();
-            firstMsg.setRoomId(roomId);
-            firstMsg.setSenderId(userId);
-            firstMsg.setSenderRole("USER");
-            String message = (dto.getMessage() == null || dto.getMessage().trim().split("\\s+").length < 10)
-                    ? "Hi, I’m interested in your property. Could you please share more information?"
-                    : dto.getMessage();
+    Long userId = dto.getUserId();
+    Long ownerId = dto.getOwnerId();
 
-            firstMsg.setContent(message);
-           // firstMsg.setContent("Hi, I’m interested in your property. Could you please share more information?");
-            firstMsg.setTimestamp(LocalDateTime.now());
-            firstMsg.setRead(false);
-            firstMsg.setStatus(MessageStatus.PENDING);
+    String roomId = createOrGetRoom(userId, ownerId);
 
-            messageRepo.save(firstMsg);
-            room.setFirstMessageSent(true);
-            chatRoomRepo.save(room);
-            MessageResponseDTO response = mapToDTO(firstMsg);
-            socketServer.getRoomOperations(roomId).sendEvent("receive_message", response);
-            return response;
+    ChatRoom room = chatRoomRepo.findByRoomId(roomId)
+            .orElseThrow(() -> new RuntimeException("Room not found"));
+
+    if (!room.isFirstMessageSent()) {
+
+        if (!"USER".equals(dto.getSenderRole())) {
+            throw new BadRequestException("First message must be sent by USER");
         }
 
-        if (!room.isAccepted() && room.isFirstMessageSent() && "USER".equals(dto.getSenderRole())) {
-            throw new BadRequestException("Please wait until owner accepts the chat");
-        }
-        if (!room.isAccepted() && "PROPERTY_OWNER".equals(dto.getSenderRole())) {
-            throw new BadRequestException("Owner cannot send message until chat is accepted");
-        }
-        if (room.isRejected()) {
-            throw new BadRequestException("Chat is rejected. You cannot send messages.");
-        }
+        Message firstMsg = new Message();
+        firstMsg.setRoomId(roomId);
+        firstMsg.setSenderId(userId);
+        firstMsg.setSenderRole("USER");
 
-        Message msg = new Message();
-        msg.setRoomId(roomId);
 
-        // ✅ FIXED senderId
-        Long senderId = "USER".equals(dto.getSenderRole())
-                ? userId
-                : ownerId;
+        String message = (dto.getMessage() == null || dto.getMessage().trim().split("\\s+").length < 10)
+                ? "Hi, I’m interested in your property. Could you please share more information?"
+                : dto.getMessage();
 
-        msg.setSenderId(senderId);
-       // msg.setSenderId(dto.getUserId());
-        msg.setSenderRole(dto.getSenderRole());
-        msg.setContent(dto.getMessage());
-        msg.setTimestamp(LocalDateTime.now());
-        msg.setRead(false);
-        msg.setStatus(room.isAccepted() ? MessageStatus.ACCEPTED : MessageStatus.PENDING);
+        firstMsg.setContent(message);
+        firstMsg.setTimestamp(LocalDateTime.now());
+        firstMsg.setRead(false);
+        firstMsg.setStatus(MessageStatus.PENDING);
 
-        messageRepo.save(msg);
-        MessageResponseDTO response = mapToDTO(msg);
+        messageRepo.save(firstMsg);
+
+        room.setFirstMessageSent(true);
+        chatRoomRepo.save(room);
+
+        MessageResponseDTO response = mapToDTO(firstMsg);
         socketServer.getRoomOperations(roomId).sendEvent("receive_message", response);
+
         return response;
     }
+
+
+    //  AFTER FIRST MESSAGE → EMPTY MESSAGE BLOCK
+
+     //    if (dto.getMessage() == null || dto.getMessage().trim().isEmpty()) {
+       //        throw new BadRequestException("Message cannot be empty");
+        //    }
+
+
+    if (!room.isAccepted() && "USER".equals(dto.getSenderRole())) {
+        throw new BadRequestException("Please wait until owner accepts the chat");
+    }
+
+    if (!room.isAccepted() && "PROPERTY_OWNER".equals(dto.getSenderRole())) {
+        throw new BadRequestException("Owner cannot send message until chat is accepted");
+    }
+
+    if (room.isRejected()) {
+        throw new BadRequestException("Chat is rejected. You cannot send messages.");
+    }
+
+    Message msg = new Message();
+    msg.setRoomId(roomId);
+
+    Long senderId = "USER".equals(dto.getSenderRole())
+            ? userId
+            : ownerId;
+
+    msg.setSenderId(senderId);
+    msg.setSenderRole(dto.getSenderRole());
+    msg.setContent(dto.getMessage());
+    msg.setTimestamp(LocalDateTime.now());
+    msg.setRead(false);
+    msg.setStatus(room.isAccepted() ? MessageStatus.ACCEPTED : MessageStatus.PENDING);
+
+    messageRepo.save(msg);
+
+    MessageResponseDTO response = mapToDTO(msg);
+    socketServer.getRoomOperations(roomId).sendEvent("receive_message", response);
+
+    return response;
+}
 
     @Override
     public void acceptChat(String roomId) {
@@ -211,12 +222,9 @@ public class ChatServiceImpl implements ChatService {
         if (dto.getRoomId() == null) {
             throw new BadRequestException("RoomId is required");
         }
-        Collection<SocketIOClient> clients =
-                socketServer.getRoomOperations(dto.getRoomId()).getClients();
+        chatRoomRepo.findByRoomId(dto.getRoomId())
+                .orElseThrow(() -> new RuntimeException("Invalid roomId"));
 
-        if (clients == null || clients.isEmpty()) {
-            throw new RuntimeException("Room does not exist or no users connected");
-        }
         socketServer.getRoomOperations(dto.getRoomId()).sendEvent("typing", dto);
     }
 
