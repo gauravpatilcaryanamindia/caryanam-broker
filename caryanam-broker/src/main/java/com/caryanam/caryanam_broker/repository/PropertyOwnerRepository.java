@@ -14,5 +14,7 @@ public interface PropertyOwnerRepository extends JpaRepository<PropertyOwner, Lo
 
     List<PropertyOwner> findByPremiumStatus(String status);
 
+
+
     boolean existsByMobileNumber(String mobileNumber);
 }

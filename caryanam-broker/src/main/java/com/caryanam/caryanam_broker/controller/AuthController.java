@@ -1,9 +1,7 @@
 package com.caryanam.caryanam_broker.controller;
 
 
-import com.caryanam.caryanam_broker.configuration.CustomUserDetails;
 import com.caryanam.caryanam_broker.dto.*;
-import com.caryanam.caryanam_broker.entity.User;
 import com.caryanam.caryanam_broker.messageconfig.MessageConfig;
 import com.caryanam.caryanam_broker.repository.AdminRepository;
 import com.caryanam.caryanam_broker.repository.PropertyOwnerRepository;
@@ -13,10 +11,7 @@ import com.caryanam.caryanam_broker.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import com.caryanam.caryanam_broker.enums.Role;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -32,10 +27,10 @@ public class AuthController {
     @Autowired
     private AdminRepository adminRepository;
 
+
+
     @Autowired
-    private PropertyOwnerRepository ownerRepository;
-
-
+    private PropertyOwnerRepository propertyOwnerRepository;
 
     @PostMapping("/register/user")
     public ResponseEntity<ResponseDto<RegisterResponseDTO>> registerUser(
@@ -107,7 +102,7 @@ public class AuthController {
         if (dto.getMobileNumber() == null || dto.getMobileNumber().trim().isEmpty()) {
             return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number is required", null));
         }
-        if (ownerRepository.existsByMobileNumber(dto.getMobileNumber())) {
+        if (propertyOwnerRepository.existsByMobileNumber(dto.getMobileNumber())) {
             return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Mobile number already exists", null));
         }
 
@@ -177,6 +172,7 @@ public class AuthController {
                 new ResponseDto<>(200, "Logged out successfully", null));
     }
 
+
     @PutMapping("/update/user/{id}")
     public ResponseEntity<ResponseDto<?>> updateUser(@PathVariable Long id, @RequestBody RegisterRequestDTO dto) {
         if (id == null || id <= 0) {
@@ -200,6 +196,11 @@ public class AuthController {
         }
         return ResponseEntity.ok(new ResponseDto<>(200, MessageConfig.USER_UPDATED, res));
     }
+
+
+
+
+
 
     @PutMapping("/update/admin/{id}")
     public ResponseEntity<ResponseDto<?>> updateAdmin(@PathVariable Long id, @RequestBody RegisterRequestDTO dto) {
@@ -250,65 +251,23 @@ public class AuthController {
         return ResponseEntity.ok(new ResponseDto<>(200, MessageConfig.OWNER_UPDATED, res));
     }
 
-//    @PutMapping("/deactivate/user/{id}")
-//    public ResponseEntity<?> deactivateUser(@PathVariable Long id) {
-//        if (id == null || id <= 0) {
-//            return ResponseEntity.badRequest().body("Invalid ID");
-//        }
-//        boolean result = authService.deactivateUser(id);
-//        if (!result) {
-//            return ResponseEntity.badRequest().body("User not found");
-//        }
-//        return ResponseEntity.ok("User deactivated successfully");
-//    }
+
 
 
 
     @PutMapping("/deactivate/user/{id}")
-    public ResponseEntity<ResponseDto<?>> deactivateUser(@PathVariable Long id) {
+    public ResponseEntity<?> deactivateUser(@PathVariable Long id) {
         if (id == null || id <= 0) {
-            return ResponseEntity.badRequest()
-                    .body(new ResponseDto<>(400, MessageConfig.INVALID_ID, null));
+            return ResponseEntity.badRequest().body("Invalid ID");
         }
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null) {
-            return ResponseEntity.status(401)
-                    .body(new ResponseDto<>(401, MessageConfig.UNAUTHORIZED, null));
-        }
-        Object principal = authentication.getPrincipal();
-        Long loggedInUserId = null;
-        if (principal instanceof CustomUserDetails) {
-            loggedInUserId = ((CustomUserDetails) principal).getId();
-        } else if (principal instanceof String) {
-            String email = (String) principal;
-            User user = userRepository.findByEmail(email).orElse(null);
-            if (user != null) {
-                loggedInUserId = user.getUserId();
-            }
-        }
-        if (loggedInUserId == null) {
-            return ResponseEntity.status(401)
-                    .body(new ResponseDto<>(401, MessageConfig.UNAUTHORIZED, null));
-        }
-
-        // 🔥 SECURITY CHECK
-        if (!loggedInUserId.equals(id)) {
-            return ResponseEntity.status(403)
-                    .body(new ResponseDto<>(403, MessageConfig.FORBIDDEN, null));
-        }
-
         boolean result = authService.deactivateUser(id);
-
         if (!result) {
-            return ResponseEntity.badRequest()
-                    .body(new ResponseDto<>(400, MessageConfig.USER_NOT_FOUND, null));
+            return ResponseEntity.badRequest().body("User not found");
         }
-
-        return ResponseEntity.ok(
-                new ResponseDto<>(200, MessageConfig.USER_DEACTIVATED, null)
-        );
+        return ResponseEntity.ok("User deactivated successfully");
     }
+
+
 
     @PutMapping("/deactivate/owner/{id}")
     public ResponseEntity<?> deactivateOwner(@PathVariable Long id) {
@@ -321,6 +280,9 @@ public class AuthController {
         }
         return ResponseEntity.ok("User deactivated successfully");
     }
+
+
+
 
     @PutMapping("/deactivate/admin/{id}")
     public ResponseEntity<?> deactivateAdmin(@PathVariable Long id) {

@@ -42,56 +42,129 @@ public class adminController {
     }
     @PostMapping("/approveOwnerPremium/{ownerId}")
     public ResponseEntity<Object> approveOwner(@PathVariable Long ownerId) {
-        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
-        if (owner == null) {
-            return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+
+        if (ownerId == null || ownerId <= 0) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
         }
+
+        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
+
+        if (owner == null) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+        }
+
+
+        if (!"PENDING".equals(owner.getPremiumStatus())) {
+            return ResponseHandler.generateResponse(
+                    "Owner has not requested premium or already approved",
+                    HttpStatus.BAD_REQUEST, null);
+        }
+
+        //  Approve
         owner.setPremiumStatus("APPROVED");
         owner.setPremiumActive(true);
+
         propertyOwnerRepository.save(owner);
-        return ResponseHandler.generateResponse(MessageConfig.OWNER_PREMIUM_APPROVED, HttpStatus.OK, null);
+
+        return ResponseHandler.generateResponse(
+                MessageConfig.OWNER_PREMIUM_APPROVED, HttpStatus.OK, owner);
     }
 
     @PostMapping("/approveUserPremium/{userId}")
     public ResponseEntity<Object> approveUser(@PathVariable Long userId) {
+
         if (userId == null || userId <= 0) {
-            return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
+            return ResponseHandler.generateResponse(
+                    MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
         }
+
         User user = userRepository.findById(userId).orElse(null);
+
         if (user == null) {
-            return ResponseHandler.generateResponse(MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+            return ResponseHandler.generateResponse(
+                    MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
+
+
+        if (!"PENDING".equals(user.getPremiumStatus())) {
+            return ResponseHandler.generateResponse(
+                    "User has not requested premium or already approved",
+                    HttpStatus.BAD_REQUEST, null);
+        }
+
+
         user.setPremiumStatus("APPROVED");
         user.setPremiumActive(true);
+
         userRepository.save(user);
-        return ResponseHandler.generateResponse(MessageConfig.USER_PREMIUM_APPROVED, HttpStatus.OK, user);
+
+        return ResponseHandler.generateResponse(
+                MessageConfig.USER_PREMIUM_APPROVED, HttpStatus.OK, user);
     }
 
     @PostMapping("/rejectOwnerPremium/{ownerId}")
     public ResponseEntity<Object> rejectOwner(@PathVariable Long ownerId) {
-        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
-        if (owner == null) {
-            return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+
+        if (ownerId == null || ownerId <= 0) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
         }
+
+        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
+
+        if (owner == null) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+        }
+
+        //   CHECK
+        if (!"PENDING".equals(owner.getPremiumStatus())) {
+            return ResponseHandler.generateResponse(
+                    "Owner has not requested premium or already processed",
+                    HttpStatus.BAD_REQUEST, null);
+        }
+
+        //  Reject
         owner.setPremiumStatus("REJECTED");
         owner.setPremiumActive(false);
+
         propertyOwnerRepository.save(owner);
-        return ResponseHandler.generateResponse(MessageConfig.OWNER_PREMIUM_REJECTED, HttpStatus.OK, null);
+
+        return ResponseHandler.generateResponse(
+                MessageConfig.OWNER_PREMIUM_REJECTED, HttpStatus.OK, null);
     }
 
     @PostMapping("/rejectUserPremium/{userId}")
     public ResponseEntity<Object> rejectUser(@PathVariable Long userId) {
+
         if (userId == null || userId <= 0) {
-            return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
+            return ResponseHandler.generateResponse(
+                    MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
         }
+
         User user = userRepository.findById(userId).orElse(null);
+
         if (user == null) {
-            return ResponseHandler.generateResponse(MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+            return ResponseHandler.generateResponse(
+                    MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
+
+
+        if (!"PENDING".equals(user.getPremiumStatus())) {
+            return ResponseHandler.generateResponse(
+                    "User has not requested premium or already processed",
+                    HttpStatus.BAD_REQUEST, null);
+        }
+
         user.setPremiumStatus("REJECTED");
         user.setPremiumActive(false);
+
         userRepository.save(user);
-        return ResponseHandler.generateResponse(MessageConfig.USER_PREMIUM_REJECTED, HttpStatus.OK, null);
+
+        return ResponseHandler.generateResponse(
+                MessageConfig.USER_PREMIUM_REJECTED, HttpStatus.OK, null);
     }
 
     @GetMapping("/owner/{ownerId}/properties")

@@ -30,11 +30,17 @@ public class UserController {
 
     @PostMapping("/buyPremium/{userId}")
     public ResponseEntity<Object> buyPremium(@PathVariable Long userId) {
-        User user = userRepository.findById(userId).orElse(null);
-        if(user == null) {
-            return ResponseHandler.generateResponse(MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+        if (userId == null || userId <= 0) {
+            return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
         }
-        if ("APPROVED".equalsIgnoreCase(user.getPremiumStatus())) {user.setPremiumStatus("NONE");user.setPremiumActive(false);
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+        }
+        if ("APPROVED".equalsIgnoreCase(user.getPremiumStatus())) {
+            user.setPremiumStatus("NONE");
+            user.setPremiumActive(false);
         }
         if ("PENDING".equalsIgnoreCase(user.getPremiumStatus())) {
             return ResponseHandler.generateResponse(MessageConfig.PAYMENT_ALREADY_IN_PROCESS, HttpStatus.BAD_REQUEST, null);
@@ -43,31 +49,86 @@ public class UserController {
         user.setPremiumActive(false);
         user.setPremiumCount(user.getPremiumCount() + 1);
         userRepository.save(user);
-        return ResponseHandler.generateResponse(MessageConfig.PREMIUM_REQUEST_SENT, HttpStatus.OK, null);
+        String qrUrl = "http://localhost:8080/qr/payment.png";
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", MessageConfig.SCAN_QR);
+        response.put("qrCode", qrUrl);
+        response.put("status", "PENDING");
+        return ResponseHandler.generateResponse(
+                MessageConfig.PAYMENT_INITIATED,
+                HttpStatus.OK,
+                response
+        );
     }
-
     @GetMapping("/properties/{userId}")
     public ResponseEntity<Object> getProperties(
-            @PathVariable Long userId, HttpServletRequest request) {
+            @PathVariable Long userId,
+            HttpServletRequest request) {
+
         User user = userRepository.findById(userId).orElse(null);
+
         if (user == null) {
-            return ResponseHandler.generateResponse(MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
-        }
-        List<PropertyDto> data = propertyService.getAllProperties(userId, request);
-        if (!user.isPremiumActive()) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", MessageConfig.PREMIUM_REQUIRED);
-            response.put("data", data);
-            return ResponseEntity.ok(response);
+            return ResponseHandler.generateResponse(
+                    MessageConfig.USER_NOT_FOUND,
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
         }
 
-        return ResponseEntity.ok(data);
+        List<PropertyDto> data = propertyService.getAllProperties(userId, request);
+
+        if (data.isEmpty()) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.NO_PROPERTIES_FOUND,
+                    HttpStatus.OK,
+                    data
+            );
+        }
+        if (!user.isPremiumActive()) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.PREMIUM_REQUIRED,
+                    HttpStatus.OK,
+                    data
+            );
+        }
+
+        return ResponseHandler.generateResponse(
+                MessageConfig.PROPERTY_FETCHED,
+                HttpStatus.OK,
+                data
+        );
     }
 
     @PostMapping("/filter-properties/{userId}")
     public ResponseEntity<Object> filterProperties(@RequestBody PropertyFilterDto dto, @PathVariable Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.USER_NOT_FOUND,
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
         List<PropertyDto> data = propertyService.filterProperties(dto, userId);
-        return ResponseHandler.generateResponse(MessageConfig.PROPERTY_FILTERED, HttpStatus.OK, data);
+        if (!user.isPremiumActive()) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.PREMIUM_REQUIRED,
+                    HttpStatus.OK,
+                    data
+            );
+        }
+        if (data.isEmpty()) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.NO_PROPERTIES_FOUND,
+                    HttpStatus.OK,
+                    data
+            );
+        }
+        return ResponseHandler.generateResponse(
+                MessageConfig.PROPERTY_FILTERED,
+                HttpStatus.OK,
+                data
+        );
     }
 
     @GetMapping("/properties-by-city")
@@ -80,4 +141,43 @@ public class UserController {
             return ResponseEntity.ok(addresses);
         }return ResponseEntity.ok(propertyService.getPropertiesByCityAndAddress(city, address));
     }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<Object> getUserById(
+            @PathVariable Long userId
+    ) {
+
+        if (userId == null || userId <= 0) {
+            return ResponseHandler.generateResponse(
+                    "Invalid User Id",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        User user = userRepository
+                .findById(userId)
+                .orElse(null);
+
+        if (user == null) {
+            return ResponseHandler.generateResponse(
+                    "User not found",
+                    HttpStatus.NOT_FOUND,
+                    null
+            );
+        }
+
+        Map<String, Object> response = new HashMap<>();
+
+        response.put("id", user.getUserId());
+        response.put("premiumStatus", user.getPremiumStatus());
+        response.put("premiumActive", user.isPremiumActive());
+
+        return ResponseHandler.generateResponse(
+                "User fetched successfully",
+                HttpStatus.OK,
+                response
+        );
+    }
+
 }
