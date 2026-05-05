@@ -41,6 +41,7 @@ public class MessageConfig {
     public static final String PG_TYPE_INVALID="Invalid PG Type";
     public static final String USER_NOT_FOUND = "User not found";
     public static final String OWNER_NOT_FOUND = "Owner not found";
+    public static final String NO_PROPERTIES_FOUND = "No properties available.";
 
     public static final String NAME_INVALID = "Full name must contain only letters";
     public static final String MOBILE_INVALID = "Mobile must be 10 digits";

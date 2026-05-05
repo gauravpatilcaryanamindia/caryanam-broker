@@ -79,13 +79,23 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public List<PropertyDto> getAllProperties(Long userId, HttpServletRequest request) {
+
         boolean isPremium = false;
         if (request.getAttribute("isPremium") != null) {
             isPremium = (boolean) request.getAttribute("isPremium");
         }
+
         List<Property> properties = propertyRepository.findByStatus(AppConstants.ACTIVE);
         List<PropertyDto> dtoList = new ArrayList<>();
+
         for (Property property : properties) {
+
+            PropertyOwner owner = property.getPropertyOwner();
+            if (owner == null || !owner.isPremiumActive()
+                    || !"APPROVED".equalsIgnoreCase(owner.getPremiumStatus())) {
+                continue;
+            }
+
             PropertyDto dto = new PropertyDto();
             List<PropertyImage> images =
                     propertyImageRepository.findByPropertyId(property.getId());
@@ -97,8 +107,7 @@ public class PropertyServiceImpl implements PropertyService {
                 dto.setTitle(property.getTitle());
                 dto.setPropertyType(property.getPropertyType());
                 dto.setDoctypeImages(imageList.toString());
-            }
-            else {
+            } else {
                 dto.setId(property.getId());
                 dto.setTitle(property.getTitle());
                 dto.setPrice(property.getPrice());
@@ -119,8 +128,10 @@ public class PropertyServiceImpl implements PropertyService {
                 dto.setStatus(property.getStatus());
                 dto.setDoctypeImages(imageList.toString());
             }
+
             dtoList.add(dto);
         }
+
         return dtoList;
     }
 
@@ -283,22 +294,36 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public List<PropertyDto> filterProperties(PropertyFilterDto filterDto, Long userId) {
+
+        boolean isPremium = false;
+
         User user = userRepository.findById(userId).orElse(null);
-        if (user == null || !user.isPremiumActive()) {
-            return new ArrayList<>();
+        if (user != null && user.isPremiumActive()) {
+            isPremium = true;
         }
+
         List<Property> allProperties = propertyRepository.findAll();
         List<Property> filteredList = new ArrayList<>();
+
         for (Property property : allProperties) {
+            PropertyOwner owner = property.getPropertyOwner();
+            if (owner == null || !owner.isPremiumActive()
+                    || !"APPROVED".equalsIgnoreCase(owner.getPremiumStatus())) {
+                continue;
+            }
+
             boolean match = true;
+
             if (filterDto.getPropertyType() != null
                     && !filterDto.getPropertyType().isEmpty()
                     && !filterDto.getPropertyType().equalsIgnoreCase("ALL")) {
 
-                if (!property.getPropertyType().name().equalsIgnoreCase(filterDto.getPropertyType())) {
+                if (!property.getPropertyType().name()
+                        .equalsIgnoreCase(filterDto.getPropertyType())) {
                     match = false;
                 }
             }
+
             if (filterDto.getMinPrice() != null) {
                 if (property.getPrice() < filterDto.getMinPrice()) {
                     match = false;
@@ -318,6 +343,7 @@ public class PropertyServiceImpl implements PropertyService {
         if (filterDto.getSortBy() != null) {
             for (int i = 0; i < filteredList.size(); i++) {
                 for (int j = i + 1; j < filteredList.size(); j++) {
+
                     if (filterDto.getSortBy().equalsIgnoreCase(AppConstants.ASC)) {
                         if (filteredList.get(i).getPrice() > filteredList.get(j).getPrice()) {
                             Property temp = filteredList.get(i);
@@ -325,6 +351,7 @@ public class PropertyServiceImpl implements PropertyService {
                             filteredList.set(j, temp);
                         }
                     }
+
                     if (filterDto.getSortBy().equalsIgnoreCase(AppConstants.DESC)) {
                         if (filteredList.get(i).getPrice() < filteredList.get(j).getPrice()) {
                             Property temp = filteredList.get(i);
@@ -336,24 +363,16 @@ public class PropertyServiceImpl implements PropertyService {
             }
         }
         List<PropertyDto> dtoList = new ArrayList<>();
+
         for (Property property : filteredList) {
+
             PropertyDto dto = new PropertyDto();
-            dto.setId(property.getId());
-            dto.setTitle(property.getTitle());
-            dto.setPrice(property.getPrice());
-            dto.setLocation(property.getLocation());
-            dto.setDescription(property.getDescription());
-            dto.setPropertyType(property.getPropertyType());
-            dto.setPgType(property.getPgType());
-            dto.setBhkType(property.getBhkType());
-            dto.setFurnishing(property.getFurnishing());
-            dto.setCarpetArea(property.getCarpetArea());
-            dto.setMobileNumber(property.getMobileNumber());
-            dto.setLikesCount(property.getLikesCount());
-            dto.setViewsCount(property.getViewsCount());
-            dto.setStatus(property.getStatus());
-            List<PropertyImage> images = propertyImageRepository.findByPropertyId(property.getId());
+
+            List<PropertyImage> images =
+                    propertyImageRepository.findByPropertyId(property.getId());
+
             List<String> imageList = new ArrayList<>();
+
             for (int i = 0; i < images.size(); i++) {
                 String path = images.get(i).getImagePath();
                 if (i == 0) {
@@ -362,12 +381,34 @@ public class PropertyServiceImpl implements PropertyService {
                     imageList.add(path);
                 }
             }
-            dto.setDoctypeImages(imageList.toString());
+            if (!isPremium) {
+                dto.setTitle(property.getTitle());
+                dto.setPropertyType(property.getPropertyType());
+                dto.setDoctypeImages(imageList.toString());
+            }
+            else {
+                dto.setId(property.getId());
+                dto.setTitle(property.getTitle());
+                dto.setPrice(property.getPrice());
+                dto.setLocation(property.getLocation());
+                dto.setDescription(property.getDescription());
+                dto.setPropertyType(property.getPropertyType());
+                dto.setPgType(property.getPgType());
+                dto.setBhkType(property.getBhkType());
+                dto.setFurnishing(property.getFurnishing());
+                dto.setCarpetArea(property.getCarpetArea());
+                dto.setMobileNumber(property.getMobileNumber());
+                dto.setLikesCount(property.getLikesCount());
+                dto.setViewsCount(property.getViewsCount());
+                dto.setStatus(property.getStatus());
+                dto.setDoctypeImages(imageList.toString());
+            }
+
             dtoList.add(dto);
         }
+
         return dtoList;
     }
-
     public List<PropertyDto> getPropertiesByCityAndAddress(String city, String address) {
         List<Property> list;
         if (address == null || address.isEmpty()) {
