@@ -35,4 +35,6 @@ public class PropertyDto {
     private String carpetArea;
     private String coverImage;
     private String doctypeImages;
+    private Long ownerId;
+
 }

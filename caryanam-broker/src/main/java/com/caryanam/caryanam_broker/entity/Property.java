@@ -47,6 +47,6 @@ public class Property {
     @ManyToOne
     @JoinColumn(name = "owner_id")
     private PropertyOwner propertyOwner;
-    private boolean isPremiumActive;   // access control
-    private String paymentStatus;      // PENDING / SUCCESS / REJECTED
+    private boolean isPremiumActive;
+    private String paymentStatus;
    }

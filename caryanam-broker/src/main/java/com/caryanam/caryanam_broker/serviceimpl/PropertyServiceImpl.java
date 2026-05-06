@@ -141,6 +141,7 @@ public class PropertyServiceImpl implements PropertyService {
         if (property == null) {
             return null;
         }
+
         PropertyDto dto = new PropertyDto();
         dto.setId(property.getId());
         dto.setTitle(property.getTitle());
@@ -160,8 +161,14 @@ public class PropertyServiceImpl implements PropertyService {
         dto.setLikesCount(property.getLikesCount());
         dto.setViewsCount(property.getViewsCount());
         dto.setStatus(property.getStatus());
+
+        if (property.getPropertyOwner() != null) {
+            dto.setOwnerId(property.getPropertyOwner().getOwnerId());
+        }
+
         List<PropertyImage> imageList = propertyImageRepository.findByPropertyId(id);
         List<String> doctypeImages = new ArrayList<>();
+
         if (imageList != null && imageList.size() > 0) {
             for (int i = 0; i < imageList.size(); i++) {
                 String path = imageList.get(i).getImagePath();
@@ -172,7 +179,9 @@ public class PropertyServiceImpl implements PropertyService {
                 }
             }
         }
+
         dto.setDoctypeImages(String.valueOf(doctypeImages));
+
         return dto;
     }
 
