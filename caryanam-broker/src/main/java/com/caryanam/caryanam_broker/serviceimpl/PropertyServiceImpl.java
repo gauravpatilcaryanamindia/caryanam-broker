@@ -97,6 +97,7 @@ public class PropertyServiceImpl implements PropertyService {
             }
 
             PropertyDto dto = new PropertyDto();
+            dto.setOwnerId(owner.getOwnerId());
             List<PropertyImage> images =
                     propertyImageRepository.findByPropertyId(property.getId());
             List<String> imageList = new ArrayList<>();
