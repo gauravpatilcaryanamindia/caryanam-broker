@@ -10,4 +10,8 @@ public class PropertyFilterDto {
     private Double maxPrice;
     private String propertyType;
     private String sortBy;
+    private String city;
+    private String address;
+    private Boolean fetchAddressOnly;
+
 }

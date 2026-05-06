@@ -293,122 +293,95 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
-    public List<PropertyDto> filterProperties(PropertyFilterDto filterDto, Long userId) {
-
-        boolean isPremium = false;
-
+    public List<?> filterProperties(PropertyFilterDto filterDto, Long userId) {
         User user = userRepository.findById(userId).orElse(null);
+        boolean isPremium = false;
         if (user != null && user.isPremiumActive()) {
             isPremium = true;
         }
+        if (Boolean.TRUE.equals(filterDto.getFetchAddressOnly())
+                && filterDto.getCity() != null
+                && !filterDto.getCity().isEmpty()) {
 
+            List<Property> list =
+                    propertyRepository.findByCityIgnoreCase(filterDto.getCity());
+
+            List<String> addresses = list.stream()
+                    .map(Property::getAddress)
+                    .distinct()
+                    .toList();
+
+            return addresses;
+        }
         List<Property> allProperties = propertyRepository.findAll();
         List<Property> filteredList = new ArrayList<>();
-
         for (Property property : allProperties) {
             PropertyOwner owner = property.getPropertyOwner();
             if (owner == null || !owner.isPremiumActive()
                     || !"APPROVED".equalsIgnoreCase(owner.getPremiumStatus())) {
                 continue;
             }
-
             boolean match = true;
-
+            if (filterDto.getCity() != null && !filterDto.getCity().isEmpty()) {
+                if (!property.getCity().equalsIgnoreCase(filterDto.getCity())) {
+                    match = false;
+                }
+            }
+            if (filterDto.getAddress() != null && !filterDto.getAddress().isEmpty()) {
+                if (!property.getAddress().equalsIgnoreCase(filterDto.getAddress())) {
+                    match = false;
+                }
+            }
             if (filterDto.getPropertyType() != null
                     && !filterDto.getPropertyType().isEmpty()
                     && !filterDto.getPropertyType().equalsIgnoreCase("ALL")) {
 
-                if (!property.getPropertyType().name()
-                        .equalsIgnoreCase(filterDto.getPropertyType())) {
+                if (!property.getPropertyType().name().equalsIgnoreCase(filterDto.getPropertyType())) {
                     match = false;
                 }
             }
-
             if (filterDto.getMinPrice() != null) {
                 if (property.getPrice() < filterDto.getMinPrice()) {
                     match = false;
                 }
             }
-
             if (filterDto.getMaxPrice() != null) {
                 if (property.getPrice() > filterDto.getMaxPrice()) {
                     match = false;
                 }
             }
-
             if (match) {
                 filteredList.add(property);
             }
         }
-        if (filterDto.getSortBy() != null) {
-            for (int i = 0; i < filteredList.size(); i++) {
-                for (int j = i + 1; j < filteredList.size(); j++) {
-
-                    if (filterDto.getSortBy().equalsIgnoreCase(AppConstants.ASC)) {
-                        if (filteredList.get(i).getPrice() > filteredList.get(j).getPrice()) {
-                            Property temp = filteredList.get(i);
-                            filteredList.set(i, filteredList.get(j));
-                            filteredList.set(j, temp);
-                        }
-                    }
-
-                    if (filterDto.getSortBy().equalsIgnoreCase(AppConstants.DESC)) {
-                        if (filteredList.get(i).getPrice() < filteredList.get(j).getPrice()) {
-                            Property temp = filteredList.get(i);
-                            filteredList.set(i, filteredList.get(j));
-                            filteredList.set(j, temp);
-                        }
-                    }
-                }
-            }
-        }
         List<PropertyDto> dtoList = new ArrayList<>();
-
         for (Property property : filteredList) {
-
             PropertyDto dto = new PropertyDto();
-
-            List<PropertyImage> images =
-                    propertyImageRepository.findByPropertyId(property.getId());
-
+            List<PropertyImage> images = propertyImageRepository.findByPropertyId(property.getId());
             List<String> imageList = new ArrayList<>();
-
-            for (int i = 0; i < images.size(); i++) {
-                String path = images.get(i).getImagePath();
-                if (i == 0) {
-                    dto.setCoverImage(path);
-                } else {
-                    imageList.add(path);
-                }
+            for (PropertyImage img : images) {
+                imageList.add(img.getImagePath());
             }
             if (!isPremium) {
                 dto.setTitle(property.getTitle());
                 dto.setPropertyType(property.getPropertyType());
                 dto.setDoctypeImages(imageList.toString());
-            }
-            else {
+            } else {
                 dto.setId(property.getId());
                 dto.setTitle(property.getTitle());
                 dto.setPrice(property.getPrice());
                 dto.setLocation(property.getLocation());
+                dto.setAddress(property.getAddress());
+                dto.setCity(property.getCity());
                 dto.setDescription(property.getDescription());
                 dto.setPropertyType(property.getPropertyType());
-                dto.setPgType(property.getPgType());
-                dto.setBhkType(property.getBhkType());
-                dto.setFurnishing(property.getFurnishing());
-                dto.setCarpetArea(property.getCarpetArea());
-                dto.setMobileNumber(property.getMobileNumber());
-                dto.setLikesCount(property.getLikesCount());
-                dto.setViewsCount(property.getViewsCount());
-                dto.setStatus(property.getStatus());
                 dto.setDoctypeImages(imageList.toString());
             }
-
             dtoList.add(dto);
         }
-
         return dtoList;
     }
+
     public List<PropertyDto> getPropertiesByCityAndAddress(String city, String address) {
         List<Property> list;
         if (address == null || address.isEmpty()) {
@@ -430,11 +403,4 @@ public class PropertyServiceImpl implements PropertyService {
         return dtoList;
     }
 
-    public List<String> getAddressesByCity(String city) {
-        List<Property> list = propertyRepository.findByCityIgnoreCase(city);
-        return list.stream()
-                .map(Property::getAddress)
-                .distinct()
-                .toList();
-    }
 }

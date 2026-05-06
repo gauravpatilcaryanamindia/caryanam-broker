@@ -54,130 +54,61 @@ public class UserController {
         response.put("message", MessageConfig.SCAN_QR);
         response.put("qrCode", qrUrl);
         response.put("status", "PENDING");
-        return ResponseHandler.generateResponse(
-                MessageConfig.PAYMENT_INITIATED,
-                HttpStatus.OK,
-                response
-        );
+        return ResponseHandler.generateResponse(MessageConfig.PAYMENT_INITIATED, HttpStatus.OK, response);
     }
+
     @GetMapping("/properties/{userId}")
-    public ResponseEntity<Object> getProperties(
-            @PathVariable Long userId,
-            HttpServletRequest request) {
-
+    public ResponseEntity<Object> getProperties(@PathVariable Long userId, HttpServletRequest request) {
         User user = userRepository.findById(userId).orElse(null);
-
         if (user == null) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.USER_NOT_FOUND,
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
-
         List<PropertyDto> data = propertyService.getAllProperties(userId, request);
-
         if (data.isEmpty()) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.NO_PROPERTIES_FOUND,
-                    HttpStatus.OK,
-                    data
-            );
+            return ResponseHandler.generateResponse(MessageConfig.NO_PROPERTIES_FOUND, HttpStatus.OK, data);
         }
         if (!user.isPremiumActive()) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.PREMIUM_REQUIRED,
-                    HttpStatus.OK,
-                    data
-            );
+            return ResponseHandler.generateResponse(MessageConfig.PREMIUM_REQUIRED, HttpStatus.OK, data);
         }
-
-        return ResponseHandler.generateResponse(
-                MessageConfig.PROPERTY_FETCHED,
-                HttpStatus.OK,
-                data
-        );
+        return ResponseHandler.generateResponse(MessageConfig.PROPERTY_FETCHED, HttpStatus.OK, data);
     }
 
     @PostMapping("/filter-properties/{userId}")
     public ResponseEntity<Object> filterProperties(@RequestBody PropertyFilterDto dto, @PathVariable Long userId) {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.USER_NOT_FOUND,
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
-        List<PropertyDto> data = propertyService.filterProperties(dto, userId);
+        Object data = propertyService.filterProperties(dto, userId);
+        if (data instanceof List<?> list && !list.isEmpty() && list.get(0) instanceof String) {
+            return ResponseHandler.generateResponse("Areas fetched successfully", HttpStatus.OK, data);
+        }
+        List<PropertyDto> propertyList = (List<PropertyDto>) data;
+        if (propertyList.isEmpty()) {
+            return ResponseHandler.generateResponse(MessageConfig.NO_PROPERTIES_FOUND, HttpStatus.OK, propertyList);
+        }
         if (!user.isPremiumActive()) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.PREMIUM_REQUIRED,
-                    HttpStatus.OK,
-                    data
-            );
+            return ResponseHandler.generateResponse(MessageConfig.PREMIUM_REQUIRED, HttpStatus.OK, propertyList);
         }
-        if (data.isEmpty()) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.NO_PROPERTIES_FOUND,
-                    HttpStatus.OK,
-                    data
-            );
-        }
-        return ResponseHandler.generateResponse(
-                MessageConfig.PROPERTY_FILTERED,
-                HttpStatus.OK,
-                data
-        );
+
+        return ResponseHandler.generateResponse(MessageConfig.PROPERTY_FILTERED, HttpStatus.OK, propertyList);
     }
 
-    @GetMapping("/properties-by-city")
-    public ResponseEntity<?> getProperties(@RequestParam String city, @RequestParam(required = false) String address) {
-        if (city == null || city.trim().isEmpty()) {
-            return ResponseHandler.generateResponse(MessageConfig.CITY_REQUIRED, HttpStatus.BAD_REQUEST, null);
-        }
-        if (address == null) {
-            List<String> addresses = propertyService.getAddressesByCity(city);
-            return ResponseEntity.ok(addresses);
-        }return ResponseEntity.ok(propertyService.getPropertiesByCityAndAddress(city, address));
-    }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<Object> getUserById(
-            @PathVariable Long userId
-    ) {
-
+    public ResponseEntity<Object> getUserById(@PathVariable Long userId) {
         if (userId == null || userId <= 0) {
             return ResponseHandler.generateResponse(
-                    "Invalid User Id",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+                    "Invalid User Id", HttpStatus.BAD_REQUEST, null);
         }
-
-        User user = userRepository
-                .findById(userId)
-                .orElse(null);
-
+        User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
-            return ResponseHandler.generateResponse(
-                    "User not found",
-                    HttpStatus.NOT_FOUND,
-                    null
-            );
-        }
-
+            return ResponseHandler.generateResponse("User not found", HttpStatus.NOT_FOUND, null);}
         Map<String, Object> response = new HashMap<>();
-
         response.put("id", user.getUserId());
         response.put("premiumStatus", user.getPremiumStatus());
         response.put("premiumActive", user.isPremiumActive());
-
-        return ResponseHandler.generateResponse(
-                "User fetched successfully",
-                HttpStatus.OK,
-                response
-        );
+        return ResponseHandler.generateResponse("User fetched successfully", HttpStatus.OK, response);
     }
 
 }
