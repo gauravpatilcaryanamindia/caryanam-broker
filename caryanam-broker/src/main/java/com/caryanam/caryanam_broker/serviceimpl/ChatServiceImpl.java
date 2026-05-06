@@ -159,7 +159,6 @@ public MessageResponseDTO sendMessage(MessageRequestDTO dto) {
 
     @Override
     public void acceptChat(String roomId) {
-
         ChatRoom room = chatRoomRepo.findByRoomId(roomId).orElseThrow(() -> new RuntimeException("Room not found"));
         if (room.isAccepted()) {
             throw new BadRequestException("Chat is already accepted");
@@ -170,10 +169,15 @@ public MessageResponseDTO sendMessage(MessageRequestDTO dto) {
         if (!room.isFirstMessageSent()) {
             throw new BadRequestException("No chat request to accept");
         }
-
         room.setAccepted(true);
         chatRoomRepo.save(room);
-
+        List<Message> messages = messageRepo.findByRoomId(roomId);
+        for (Message msg : messages) {
+            if ("USER".equals(msg.getSenderRole())) {
+                msg.setStatus(MessageStatus.ACCEPTED);
+                messageRepo.save(msg);
+            }
+        }
         Message autoReply = new Message();
         autoReply.setRoomId(roomId);
         autoReply.setSenderId(room.getOwnerId());
@@ -182,10 +186,8 @@ public MessageResponseDTO sendMessage(MessageRequestDTO dto) {
         autoReply.setTimestamp(LocalDateTime.now());
         autoReply.setRead(false);
         autoReply.setStatus(MessageStatus.ACCEPTED);
-
         messageRepo.save(autoReply);
         MessageResponseDTO response = mapToDTO(autoReply);
-
         socketServer.getRoomOperations(roomId).sendEvent("chat_accepted", response);
         socketServer.getRoomOperations(roomId).sendEvent("receive_message", response);
     }
