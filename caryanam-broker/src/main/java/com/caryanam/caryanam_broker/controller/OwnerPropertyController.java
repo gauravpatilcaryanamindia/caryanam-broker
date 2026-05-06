@@ -62,7 +62,48 @@ public class OwnerPropertyController {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 
-    // ================= ADD PROPERTY =================
+//    // ================= ADD PROPERTY =================
+//    @PostMapping("/addPropertyByOwner/{ownerId}")
+//    public ResponseEntity<Object> addProperty(@PathVariable Long ownerId,
+//                                              @RequestBody PropertyDto propertyDto) {
+//
+//        Long loggedInOwnerId = getLoggedInOwnerId();
+//
+//        if (loggedInOwnerId == null) {
+//            return ResponseEntity.status(401)
+//                    .body(new ResponseDto<>(401, MessageConfig.UNAUTHORIZED, null));
+//        }
+//
+//        if (!isAdmin() && !loggedInOwnerId.equals(ownerId)) {
+//            return ResponseEntity.status(403)
+//                    .body(new ResponseDto<>(403, MessageConfig.FORBIDDEN, null));
+//        }
+//
+//        // ===== YOUR VALIDATION (UNCHANGED) =====
+//        if (propertyDto.getTitle() == null || propertyDto.getTitle().trim().isEmpty())
+//            return ResponseHandler.generateResponse(MessageConfig.TITLE_REQUIRED, HttpStatus.BAD_REQUEST, null);
+//
+//        for (int i = 0; i < propertyDto.getTitle().length(); i++)
+//            if (Character.isDigit(propertyDto.getTitle().charAt(i)))
+//                return ResponseHandler.generateResponse(MessageConfig.TITLE_INVALID, HttpStatus.BAD_REQUEST, null);
+//
+//        if (propertyDto.getPrice() == null)
+//            return ResponseHandler.generateResponse(MessageConfig.PRICE_REQUIRED, HttpStatus.BAD_REQUEST, null);
+//
+//        if (propertyDto.getPrice() <= 0)
+//            return ResponseHandler.generateResponse(MessageConfig.NO_ALPHABETS_ALLOWED, HttpStatus.BAD_REQUEST, null);
+//
+//        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
+//        if (owner == null)
+//            return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+//
+//        return ResponseHandler.generateResponse(
+//                MessageConfig.PROPERTY_ADDED,
+//                HttpStatus.OK,
+//                propertyService.addProperty(propertyDto, ownerId)
+//        );
+//    }
+
     @PostMapping("/addPropertyByOwner/{ownerId}")
     public ResponseEntity<Object> addProperty(@PathVariable Long ownerId,
                                               @RequestBody PropertyDto propertyDto) {
@@ -79,24 +120,189 @@ public class OwnerPropertyController {
                     .body(new ResponseDto<>(403, MessageConfig.FORBIDDEN, null));
         }
 
-        // ===== YOUR VALIDATION (UNCHANGED) =====
-        if (propertyDto.getTitle() == null || propertyDto.getTitle().trim().isEmpty())
-            return ResponseHandler.generateResponse(MessageConfig.TITLE_REQUIRED, HttpStatus.BAD_REQUEST, null);
+        // ================= TITLE =================
+        if (propertyDto.getTitle() == null || propertyDto.getTitle().trim().isEmpty()) {
+            return ResponseHandler.generateResponse(
+                    "Title is required",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
 
-        for (int i = 0; i < propertyDto.getTitle().length(); i++)
-            if (Character.isDigit(propertyDto.getTitle().charAt(i)))
-                return ResponseHandler.generateResponse(MessageConfig.TITLE_INVALID, HttpStatus.BAD_REQUEST, null);
+        for (int i = 0; i < propertyDto.getTitle().length(); i++) {
+            if (Character.isDigit(propertyDto.getTitle().charAt(i))) {
+                return ResponseHandler.generateResponse(
+                        "Title should not contain numbers",
+                        HttpStatus.BAD_REQUEST,
+                        null
+                );
+            }
+        }
 
-        if (propertyDto.getPrice() == null)
-            return ResponseHandler.generateResponse(MessageConfig.PRICE_REQUIRED, HttpStatus.BAD_REQUEST, null);
+        // ================= PRICE =================
+        if (propertyDto.getPrice() == null) {
+            return ResponseHandler.generateResponse(
+                    "Price is required",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
 
-        if (propertyDto.getPrice() <= 0)
-            return ResponseHandler.generateResponse(MessageConfig.NO_ALPHABETS_ALLOWED, HttpStatus.BAD_REQUEST, null);
+        if (propertyDto.getPrice() <= 0) {
+            return ResponseHandler.generateResponse(
+                    "Price must be greater than 0",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
 
+        // ================= LOCATION =================
+        if (propertyDto.getLocation() == null || propertyDto.getLocation().trim().isEmpty()) {
+            return ResponseHandler.generateResponse(
+                    "Location is required",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        // ================= ADDRESS =================
+        if (propertyDto.getAddress() == null || propertyDto.getAddress().trim().isEmpty()) {
+            return ResponseHandler.generateResponse(
+                    "Address is required",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+// ================= CITY =================
+        if (propertyDto.getCity() == null || propertyDto.getCity().trim().isEmpty()) {
+            return ResponseHandler.generateResponse(
+                    "City is required",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+// Only letters and spaces allowed
+        if (!propertyDto.getCity().matches("^[A-Za-z ]+$")) {
+            return ResponseHandler.generateResponse(
+                    "City must contain only letters",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+// ================= STATE =================
+        if (propertyDto.getState() == null || propertyDto.getState().trim().isEmpty()) {
+            return ResponseHandler.generateResponse(
+                    "State is required",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+// Only letters and spaces allowed
+        if (!propertyDto.getState().matches("^[A-Za-z ]+$")) {
+            return ResponseHandler.generateResponse(
+                    "State must contain only letters",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        // ================= PINCODE =================
+        if (propertyDto.getPincode() == null || propertyDto.getPincode().trim().isEmpty()) {
+            return ResponseHandler.generateResponse(
+                    "Pincode is required",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        if (!propertyDto.getPincode().matches("\\d{6}")) {
+            return ResponseHandler.generateResponse(
+                    "Pincode must be 6 digits",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        // ================= DESCRIPTION =================
+        if (propertyDto.getDescription() == null || propertyDto.getDescription().trim().isEmpty()) {
+            return ResponseHandler.generateResponse(
+                    "Description is required",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        // ================= PROPERTY TYPE =================
+        if (propertyDto.getPropertyType() == null) {
+            return ResponseHandler.generateResponse(
+                    "Property type is required",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        // ================= BHK TYPE =================
+        if (propertyDto.getBhkType() == null) {
+            return ResponseHandler.generateResponse(
+                    "BHK type is required",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        // ================= FURNISHING =================
+        if (propertyDto.getFurnishing() == null) {
+            return ResponseHandler.generateResponse(
+                    "Furnishing is required",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        // ================= CARPET AREA =================
+        if (propertyDto.getCarpetArea() == null ) {
+            return ResponseHandler.generateResponse(
+                    "Carpet area must be greater than 0",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        // ================= MOBILE NUMBER =================
+        if (propertyDto.getMobileNumber() == null ||
+                propertyDto.getMobileNumber().trim().isEmpty()) {
+
+            return ResponseHandler.generateResponse(
+                    "Mobile number is required",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        if (!propertyDto.getMobileNumber().matches("\\d{10}")) {
+            return ResponseHandler.generateResponse(
+                    "Mobile number must be 10 digits",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        // ================= OWNER =================
         PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
-        if (owner == null)
-            return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
 
+        if (owner == null) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.OWNER_NOT_FOUND,
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        // ================= SAVE =================
         return ResponseHandler.generateResponse(
                 MessageConfig.PROPERTY_ADDED,
                 HttpStatus.OK,
