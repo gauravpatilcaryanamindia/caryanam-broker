@@ -80,9 +80,11 @@ public class PropertyServiceImpl implements PropertyService {
     @Override
     public List<PropertyDto> getAllProperties(Long userId, HttpServletRequest request) {
 
+        User user = userRepository.findById(userId).orElse(null);
         boolean isPremium = false;
-        if (request.getAttribute("isPremium") != null) {
-            isPremium = (boolean) request.getAttribute("isPremium");
+
+        if (user != null) {
+            isPremium = user.isPremiumActive();
         }
 
         List<Property> properties = propertyRepository.findByStatus(AppConstants.ACTIVE);
@@ -98,12 +100,13 @@ public class PropertyServiceImpl implements PropertyService {
 
             PropertyDto dto = new PropertyDto();
             dto.setOwnerId(owner.getOwnerId());
-            List<PropertyImage> images =
-                    propertyImageRepository.findByPropertyId(property.getId());
+
+            List<PropertyImage> images = propertyImageRepository.findByPropertyId(property.getId());
             List<String> imageList = new ArrayList<>();
             for (PropertyImage img : images) {
                 imageList.add(img.getImagePath());
             }
+
             if (!isPremium) {
                 dto.setTitle(property.getTitle());
                 dto.setPropertyType(property.getPropertyType());
