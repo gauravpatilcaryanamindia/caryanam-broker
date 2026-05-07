@@ -58,6 +58,8 @@ public class PropertyServiceImpl implements PropertyService {
         property.setFurnishing(propertyDto.getFurnishing());
         property.setCarpetArea(propertyDto.getCarpetArea());
         property.setMobileNumber(propertyDto.getMobileNumber());
+        property.setApartmentName(property.getApartmentName());
+
 
         property.setLikesCount(0);
         property.setViewsCount(0);
@@ -128,8 +130,8 @@ public class PropertyServiceImpl implements PropertyService {
                 dto.setCarpetArea(property.getCarpetArea());
                 dto.setMobileNumber(property.getMobileNumber());
                 dto.setLikesCount(property.getLikesCount());
-                property.setApartmentName(property.getApartmentName());
                 dto.setViewsCount(property.getViewsCount());
+                dto.setApartmentName(property.getApartmentName());
                 dto.setStatus(property.getStatus());
                 dto.setDoctypeImages(imageList.toString());
             }
@@ -165,6 +167,7 @@ public class PropertyServiceImpl implements PropertyService {
         dto.setMobileNumber(property.getMobileNumber());
         dto.setLikesCount(property.getLikesCount());
         dto.setViewsCount(property.getViewsCount());
+        dto.setApartmentName(property.getApartmentName());
         dto.setStatus(property.getStatus());
 
         if (property.getPropertyOwner() != null) {
@@ -228,6 +231,7 @@ public class PropertyServiceImpl implements PropertyService {
         responseDto.setCarpetArea(updatedProperty.getCarpetArea());
         responseDto.setMobileNumber(updatedProperty.getMobileNumber());
         responseDto.setStatus(updatedProperty.getStatus());
+        responseDto.setApartmentName(updatedProperty.getApartmentName());
         responseDto.setLikesCount(updatedProperty.getLikesCount());
         responseDto.setViewsCount(updatedProperty.getViewsCount());
         return responseDto;
@@ -377,7 +381,7 @@ public class PropertyServiceImpl implements PropertyService {
                 imageList.add(img.getImagePath());
             }
             if (!isPremium) {
-                dto.setTitle(property.getTitle()); // add kar sakta hai
+                dto.setTitle(property.getTitle());
                 dto.setPrice(property.getPrice());
                 dto.setLocation(property.getLocation());
             } else {
@@ -390,6 +394,7 @@ public class PropertyServiceImpl implements PropertyService {
                 dto.setDescription(property.getDescription());
                 dto.setPropertyType(property.getPropertyType());
                 dto.setDoctypeImages(imageList.toString());
+                dto.setApartmentName(property.getApartmentName());
             }
             dtoList.add(dto);
         }
@@ -412,9 +417,69 @@ public class PropertyServiceImpl implements PropertyService {
             dto.setPrice(property.getPrice());
             dto.setAddress(property.getAddress());
             dto.setCity(property.getCity());
+            dto.setMobileNumber(property.getMobileNumber());
+            dto.setBhkType(property.getBhkType());
+            dto.setPrice(property.getPrice());
+            dto.setLocation(property.getLocation());
+            dto.setApartmentName(property.getApartmentName());
+
             dtoList.add(dto);
         }
         return dtoList;
     }
 
+    @Override
+    public List<PropertyDto> getPropertiesByOwnerId(Long ownerId) {
+
+        List<Property> properties =
+                propertyRepository.findByPropertyOwner_OwnerId(ownerId);
+
+        List<PropertyDto> dtoList = new ArrayList<>();
+
+        for (Property property : properties) {
+
+            PropertyDto dto = new PropertyDto();
+
+            dto.setId(property.getId());
+            dto.setTitle(property.getTitle());
+            dto.setPrice(property.getPrice());
+            dto.setLocation(property.getLocation());
+            dto.setAddress(property.getAddress());
+            dto.setCity(property.getCity());
+            dto.setState(property.getState());
+            dto.setPincode(property.getPincode());
+            dto.setDescription(property.getDescription());
+            dto.setPropertyType(property.getPropertyType());
+            dto.setPgType(property.getPgType());
+            dto.setBhkType(property.getBhkType());
+            dto.setFurnishing(property.getFurnishing());
+            dto.setCarpetArea(property.getCarpetArea());
+            dto.setMobileNumber(property.getMobileNumber());
+            dto.setApartmentName(property.getApartmentName());
+            dto.setStatus(property.getStatus());
+            List<PropertyImage> imageList =
+                    propertyImageRepository.findByPropertyId(property.getId());
+            List<String> doctypeImages = new ArrayList<>();
+
+            if (imageList != null && imageList.size() > 0) {
+
+                for (int i = 0; i < imageList.size(); i++) {
+
+                    String path = imageList.get(i).getImagePath();
+
+                    if (i == 0) {
+                        dto.setCoverImage(path);
+                    } else {
+                        doctypeImages.add(path);
+                    }
+                }
+            }
+
+            dto.setDoctypeImages(String.valueOf(doctypeImages));
+
+            dtoList.add(dto);
+        }
+
+        return dtoList;
+    }
 }

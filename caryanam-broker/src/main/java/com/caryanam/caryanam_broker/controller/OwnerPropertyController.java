@@ -1,8 +1,5 @@
 package com.caryanam.caryanam_broker.controller;
 
-import com.caryanam.caryanam_broker.Enum.PgType;
-import com.caryanam.caryanam_broker.Enum.PropertyType;
-import com.caryanam.caryanam_broker.appconstant.AppConstants;
 import com.caryanam.caryanam_broker.configuration.CustomUserDetails;
 import com.caryanam.caryanam_broker.dto.PropertyDto;
 import com.caryanam.caryanam_broker.dto.ResponseDto;
@@ -12,6 +9,7 @@ import com.caryanam.caryanam_broker.entity.PropertyOwner;
 import com.caryanam.caryanam_broker.messageconfig.MessageConfig;
 import com.caryanam.caryanam_broker.repository.*;
 import com.caryanam.caryanam_broker.service.PropertyService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -63,243 +61,97 @@ public class OwnerPropertyController {
     }
 
     @PostMapping("/addPropertyByOwner/{ownerId}")
-    public ResponseEntity<Object> addProperty(@PathVariable Long ownerId,
-                                              @RequestBody PropertyDto propertyDto) {
-
+    public ResponseEntity<Object> addProperty(@PathVariable Long ownerId, @RequestBody PropertyDto propertyDto) {
         Long loggedInOwnerId = getLoggedInOwnerId();
-
         if (loggedInOwnerId == null) {
-            return ResponseEntity.status(401)
-                    .body(new ResponseDto<>(401, MessageConfig.UNAUTHORIZED, null));
+            return ResponseEntity.status(401).body(new ResponseDto<>(401, MessageConfig.UNAUTHORIZED, null));
         }
-
         if (!isAdmin() && !loggedInOwnerId.equals(ownerId)) {
-            return ResponseEntity.status(403)
-                    .body(new ResponseDto<>(403, MessageConfig.FORBIDDEN, null));
+            return ResponseEntity.status(403).body(new ResponseDto<>(403, MessageConfig.FORBIDDEN, null));
         }
-
-        // ================= TITLE =================
         if (propertyDto.getTitle() == null || propertyDto.getTitle().trim().isEmpty()) {
-            return ResponseHandler.generateResponse(
-                    "Title is required",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("Title is required", HttpStatus.BAD_REQUEST, null);
         }
-
         for (int i = 0; i < propertyDto.getTitle().length(); i++) {
             if (Character.isDigit(propertyDto.getTitle().charAt(i))) {
-                return ResponseHandler.generateResponse(
-                        "Title should not contain numbers",
-                        HttpStatus.BAD_REQUEST,
-                        null
-                );
+                return ResponseHandler.generateResponse("Title should not contain numbers", HttpStatus.BAD_REQUEST, null);
             }
         }
-
-        // ================= PRICE =================
         if (propertyDto.getPrice() == null) {
-            return ResponseHandler.generateResponse(
-                    "Price is required",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("Price is required", HttpStatus.BAD_REQUEST, null);
         }
-
         if (propertyDto.getPrice() <= 0) {
-            return ResponseHandler.generateResponse(
-                    "Price must be greater than 0",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("Price must be greater than 0", HttpStatus.BAD_REQUEST, null);
         }
-
-        // ================= LOCATION =================
         if (propertyDto.getLocation() == null || propertyDto.getLocation().trim().isEmpty()) {
-            return ResponseHandler.generateResponse(
-                    "Location is required",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("Location is required", HttpStatus.BAD_REQUEST, null);
         }
-
-        // ================= ADDRESS =================
         if (propertyDto.getAddress() == null || propertyDto.getAddress().trim().isEmpty()) {
             return ResponseHandler.generateResponse(
-                    "Address is required",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+                    "Address is required", HttpStatus.BAD_REQUEST, null);
         }
-
-// ================= CITY =================
         if (propertyDto.getCity() == null || propertyDto.getCity().trim().isEmpty()) {
-            return ResponseHandler.generateResponse(
-                    "City is required",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("City is required", HttpStatus.BAD_REQUEST, null);
         }
-
-// Only letters and spaces allowed
         if (!propertyDto.getCity().matches("^[A-Za-z ]+$")) {
-            return ResponseHandler.generateResponse(
-                    "City must contain only letters",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("City must contain only letters", HttpStatus.BAD_REQUEST, null);
         }
-
-// ================= STATE =================
         if (propertyDto.getState() == null || propertyDto.getState().trim().isEmpty()) {
-            return ResponseHandler.generateResponse(
-                    "State is required",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("State is required", HttpStatus.BAD_REQUEST, null);
         }
-
-// Only letters and spaces allowed
         if (!propertyDto.getState().matches("^[A-Za-z ]+$")) {
-            return ResponseHandler.generateResponse(
-                    "State must contain only letters",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("State must contain only letters", HttpStatus.BAD_REQUEST, null);
         }
-
-        // ================= PINCODE =================
         if (propertyDto.getPincode() == null || propertyDto.getPincode().trim().isEmpty()) {
-            return ResponseHandler.generateResponse(
-                    "Pincode is required",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("Pincode is required", HttpStatus.BAD_REQUEST, null);
         }
-
         if (!propertyDto.getPincode().matches("\\d{6}")) {
-            return ResponseHandler.generateResponse(
-                    "Pincode must be 6 digits",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("Pincode must be 6 digits", HttpStatus.BAD_REQUEST, null);
         }
-
-        // ================= DESCRIPTION =================
         if (propertyDto.getDescription() == null || propertyDto.getDescription().trim().isEmpty()) {
-            return ResponseHandler.generateResponse(
-                    "Description is required",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("Description is required", HttpStatus.BAD_REQUEST, null);
         }
-
-        // ================= PROPERTY TYPE =================
         if (propertyDto.getPropertyType() == null) {
-            return ResponseHandler.generateResponse(
-                    "Property type is required",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("Property type is required", HttpStatus.BAD_REQUEST, null);
         }
-
-        // ================= BHK TYPE =================
         if (propertyDto.getBhkType() == null) {
-            return ResponseHandler.generateResponse(
-                    "BHK type is required",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("BHK type is required", HttpStatus.BAD_REQUEST, null);
         }
-
-        // ================= FURNISHING =================
         if (propertyDto.getFurnishing() == null) {
-            return ResponseHandler.generateResponse(
-                    "Furnishing is required",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("Furnishing is required", HttpStatus.BAD_REQUEST, null);
         }
-
-        // ================= CARPET AREA =================
         if (propertyDto.getCarpetArea() == null ) {
-            return ResponseHandler.generateResponse(
-                    "Carpet area must be greater than 0",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("Carpet area must be greater than 0", HttpStatus.BAD_REQUEST, null);
         }
-
-        // ================= MOBILE NUMBER =================
-        if (propertyDto.getMobileNumber() == null ||
-                propertyDto.getMobileNumber().trim().isEmpty()) {
-
-            return ResponseHandler.generateResponse(
-                    "Mobile number is required",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+        if (propertyDto.getMobileNumber() == null || propertyDto.getMobileNumber().trim().isEmpty()) {
+            return ResponseHandler.generateResponse("Mobile number is required", HttpStatus.BAD_REQUEST, null);
         }
-
         if (!propertyDto.getMobileNumber().matches("\\d{10}")) {
-            return ResponseHandler.generateResponse(
-                    "Mobile number must be 10 digits",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("Mobile number must be 10 digits", HttpStatus.BAD_REQUEST, null);
         }
-        if (propertyDto.getApartmentName() == null ||
-                propertyDto.getApartmentName().trim().isEmpty()) {
-
-            return ResponseHandler.generateResponse(
-                    "Apartment name is required",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+        if (propertyDto.getApartmentName() == null || propertyDto.getApartmentName().trim().isEmpty()) {
+            return ResponseHandler.generateResponse("Apartment name is required", HttpStatus.BAD_REQUEST, null);
         }
-
-        // ================= OWNER =================
         PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
-
         if (owner == null) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.OWNER_NOT_FOUND,
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
 
-        // ================= SAVE =================
-        return ResponseHandler.generateResponse(
-                MessageConfig.PROPERTY_ADDED,
-                HttpStatus.OK,
-                propertyService.addProperty(propertyDto, ownerId)
-        );
+        return ResponseHandler.generateResponse(MessageConfig.PROPERTY_ADDED, HttpStatus.OK, propertyService.addProperty(propertyDto, ownerId));
     }
 
     // ================= GET PROPERTY =================
     @GetMapping("/getPropertyById/{id}")
     public ResponseEntity<Object> getPropertyById(@PathVariable Long id) {
-
         Long loggedInOwnerId = getLoggedInOwnerId();
-
         if (loggedInOwnerId == null)
             return ResponseHandler.generateResponse(MessageConfig.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, null);
-
         Property property = propertyRepository.findById(id).orElse(null);
         if (property == null)
             return ResponseHandler.generateResponse(MessageConfig.PROPERTY_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
-
-        // 🔥 ADMIN BYPASS ADDED HERE
         if (!isAdmin()) {
-            if (property.getPropertyOwner() == null ||
-                    !property.getPropertyOwner().getOwnerId().equals(loggedInOwnerId)) {
-
-                return ResponseHandler.generateResponse(
-                        MessageConfig.FORBIDDEN,
-                        HttpStatus.FORBIDDEN,
-                        null
-                );
+            if (property.getPropertyOwner() == null || !property.getPropertyOwner().getOwnerId().equals(loggedInOwnerId)) {
+                return ResponseHandler.generateResponse(MessageConfig.FORBIDDEN, HttpStatus.FORBIDDEN, null);
             }
         }
 
@@ -312,124 +164,89 @@ public class OwnerPropertyController {
 
     // ================= UPDATE =================
     @PutMapping("/updatePropertyById/{id}")
-    public ResponseEntity<Object> updateProperty(@PathVariable Long id,
-                                                 @RequestBody PropertyDto propertyDto) {
-
+    public ResponseEntity<Object> updateProperty(@PathVariable Long id, @RequestBody PropertyDto propertyDto) {
         Long loggedInOwnerId = getLoggedInOwnerId();
-
         if (loggedInOwnerId == null)
             return ResponseHandler.generateResponse(MessageConfig.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, null);
-
         Property property = propertyRepository.findById(id).orElse(null);
         if (property == null)
             return ResponseHandler.generateResponse(MessageConfig.PROPERTY_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
-
         if (!isAdmin()) {
-            if (property.getPropertyOwner() == null ||
-                    !property.getPropertyOwner().getOwnerId().equals(loggedInOwnerId)) {
-
+            if (property.getPropertyOwner() == null || !property.getPropertyOwner().getOwnerId().equals(loggedInOwnerId)) {
                 return ResponseHandler.generateResponse(MessageConfig.FORBIDDEN, HttpStatus.FORBIDDEN, null);
             }
         }
-
-        return ResponseHandler.generateResponse(
-                MessageConfig.PROPERTY_UPDATED,
-                HttpStatus.OK,
-                propertyService.updateProperty(id, propertyDto)
-        );
+        return ResponseHandler.generateResponse(MessageConfig.PROPERTY_UPDATED, HttpStatus.OK, propertyService.updateProperty(id, propertyDto));
     }
 
-    // ================= DELETE =================
     @DeleteMapping("/deletePropertyById/{id}")
     public ResponseEntity<Object> deleteProperty(@PathVariable Long id) {
-
         Long loggedInOwnerId = getLoggedInOwnerId();
-
         if (loggedInOwnerId == null)
             return ResponseHandler.generateResponse(MessageConfig.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, null);
-
         Property property = propertyRepository.findById(id).orElse(null);
         if (property == null)
             return ResponseHandler.generateResponse(MessageConfig.PROPERTY_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
-
         if (!isAdmin()) {
-            if (property.getPropertyOwner() == null ||
-                    !property.getPropertyOwner().getOwnerId().equals(loggedInOwnerId)) {
-
+            if (property.getPropertyOwner() == null || !property.getPropertyOwner().getOwnerId().equals(loggedInOwnerId)) {
                 return ResponseHandler.generateResponse(MessageConfig.FORBIDDEN, HttpStatus.FORBIDDEN, null);
             }
         }
-
-        return ResponseHandler.generateResponse(
-                MessageConfig.PROPERTY_DELETED,
-                HttpStatus.OK,
-                propertyService.deleteProperty(id)
-        );
+        return ResponseHandler.generateResponse(MessageConfig.PROPERTY_DELETED, HttpStatus.OK, propertyService.deleteProperty(id));
     }
 
-    // ================= IMAGE UPLOAD =================
     @PostMapping("/uploadPropertyImagesByPropertyId/{id}")
-    public ResponseEntity<Object> uploadPropertyImages(@PathVariable Long id,
-                                                       @RequestParam("files") MultipartFile[] files) {
-
+    public ResponseEntity<Object> uploadPropertyImages(@PathVariable Long id, @RequestParam("files") MultipartFile[] files) {
         Long loggedInOwnerId = getLoggedInOwnerId();
-
         if (loggedInOwnerId == null)
             return ResponseHandler.generateResponse(MessageConfig.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, null);
-
         Property property = propertyRepository.findById(id).orElse(null);
         if (property == null)
             return ResponseHandler.generateResponse(MessageConfig.PROPERTY_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
-
         if (!isAdmin()) {
             if (property.getPropertyOwner() == null ||
                     !property.getPropertyOwner().getOwnerId().equals(loggedInOwnerId)) {
-
                 return ResponseHandler.generateResponse(MessageConfig.FORBIDDEN, HttpStatus.FORBIDDEN, null);
             }
         }
-
-        return ResponseHandler.generateResponse(
-                propertyService.uploadPropertyImages(id, files),
-                HttpStatus.OK,
-                null
-        );
+        return ResponseHandler.generateResponse(propertyService.uploadPropertyImages(id, files), HttpStatus.OK, null);
     }
 
 @PostMapping("/buyPremiumByOwner/{ownerId}")
 public ResponseEntity<Object> buyPremium(@PathVariable Long ownerId) {
-
-    PropertyOwner owner =
-            propertyOwnerRepository.findById(ownerId).orElse(null);
-
+    PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
     if (owner == null) {
-        return ResponseHandler.generateResponse(
-                MessageConfig.OWNER_NOT_FOUND,
-                HttpStatus.BAD_REQUEST,
-                null);
+        return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
     }
-
     String status = owner.getPremiumStatus();
-
     if (status == null || status.isEmpty()) {
         owner.setPremiumStatus("PENDING");
     } else {
         owner.setPremiumStatus(status + ",PENDING");
     }
-
     owner.setPremiumCount(owner.getPremiumCount() + 1);
-
     propertyOwnerRepository.save(owner);
-
     String qrUrl = "http://localhost:8080/qr/payment.png";
-
     Map<String, Object> response = new HashMap<>();
     response.put("message", MessageConfig.SCAN_QR);
     response.put("qrCode", qrUrl);
-
-    return ResponseHandler.generateResponse(
-            MessageConfig.PAYMENT_INITIATED,
-            HttpStatus.OK,
-            response);
+    return ResponseHandler.generateResponse(MessageConfig.PAYMENT_INITIATED, HttpStatus.OK, response);
 }
+
+
+    @GetMapping("/getAllPropertiesByOwnerId/{ownerId}")
+    public ResponseEntity<Object> getAllPropertiesByOwnerId(@PathVariable Long ownerId, HttpServletRequest request) {
+        Long loggedInOwnerId = getLoggedInOwnerId();
+        if (loggedInOwnerId == null) {
+            return ResponseHandler.generateResponse(MessageConfig.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, null);
+        }
+        if (!isAdmin() && !loggedInOwnerId.equals(ownerId)) {
+            return ResponseHandler.generateResponse(MessageConfig.FORBIDDEN, HttpStatus.FORBIDDEN, null);
+        }
+        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
+        if (owner == null) {
+            return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+        }
+        return ResponseHandler.generateResponse(MessageConfig.PROPERTY_FETCHED, HttpStatus.OK, propertyService.getPropertiesByOwnerId(ownerId));
+    }
 }

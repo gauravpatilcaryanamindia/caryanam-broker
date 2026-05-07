@@ -25,4 +25,5 @@ public interface PropertyService {
     List<?> filterProperties(PropertyFilterDto filterDto, Long userId);
 
     Object getPropertiesByCityAndAddress(String city, String address);
+    List<PropertyDto> getPropertiesByOwnerId(Long ownerId);
 }
