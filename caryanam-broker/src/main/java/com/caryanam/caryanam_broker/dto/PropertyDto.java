@@ -36,5 +36,5 @@ public class PropertyDto {
     private String coverImage;
     private String doctypeImages;
     private Long ownerId;
-
+    private String apartmentName;
 }

@@ -49,4 +49,6 @@ public class Property {
     private PropertyOwner propertyOwner;
     private boolean isPremiumActive;
     private String paymentStatus;
+    @Column(name = "apartment_name")
+    private String apartmentName;
    }

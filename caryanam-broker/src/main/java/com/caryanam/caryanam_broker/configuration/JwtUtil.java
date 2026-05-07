@@ -21,10 +21,15 @@ public class JwtUtil {
     private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
 
 
-    public String generateToken(String username, String role, String deviceType, Long id) {
+    public String generateToken(String username,
+                                String fullName,
+                                String role,
+                                String deviceType,
+                                Long id) {
 
         return Jwts.builder()
                 .setSubject(username)
+                .claim("fullName", fullName)   // ✅ NEW ADDED
                 .claim("role", role)
                 .claim("deviceType", deviceType)
                 .claim("id", id)

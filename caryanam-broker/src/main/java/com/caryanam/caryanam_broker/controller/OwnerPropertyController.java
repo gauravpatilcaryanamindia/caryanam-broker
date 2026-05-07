@@ -62,48 +62,6 @@ public class OwnerPropertyController {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 
-//    // ================= ADD PROPERTY =================
-//    @PostMapping("/addPropertyByOwner/{ownerId}")
-//    public ResponseEntity<Object> addProperty(@PathVariable Long ownerId,
-//                                              @RequestBody PropertyDto propertyDto) {
-//
-//        Long loggedInOwnerId = getLoggedInOwnerId();
-//
-//        if (loggedInOwnerId == null) {
-//            return ResponseEntity.status(401)
-//                    .body(new ResponseDto<>(401, MessageConfig.UNAUTHORIZED, null));
-//        }
-//
-//        if (!isAdmin() && !loggedInOwnerId.equals(ownerId)) {
-//            return ResponseEntity.status(403)
-//                    .body(new ResponseDto<>(403, MessageConfig.FORBIDDEN, null));
-//        }
-//
-//        // ===== YOUR VALIDATION (UNCHANGED) =====
-//        if (propertyDto.getTitle() == null || propertyDto.getTitle().trim().isEmpty())
-//            return ResponseHandler.generateResponse(MessageConfig.TITLE_REQUIRED, HttpStatus.BAD_REQUEST, null);
-//
-//        for (int i = 0; i < propertyDto.getTitle().length(); i++)
-//            if (Character.isDigit(propertyDto.getTitle().charAt(i)))
-//                return ResponseHandler.generateResponse(MessageConfig.TITLE_INVALID, HttpStatus.BAD_REQUEST, null);
-//
-//        if (propertyDto.getPrice() == null)
-//            return ResponseHandler.generateResponse(MessageConfig.PRICE_REQUIRED, HttpStatus.BAD_REQUEST, null);
-//
-//        if (propertyDto.getPrice() <= 0)
-//            return ResponseHandler.generateResponse(MessageConfig.NO_ALPHABETS_ALLOWED, HttpStatus.BAD_REQUEST, null);
-//
-//        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
-//        if (owner == null)
-//            return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
-//
-//        return ResponseHandler.generateResponse(
-//                MessageConfig.PROPERTY_ADDED,
-//                HttpStatus.OK,
-//                propertyService.addProperty(propertyDto, ownerId)
-//        );
-//    }
-
     @PostMapping("/addPropertyByOwner/{ownerId}")
     public ResponseEntity<Object> addProperty(@PathVariable Long ownerId,
                                               @RequestBody PropertyDto propertyDto) {
@@ -290,6 +248,15 @@ public class OwnerPropertyController {
                     null
             );
         }
+        if (propertyDto.getApartmentName() == null ||
+                propertyDto.getApartmentName().trim().isEmpty()) {
+
+            return ResponseHandler.generateResponse(
+                    "Apartment name is required",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
 
         // ================= OWNER =================
         PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
@@ -429,29 +396,40 @@ public class OwnerPropertyController {
         );
     }
 
-    // ================= PREMIUM =================
-    @PostMapping("/buyPremiumByOwner/{ownerId}")
-    public ResponseEntity<Object> buyPremium(@PathVariable Long ownerId) {
+@PostMapping("/buyPremiumByOwner/{ownerId}")
+public ResponseEntity<Object> buyPremium(@PathVariable Long ownerId) {
 
-        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
+    PropertyOwner owner =
+            propertyOwnerRepository.findById(ownerId).orElse(null);
 
-        if (owner == null)
-            return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
-
-        if ("PENDING".equalsIgnoreCase(owner.getPremiumStatus()))
-            return ResponseHandler.generateResponse(MessageConfig.PAYMENT_ALREADY_IN_PROCESS, HttpStatus.BAD_REQUEST, null);
-
-        owner.setPremiumStatus("PENDING");
-        owner.setPremiumActive(false);
-        owner.setPremiumCount(owner.getPremiumCount() + 1);
-
-        propertyOwnerRepository.save(owner);
-
-        Map<String, Object> res = new HashMap<>();
-        res.put("message", MessageConfig.SCAN_QR);
-        res.put("qrCode", "http://localhost:8080/qr/payment.png");
-        res.put("status", "PENDING");
-
-        return ResponseHandler.generateResponse(MessageConfig.PAYMENT_INITIATED, HttpStatus.OK, res);
+    if (owner == null) {
+        return ResponseHandler.generateResponse(
+                MessageConfig.OWNER_NOT_FOUND,
+                HttpStatus.BAD_REQUEST,
+                null);
     }
+
+    String status = owner.getPremiumStatus();
+
+    if (status == null || status.isEmpty()) {
+        owner.setPremiumStatus("PENDING");
+    } else {
+        owner.setPremiumStatus(status + ",PENDING");
+    }
+
+    owner.setPremiumCount(owner.getPremiumCount() + 1);
+
+    propertyOwnerRepository.save(owner);
+
+    String qrUrl = "http://localhost:8080/qr/payment.png";
+
+    Map<String, Object> response = new HashMap<>();
+    response.put("message", MessageConfig.SCAN_QR);
+    response.put("qrCode", qrUrl);
+
+    return ResponseHandler.generateResponse(
+            MessageConfig.PAYMENT_INITIATED,
+            HttpStatus.OK,
+            response);
+}
 }

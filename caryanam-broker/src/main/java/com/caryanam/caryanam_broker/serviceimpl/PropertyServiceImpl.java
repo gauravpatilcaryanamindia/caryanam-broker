@@ -109,8 +109,8 @@ public class PropertyServiceImpl implements PropertyService {
 
             if (!isPremium) {
                 dto.setTitle(property.getTitle());
-                dto.setPropertyType(property.getPropertyType());
-                dto.setDoctypeImages(imageList.toString());
+                dto.setPrice(property.getPrice());
+                dto.setLocation(property.getLocation());
             } else {
                 dto.setId(property.getId());
                 dto.setTitle(property.getTitle());
@@ -128,6 +128,7 @@ public class PropertyServiceImpl implements PropertyService {
                 dto.setCarpetArea(property.getCarpetArea());
                 dto.setMobileNumber(property.getMobileNumber());
                 dto.setLikesCount(property.getLikesCount());
+                property.setApartmentName(property.getApartmentName());
                 dto.setViewsCount(property.getViewsCount());
                 dto.setStatus(property.getStatus());
                 dto.setDoctypeImages(imageList.toString());
@@ -376,9 +377,9 @@ public class PropertyServiceImpl implements PropertyService {
                 imageList.add(img.getImagePath());
             }
             if (!isPremium) {
-                dto.setTitle(property.getTitle());
-                dto.setPropertyType(property.getPropertyType());
-                dto.setDoctypeImages(imageList.toString());
+                dto.setTitle(property.getTitle()); // add kar sakta hai
+                dto.setPrice(property.getPrice());
+                dto.setLocation(property.getLocation());
             } else {
                 dto.setId(property.getId());
                 dto.setTitle(property.getTitle());

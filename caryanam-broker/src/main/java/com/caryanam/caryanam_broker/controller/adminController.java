@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,15 +32,54 @@ public class adminController {
     private PropertyRepository propertyRepository;
 
 
-    @GetMapping("/pending-users")
-    public List<User> getPendingUsers() {
-        return userRepository.findByPremiumStatus("PENDING");
+@GetMapping("/pending-users")
+public List<Map<String, Object>> getPendingUsers() {
+    List<User> users = userRepository.findAll();
+    List<Map<String, Object>> response = new ArrayList<>();
+    for (User user : users) {
+        if (user.getPremiumStatus() != null && user.getPremiumStatus().contains("PENDING")) {
+            String[] statuses = user.getPremiumStatus().split(",");
+            for (String status : statuses) {
+                if ("PENDING".equalsIgnoreCase(status.trim())) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("userId", user.getUserId());
+                    map.put("fullName", user.getFullName());
+                    map.put("email", user.getEmail());
+                    map.put("mobileNumber", user.getMobileNumber());
+                    map.put("premiumStatus", "PENDING");
+                    map.put("premiumCount", user.getPremiumCount());
+                    response.add(map);
+                }
+            }
+        }
+    }
+    return response;
+}
+
+    @GetMapping("/pending-owner")
+    public List<Map<String, Object>> getPendingOwners() {
+        List<PropertyOwner> owners = propertyOwnerRepository.findAll();
+        List<Map<String, Object>> response = new ArrayList<>();
+        for (PropertyOwner owner : owners) {
+            if (owner.getPremiumStatus() != null && owner.getPremiumStatus().contains("PENDING")) {
+                String[] statuses = owner.getPremiumStatus().split(",");
+                for (String status : statuses) {
+                    if ("PENDING".equalsIgnoreCase(status.trim())) {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("ownerId", owner.getOwnerId());
+                        map.put("fullName", owner.getFullName());
+                        map.put("email", owner.getEmail());
+                        map.put("mobileNumber", owner.getMobileNumber());
+                        map.put("premiumStatus", "PENDING");
+                        map.put("premiumCount", owner.getPremiumCount());
+                        response.add(map);
+                    }
+                }
+            }
+        }
+        return response;
     }
 
-    @GetMapping("/pending-Owner")
-    public List<PropertyOwner> getPendingAdmins() {
-        return propertyOwnerRepository.findByPremiumStatus("PENDING");
-    }
     @PostMapping("/approveOwnerPremium/{ownerId}")
     public ResponseEntity<Object> approveOwner(@PathVariable Long ownerId) {
 
