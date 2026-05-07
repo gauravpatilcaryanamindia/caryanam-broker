@@ -13,4 +13,10 @@ public interface AreaPincodeRepository extends JpaRepository<AreaPincode, Long> 
             String city,
             String area
     );
+
+    boolean existsByCityIgnoreCaseAndAreaIgnoreCaseAndPincode(
+            String city,
+            String area,
+            String pincode
+    );
 }
