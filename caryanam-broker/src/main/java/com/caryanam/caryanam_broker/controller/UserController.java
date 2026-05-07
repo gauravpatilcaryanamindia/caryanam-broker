@@ -29,36 +29,6 @@ public class UserController {
     private PropertyService propertyService;
 
 
-
-//    @PostMapping("/buyPremium/{userId}")
-//    public ResponseEntity<Object> buyPremium(@PathVariable Long userId) {
-//        if (userId == null || userId <= 0) {
-//            return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
-//        }
-//        User user = userRepository.findById(userId).orElse(null);
-//        if (user == null) {
-//            return ResponseHandler.generateResponse(
-//                    MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
-//        }
-//        if ("APPROVED".equalsIgnoreCase(user.getPremiumStatus())) {
-//            user.setPremiumStatus("NONE");
-//            user.setPremiumActive(false);
-//        }
-//        if ("PENDING".equalsIgnoreCase(user.getPremiumStatus())) {
-//            return ResponseHandler.generateResponse(MessageConfig.PAYMENT_ALREADY_IN_PROCESS, HttpStatus.BAD_REQUEST, null);
-//        }
-//        user.setPremiumStatus("PENDING");
-//        user.setPremiumActive(false);
-//        user.setPremiumCount(user.getPremiumCount() + 1);
-//        userRepository.save(user);
-//        String qrUrl = "http://localhost:8080/qr/payment.png";
-//        Map<String, Object> response = new HashMap<>();
-//        response.put("message", MessageConfig.SCAN_QR);
-//        response.put("qrCode", qrUrl);
-//        response.put("status", "PENDING");
-//        return ResponseHandler.generateResponse(MessageConfig.PAYMENT_INITIATED, HttpStatus.OK, response);
-//    }
-
     @PostMapping("/buyPremium/{userId}")
     public ResponseEntity<Object> buyPremium(@PathVariable Long userId) {
 

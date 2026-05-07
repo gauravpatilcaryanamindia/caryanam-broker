@@ -113,6 +113,7 @@ public class PropertyServiceImpl implements PropertyService {
                 dto.setTitle(property.getTitle());
                 dto.setPrice(property.getPrice());
                 dto.setLocation(property.getLocation());
+                dto.setDoctypeImages(imageList.toString());
             } else {
                 dto.setId(property.getId());
                 dto.setTitle(property.getTitle());
@@ -195,24 +196,57 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public PropertyDto updateProperty(Long id, PropertyDto propertyDto) {
+
         Property property = propertyRepository.findById(id).orElse(null);
         if (property == null) {
             return null;
         }
-        property.setTitle(propertyDto.getTitle());
-        property.setPrice(propertyDto.getPrice());
-        property.setLocation(propertyDto.getLocation());
-        property.setAddress(propertyDto.getAddress());
-        property.setCity(propertyDto.getCity());
-        property.setState(propertyDto.getState());
-        property.setPincode(propertyDto.getPincode());
-        property.setDescription(propertyDto.getDescription());
-        property.setPropertyType(propertyDto.getPropertyType());
-        property.setPgType(propertyDto.getPgType());
-        property.setBhkType(propertyDto.getBhkType());
-        property.setFurnishing(propertyDto.getFurnishing());
-        property.setCarpetArea(propertyDto.getCarpetArea());
-        property.setMobileNumber(propertyDto.getMobileNumber());
+        if (propertyDto.getTitle() != null) {
+            property.setTitle(propertyDto.getTitle());
+        }
+        if (propertyDto.getPrice() != null) {
+            property.setPrice(propertyDto.getPrice());
+        }
+        if (propertyDto.getLocation() != null) {
+            property.setLocation(propertyDto.getLocation());
+        }
+        if (propertyDto.getAddress() != null) {
+            property.setAddress(propertyDto.getAddress());
+        }
+        if (propertyDto.getCity() != null) {
+            property.setCity(propertyDto.getCity());
+        }
+        if (propertyDto.getState() != null) {
+            property.setState(propertyDto.getState());
+        }
+        if (propertyDto.getPincode() != null) {
+            property.setPincode(propertyDto.getPincode());
+        }
+
+        if (propertyDto.getDescription() != null) {
+            property.setDescription(propertyDto.getDescription());
+        }
+        if (propertyDto.getPropertyType() != null) {
+            property.setPropertyType(propertyDto.getPropertyType());
+        }
+        if (propertyDto.getPgType() != null) {
+            property.setPgType(propertyDto.getPgType());
+        }
+        if (propertyDto.getBhkType() != null) {
+            property.setBhkType(propertyDto.getBhkType());
+        }
+        if (propertyDto.getFurnishing() != null) {
+            property.setFurnishing(propertyDto.getFurnishing());
+        }
+        if (propertyDto.getCarpetArea() != null) {
+            property.setCarpetArea(propertyDto.getCarpetArea());
+        }
+        if (propertyDto.getMobileNumber() != null) {
+            property.setMobileNumber(propertyDto.getMobileNumber());
+        }
+        if (propertyDto.getApartmentName() != null) {
+            property.setApartmentName(propertyDto.getApartmentName());
+        }
         Property updatedProperty = propertyRepository.save(property);
         PropertyDto responseDto = new PropertyDto();
         responseDto.setId(updatedProperty.getId());
@@ -230,10 +264,17 @@ public class PropertyServiceImpl implements PropertyService {
         responseDto.setFurnishing(updatedProperty.getFurnishing());
         responseDto.setCarpetArea(updatedProperty.getCarpetArea());
         responseDto.setMobileNumber(updatedProperty.getMobileNumber());
-        responseDto.setStatus(updatedProperty.getStatus());
         responseDto.setApartmentName(updatedProperty.getApartmentName());
+        responseDto.setStatus(updatedProperty.getStatus());
         responseDto.setLikesCount(updatedProperty.getLikesCount());
         responseDto.setViewsCount(updatedProperty.getViewsCount());
+        List<PropertyImage> images = propertyImageRepository.findByPropertyId(updatedProperty.getId());
+        List<String> imageList = new ArrayList<>();
+        for (PropertyImage img : images) {
+            imageList.add(img.getImagePath());
+        }
+        responseDto.setDoctypeImages(imageList.toString());
+
         return responseDto;
     }
 
