@@ -4,6 +4,7 @@ import com.caryanam.caryanam_broker.configuration.CustomUserDetails;
 import com.caryanam.caryanam_broker.dto.PropertyDto;
 import com.caryanam.caryanam_broker.dto.ResponseDto;
 import com.caryanam.caryanam_broker.dto.ResponseHandler;
+import com.caryanam.caryanam_broker.entity.AreaPincode;
 import com.caryanam.caryanam_broker.entity.Property;
 import com.caryanam.caryanam_broker.entity.PropertyOwner;
 import com.caryanam.caryanam_broker.messageconfig.MessageConfig;
@@ -18,7 +19,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -29,6 +32,8 @@ public class OwnerPropertyController {
     @Autowired private PropertyImageRepository propertyImageRepository;
     @Autowired private PropertyOwnerRepository propertyOwnerRepository;
     @Autowired private PropertyRepository propertyRepository;
+    @Autowired
+    private AreaPincodeRepository areaPincodeRepository;
 
     // ================= COMMON METHODS =================
 
@@ -60,8 +65,37 @@ public class OwnerPropertyController {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 
+    @GetMapping("/getAreasByCity/{city}")
+    public ResponseEntity<Object> getAreasByCity(
+            @PathVariable String city) {
+
+        List<AreaPincode> list =
+                areaPincodeRepository.findByCityIgnoreCase(city);
+
+        List<String> areas = new ArrayList<>();
+
+        for (AreaPincode area : list) {
+            areas.add(area.getArea());
+        }
+
+        return ResponseHandler.generateResponse(
+                "Areas fetched successfully", HttpStatus.OK, areas);
+    }
+
+    // ================= GET PINCODE =================
+    @GetMapping("/getPincode")
+    public ResponseEntity<Object> getPincode(@RequestParam String city, @RequestParam String area) {
+        AreaPincode data = areaPincodeRepository.findByCityIgnoreCaseAndAreaIgnoreCase(city, area);
+        if (data == null) {
+            return ResponseHandler.generateResponse("Area not found", HttpStatus.BAD_REQUEST, null);
+        }
+        return ResponseHandler.generateResponse(
+                "Pincode fetched successfully", HttpStatus.OK, data.getPincode());
+    }
+
     @PostMapping("/addPropertyByOwner/{ownerId}")
-    public ResponseEntity<Object> addProperty(@PathVariable Long ownerId, @RequestBody PropertyDto propertyDto) {
+    public ResponseEntity<Object> addProperty(
+            @PathVariable Long ownerId, @RequestBody PropertyDto propertyDto) {
         Long loggedInOwnerId = getLoggedInOwnerId();
         if (loggedInOwnerId == null) {
             return ResponseEntity.status(401).body(new ResponseDto<>(401, MessageConfig.UNAUTHORIZED, null));
@@ -69,6 +103,7 @@ public class OwnerPropertyController {
         if (!isAdmin() && !loggedInOwnerId.equals(ownerId)) {
             return ResponseEntity.status(403).body(new ResponseDto<>(403, MessageConfig.FORBIDDEN, null));
         }
+
         if (propertyDto.getTitle() == null || propertyDto.getTitle().trim().isEmpty()) {
             return ResponseHandler.generateResponse("Title is required", HttpStatus.BAD_REQUEST, null);
         }
@@ -87,8 +122,7 @@ public class OwnerPropertyController {
             return ResponseHandler.generateResponse("Location is required", HttpStatus.BAD_REQUEST, null);
         }
         if (propertyDto.getAddress() == null || propertyDto.getAddress().trim().isEmpty()) {
-            return ResponseHandler.generateResponse(
-                    "Address is required", HttpStatus.BAD_REQUEST, null);
+            return ResponseHandler.generateResponse("Address is required", HttpStatus.BAD_REQUEST, null);
         }
         if (propertyDto.getCity() == null || propertyDto.getCity().trim().isEmpty()) {
             return ResponseHandler.generateResponse("City is required", HttpStatus.BAD_REQUEST, null);
@@ -108,6 +142,14 @@ public class OwnerPropertyController {
         if (!propertyDto.getPincode().matches("\\d{6}")) {
             return ResponseHandler.generateResponse("Pincode must be 6 digits", HttpStatus.BAD_REQUEST, null);
         }
+        AreaPincode areaData =
+                areaPincodeRepository.findByCityIgnoreCaseAndAreaIgnoreCase(propertyDto.getCity(), propertyDto.getLocation());
+        if (areaData == null) {
+            return ResponseHandler.generateResponse("Invalid city or area", HttpStatus.BAD_REQUEST, null);
+        }
+        if (!areaData.getPincode().equals(propertyDto.getPincode())) {
+            return ResponseHandler.generateResponse("Pincode does not match selected area", HttpStatus.BAD_REQUEST, null);
+        }
         if (propertyDto.getDescription() == null || propertyDto.getDescription().trim().isEmpty()) {
             return ResponseHandler.generateResponse("Description is required", HttpStatus.BAD_REQUEST, null);
         }
@@ -120,26 +162,45 @@ public class OwnerPropertyController {
         if (propertyDto.getFurnishing() == null) {
             return ResponseHandler.generateResponse("Furnishing is required", HttpStatus.BAD_REQUEST, null);
         }
-        if (propertyDto.getCarpetArea() == null ) {
-            return ResponseHandler.generateResponse("Carpet area must be greater than 0", HttpStatus.BAD_REQUEST, null);
+        if (propertyDto.getCarpetArea() == null) {
+            return ResponseHandler.generateResponse("Carpet area is required", HttpStatus.BAD_REQUEST, null);
         }
+
         if (propertyDto.getMobileNumber() == null || propertyDto.getMobileNumber().trim().isEmpty()) {
             return ResponseHandler.generateResponse("Mobile number is required", HttpStatus.BAD_REQUEST, null);
         }
         if (!propertyDto.getMobileNumber().matches("\\d{10}")) {
             return ResponseHandler.generateResponse("Mobile number must be 10 digits", HttpStatus.BAD_REQUEST, null);
         }
-        if (propertyDto.getApartmentName() == null || propertyDto.getApartmentName().trim().isEmpty()) {
-            return ResponseHandler.generateResponse("Apartment name is required", HttpStatus.BAD_REQUEST, null);
+
+        if (propertyDto.getApartmentName() == null
+                || propertyDto.getApartmentName().trim().isEmpty()) {
+
+            return ResponseHandler.generateResponse(
+                    "Apartment name is required",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
         }
-        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
+
+        PropertyOwner owner =
+                propertyOwnerRepository.findById(ownerId).orElse(null);
+
         if (owner == null) {
-            return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+
+            return ResponseHandler.generateResponse(
+                    MessageConfig.OWNER_NOT_FOUND,
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
         }
 
-        return ResponseHandler.generateResponse(MessageConfig.PROPERTY_ADDED, HttpStatus.OK, propertyService.addProperty(propertyDto, ownerId));
+        return ResponseHandler.generateResponse(
+                MessageConfig.PROPERTY_ADDED,
+                HttpStatus.OK,
+                propertyService.addProperty(propertyDto, ownerId)
+        );
     }
-
     // ================= GET PROPERTY =================
     @GetMapping("/getPropertyById/{id}")
     public ResponseEntity<Object> getPropertyById(@PathVariable Long id) {

@@ -9,7 +9,6 @@ public class NoBrokerApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(NoBrokerApplication.class, args);
 
-
 		System.out.println("Caryanam Broker Application start Successfully");
 		System.out.println("\n\n");
 		System.err.println("PORT : localhost8080");

@@ -45,6 +45,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/user/buyPremium/**").permitAll()
                         .requestMatchers("/api/owner/buyPremiumByOwner/**").permitAll()
+                        .requestMatchers("/api/area/**").permitAll()
+                        .requestMatchers(
+                                "/api/owner/getAreasByCity/**",
+                                "/api/owner/getPincode"
+                        ).permitAll()
                         .requestMatchers("/uploads/**", "/images/**", "/**/*.jpg", "/**/*.png", "/**/*.jpeg").permitAll()
                         .requestMatchers("/v3/api-docs/**",
                                 "/swagger-ui/**",
