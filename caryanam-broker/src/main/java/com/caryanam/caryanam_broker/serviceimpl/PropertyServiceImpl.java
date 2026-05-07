@@ -58,7 +58,7 @@ public class PropertyServiceImpl implements PropertyService {
         property.setFurnishing(propertyDto.getFurnishing());
         property.setCarpetArea(propertyDto.getCarpetArea());
         property.setMobileNumber(propertyDto.getMobileNumber());
-        property.setApartmentName(property.getApartmentName());
+        property.setApartmentName(propertyDto.getApartmentName());
 
 
         property.setLikesCount(0);
