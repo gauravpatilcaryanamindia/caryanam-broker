@@ -84,30 +84,93 @@ public class PropertyServiceImpl implements PropertyService {
         if (request.getAttribute("isPremium") != null) {
             isPremium = (boolean) request.getAttribute("isPremium");
         }
+
         List<Property> properties =
                 propertyRepository.findByStatus(AppConstants.ACTIVE);
+
         List<PropertyDto> dtoList = new ArrayList<>();
+
         for (Property property : properties) {
+
+            PropertyOwner owner = property.getPropertyOwner();
+
+            if (owner == null) {
+                continue;
+            }
+
+            // PROPERTY OWNER PREMIUM CHECK
+            if (!owner.isPremiumActive()) {
+                continue;
+            }
+
+            if (owner.getPremiumStatus() == null
+                    || !owner.getPremiumStatus().contains("APPROVED")) {
+                continue;
+            }
+
             PropertyDto dto = new PropertyDto();
 
-            dto.setId(property.getId());
-            dto.setTitle(property.getTitle());
-            dto.setPrice(property.getPrice());
-            dto.setCity(property.getCity());
-            dto.setLocation(property.getLocation());
-            dto.setAddress(property.getAddress());
-            dto.setDescription(property.getDescription());
-            dto.setPropertyType(property.getPropertyType());
-            dto.setBhkType(property.getBhkType());
-            dto.setFurnishing(property.getFurnishing());
-            dto.setCarpetArea(property.getCarpetArea());
+            // IMAGE LOGIC
+            List<PropertyImage> imageList =
+                    propertyImageRepository.findByPropertyId(property.getId());
+
+            List<String> doctypeImages = new ArrayList<>();
+
+            if (imageList != null && !imageList.isEmpty()) {
+
+                for (int i = 0; i < imageList.size(); i++) {
+
+                    String path = imageList.get(i).getImagePath();
+
+                    if (i == 0) {
+                        dto.setCoverImage(path);
+                    } else {
+                        doctypeImages.add(path);
+                    }
+                }
+            }
+
+            // NON PREMIUM USER
+            if (!isPremium) {
+
+                dto.setId(property.getId());
+                dto.setTitle(property.getTitle());
+                dto.setPrice(property.getPrice());
+                dto.setLocation(property.getLocation());
+
+                // ONLY COVER IMAGE
+                dto.setCoverImage(dto.getCoverImage());
+                dto.setDoctypeImages(String.valueOf(doctypeImages));
+
+
+            } else {
+
+                // PREMIUM USER → FULL DETAILS
+                dto.setId(property.getId());
+                dto.setTitle(property.getTitle());
+                dto.setPrice(property.getPrice());
+                dto.setCity(property.getCity());
+                dto.setLocation(property.getLocation());
+                dto.setAddress(property.getAddress());
+                dto.setDescription(property.getDescription());
+                dto.setPropertyType(property.getPropertyType());
+                dto.setPgType(property.getPgType());
+                dto.setBhkType(property.getBhkType());
+                dto.setFurnishing(property.getFurnishing());
+                dto.setCarpetArea(property.getCarpetArea());
+                dto.setApartmentName(property.getApartmentName());
+                dto.setStatus(property.getStatus());
+                dto.setOwnerId(owner.getOwnerId());
+
+                dto.setCoverImage(dto.getCoverImage());
+                dto.setDoctypeImages(String.valueOf(doctypeImages));
+            }
 
             dtoList.add(dto);
         }
 
         return dtoList;
     }
-
     @Override
     public PropertyDto getPropertyById(Long id) {
         Property property = propertyRepository.findById(id).orElse(null);
