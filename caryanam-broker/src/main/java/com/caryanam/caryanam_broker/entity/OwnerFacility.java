@@ -1,7 +1,11 @@
 package com.caryanam.caryanam_broker.entity;
 
+import com.caryanam.caryanam_broker.enums.FacilityName;
+import com.caryanam.caryanam_broker.enums.FacilityStatus;
 import jakarta.persistence.*;
+import lombok.Data;
 
+@Data
 @Entity
 @Table(name = "owner_facilities")
 public class OwnerFacility {
@@ -13,30 +17,11 @@ public class OwnerFacility {
     @Column(name = "owner_id")
     private Long ownerId;
 
-    @Column(name = "facility_name")
-    private String facilityName;
+    @Enumerated(EnumType.STRING)
+    private FacilityName facilityName;
 
-    public Long getId() {
-        return id;
-    }
+    @Enumerated(EnumType.STRING)
+    private FacilityStatus status;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
 
-    public Long getOwnerId() {
-        return ownerId;
-    }
-
-    public void setOwnerId(Long ownerId) {
-        this.ownerId = ownerId;
-    }
-
-    public String getFacilityName() {
-        return facilityName;
-    }
-
-    public void setFacilityName(String facilityName) {
-        this.facilityName = facilityName;
-    }
 }
