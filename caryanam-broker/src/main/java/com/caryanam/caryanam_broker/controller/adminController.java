@@ -85,31 +85,47 @@ public List<Map<String, Object>> getPendingUsers() {
 
         if (ownerId == null || ownerId <= 0) {
             return ResponseHandler.generateResponse(
-                    MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
+                    MessageConfig.INVALID_ID,
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
         }
 
-        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
+        PropertyOwner owner =
+                propertyOwnerRepository.findById(ownerId).orElse(null);
 
         if (owner == null) {
             return ResponseHandler.generateResponse(
-                    MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+                    MessageConfig.OWNER_NOT_FOUND,
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
         }
 
+        String status = owner.getPremiumStatus();
 
-        if (!"PENDING".equals(owner.getPremiumStatus())) {
+        if (status == null || !status.contains("PENDING")) {
+
             return ResponseHandler.generateResponse(
-                    "Owner has not requested premium or already approved",
-                    HttpStatus.BAD_REQUEST, null);
+                    "No pending premium request found",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
         }
 
-        //  Approve
-        owner.setPremiumStatus("APPROVED");
+        // LAST PENDING -> APPROVED
+        status = status.replaceFirst("PENDING", "APPROVED");
+
+        owner.setPremiumStatus(status);
         owner.setPremiumActive(true);
 
         propertyOwnerRepository.save(owner);
 
         return ResponseHandler.generateResponse(
-                MessageConfig.OWNER_PREMIUM_APPROVED, HttpStatus.OK, owner);
+                MessageConfig.OWNER_PREMIUM_APPROVED,
+                HttpStatus.OK,
+                owner
+        );
     }
 
     @PostMapping("/approveUserPremium/{userId}")

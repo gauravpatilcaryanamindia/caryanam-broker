@@ -71,7 +71,6 @@ public class UserController {
                     HttpStatus.BAD_REQUEST,
                     null);
         }
-
         User user = userRepository.findById(userId).orElse(null);
 
         if (user == null) {
@@ -79,6 +78,15 @@ public class UserController {
                     MessageConfig.USER_NOT_FOUND,
                     HttpStatus.BAD_REQUEST,
                     null);
+        }
+        if (user.getPremiumStatus() != null
+                && user.getPremiumStatus().contains("PENDING")) {
+
+            return ResponseHandler.generateResponse(
+                    "Premium request already pending",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
         }
 
         String status = user.getPremiumStatus();

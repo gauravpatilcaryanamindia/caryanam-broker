@@ -149,15 +149,20 @@ public class PropertyServiceImpl implements PropertyService {
                 dto.setId(property.getId());
                 dto.setTitle(property.getTitle());
                 dto.setPrice(property.getPrice());
-                dto.setCity(property.getCity());
                 dto.setLocation(property.getLocation());
                 dto.setAddress(property.getAddress());
+                dto.setCity(property.getCity());
+                dto.setState(property.getState());
+                dto.setPincode(property.getPincode());
                 dto.setDescription(property.getDescription());
                 dto.setPropertyType(property.getPropertyType());
                 dto.setPgType(property.getPgType());
                 dto.setBhkType(property.getBhkType());
                 dto.setFurnishing(property.getFurnishing());
                 dto.setCarpetArea(property.getCarpetArea());
+                dto.setMobileNumber(property.getMobileNumber());
+                dto.setLikesCount(property.getLikesCount());
+                dto.setViewsCount(property.getViewsCount());
                 dto.setApartmentName(property.getApartmentName());
                 dto.setStatus(property.getStatus());
                 dto.setOwnerId(owner.getOwnerId());
@@ -459,9 +464,19 @@ public class PropertyServiceImpl implements PropertyService {
                 imageList.add(img.getImagePath());
             }
             if (!isPremium) {
+
                 dto.setTitle(property.getTitle());
                 dto.setPrice(property.getPrice());
                 dto.setLocation(property.getLocation());
+
+                // ONLY DOCTYPE IMAGES
+                List<String> doctypeImages = new ArrayList<>();
+
+                for (String image : imageList) {
+                    doctypeImages.add(image);
+                }
+
+                dto.setDoctypeImages(doctypeImages.toString());
             } else {
                 dto.setId(property.getId());
                 dto.setTitle(property.getTitle());
