@@ -3,7 +3,6 @@ package com.caryanam.caryanam_broker.serviceimpl;
 import com.caryanam.caryanam_broker.dto.FacilityDto;
 import com.caryanam.caryanam_broker.dto.OwnerFacilityRequest;
 import com.caryanam.caryanam_broker.entity.OwnerFacility;
-import com.caryanam.caryanam_broker.enums.FacilityName;
 import com.caryanam.caryanam_broker.repository.OwnerFacilityRepository;
 import com.caryanam.caryanam_broker.service.OwnerFacilityService;
 
@@ -34,14 +33,18 @@ public class OwnerFacilityServiceImpl
 
             OwnerFacility ownerFacility =
                     repository
-                            .findByOwnerIdAndFacilityName(
+                            .findByOwnerIdAndPropertyIdAndFacilityName(
                                     request.getOwnerId(),
-                                    FacilityName.valueOf(String.valueOf(facilityDto.getFacilityName()))
+                                    request.getPropertyId(),
+                                    facilityDto.getFacilityName()
                             )
                             .orElse(new OwnerFacility());
 
             ownerFacility.setOwnerId(
                     request.getOwnerId());
+
+            ownerFacility.setPropertyId(
+                    request.getPropertyId());
 
             ownerFacility.setFacilityName(
                     facilityDto.getFacilityName());
@@ -57,10 +60,16 @@ public class OwnerFacilityServiceImpl
         return "Facilities Saved Successfully";
     }
 
+
+
     @Override
     public List<OwnerFacility> getFacilities(
-            Long ownerId) {
+            Long ownerId,
+            Long propertyId) {
 
-        return repository.findByOwnerId(ownerId);
+        return repository.findByOwnerIdAndPropertyId(
+                ownerId,
+                propertyId
+        );
     }
 }

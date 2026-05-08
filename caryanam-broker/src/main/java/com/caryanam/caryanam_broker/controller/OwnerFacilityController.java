@@ -1,6 +1,5 @@
 package com.caryanam.caryanam_broker.controller;
 
-
 import com.caryanam.caryanam_broker.dto.OwnerFacilityRequest;
 import com.caryanam.caryanam_broker.dto.ResponseHandler;
 import com.caryanam.caryanam_broker.entity.OwnerFacility;
@@ -32,6 +31,7 @@ public class OwnerFacilityController {
     public ResponseEntity<Object> saveFacilities(
             @RequestBody OwnerFacilityRequest request) {
 
+        // Owner Validation
         if (request.getOwnerId() == null) {
 
             return ResponseHandler.generateResponse(
@@ -41,8 +41,20 @@ public class OwnerFacilityController {
             );
         }
 
+        // Property Validation
+        if (request.getPropertyId() == null) {
+
+            return ResponseHandler.generateResponse(
+                    "Property Id Is Required",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        // Owner Check
         PropertyOwner owner =
-                propertyOwnerRepository.findById(request.getOwnerId())
+                propertyOwnerRepository
+                        .findById(request.getOwnerId())
                         .orElse(null);
 
         if (owner == null) {
@@ -54,6 +66,7 @@ public class OwnerFacilityController {
             );
         }
 
+        // Facility Validation
         if (request.getFacilities() == null ||
                 request.getFacilities().isEmpty()) {
 
@@ -64,10 +77,15 @@ public class OwnerFacilityController {
             );
         }
 
+        // Save Facilities
         service.saveFacilities(request);
 
+        // Fetch Saved Data
         List<OwnerFacility> savedFacilities =
-                service.getFacilities(request.getOwnerId());
+                service.getFacilities(
+                        request.getOwnerId(),
+                        request.getPropertyId()
+                );
 
         return ResponseHandler.generateResponse(
                 "Facilities Saved Successfully",
@@ -76,15 +94,37 @@ public class OwnerFacilityController {
         );
     }
 
-    @GetMapping("/get-facilities/{ownerId}")
+    @GetMapping("/get-facilities")
     public ResponseEntity<Object> getFacilities(
-            @PathVariable Long ownerId) {
+            @RequestParam Long ownerId,
+            @RequestParam Long propertyId) {
 
-        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
-        if (owner == null) {return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+        // Owner Check
+        PropertyOwner owner =
+                propertyOwnerRepository
+                        .findById(ownerId)
+                        .orElse(null);
+
+        if (owner == null) {
+
+            return ResponseHandler.generateResponse(
+                    MessageConfig.OWNER_NOT_FOUND,
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
         }
 
-        List<OwnerFacility> facilities = service.getFacilities(ownerId);
-        return ResponseHandler.generateResponse("Facilities Fetched Successfully", HttpStatus.OK, facilities);
+        // Fetch Facilities
+        List<OwnerFacility> facilities =
+                service.getFacilities(
+                        ownerId,
+                        propertyId
+                );
+
+        return ResponseHandler.generateResponse(
+                "Facilities Fetched Successfully",
+                HttpStatus.OK,
+                facilities
+        );
     }
 }

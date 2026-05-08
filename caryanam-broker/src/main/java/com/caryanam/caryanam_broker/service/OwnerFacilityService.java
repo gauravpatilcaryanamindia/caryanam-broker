@@ -10,6 +10,9 @@ public interface OwnerFacilityService {
     String saveFacilities(
             OwnerFacilityRequest request);
 
+
+
     List<OwnerFacility> getFacilities(
-            Long ownerId);
+            Long ownerId,
+            Long propertyId);
 }

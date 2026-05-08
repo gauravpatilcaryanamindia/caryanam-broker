@@ -15,10 +15,12 @@ public interface OwnerFacilityRepository
 
     List<OwnerFacility> findByOwnerId(Long ownerId);
 
-    Optional<OwnerFacility> findByOwnerIdAndFacilityName(
-            Long ownerId,
-            FacilityName facilityName
-    );
+    Optional<OwnerFacility> findByOwnerIdAndFacilityName(Long ownerId, FacilityName facilityName);
+
+    List<OwnerFacility> findByOwnerIdAndPropertyId(Long ownerId, Long propertyId);
+
+    Optional<OwnerFacility> findByOwnerIdAndPropertyIdAndFacilityName(
+            Long ownerId, Long propertyId, FacilityName facilityName);
 
     @Transactional
     void deleteByOwnerId(Long ownerId);

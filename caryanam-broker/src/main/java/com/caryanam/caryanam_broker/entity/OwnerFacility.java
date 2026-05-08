@@ -17,6 +17,8 @@ public class OwnerFacility {
     @Column(name = "owner_id")
     private Long ownerId;
 
+    private Long propertyId;
+
     @Enumerated(EnumType.STRING)
     private FacilityName facilityName;
 
