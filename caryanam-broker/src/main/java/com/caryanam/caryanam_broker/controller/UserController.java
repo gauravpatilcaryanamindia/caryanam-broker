@@ -1,5 +1,6 @@
 package com.caryanam.caryanam_broker.controller;
 
+import com.caryanam.caryanam_broker.configuration.CustomUserDetails;
 import com.caryanam.caryanam_broker.dto.PropertyDto;
 import com.caryanam.caryanam_broker.dto.PropertyFilterDto;
 import com.caryanam.caryanam_broker.dto.ResponseHandler;
@@ -11,6 +12,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -27,6 +30,36 @@ public class UserController {
 
     @Autowired
     private PropertyService propertyService;
+
+
+    private Authentication getAuth() {
+        return SecurityContextHolder.getContext().getAuthentication();
+    }
+
+    private Long getLoggedInUserId() {
+        Authentication authentication = getAuth();
+        if (authentication == null) return null;
+
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof CustomUserDetails) {
+            return ((CustomUserDetails) principal).getId();
+        } else if (principal instanceof String) {
+            String email = (String) principal;
+            User user = userRepository.findByEmail(email).orElse(null);
+            return user != null ? user.getUserId() : null;
+        }
+        return null;
+    }
+
+    private boolean isAdmin() {
+        Authentication auth = getAuth();
+        if (auth == null) return false;
+
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    }
+
 
 
     @PostMapping("/buyPremium/{userId}")
@@ -74,6 +107,36 @@ public class UserController {
 
     @GetMapping("/properties/{userId}")
     public ResponseEntity<Object> getProperties(@PathVariable Long userId, HttpServletRequest request) {
+
+
+        if (userId == null || userId <= 0) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.INVALID_ID,
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        Long loggedInUserId = getLoggedInUserId();
+
+        if (loggedInUserId == null) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.UNAUTHORIZED,
+                    HttpStatus.UNAUTHORIZED,
+                    null
+            );
+        }
+
+
+        if (!isAdmin() && !loggedInUserId.equals(userId)) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.FORBIDDEN,
+                    HttpStatus.FORBIDDEN,
+                    null
+            );
+        }
+
+
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
             return ResponseHandler.generateResponse(MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
@@ -90,6 +153,37 @@ public class UserController {
 
     @PostMapping("/filter-properties/{userId}")
     public ResponseEntity<Object> filterProperties(@RequestBody PropertyFilterDto dto, @PathVariable Long userId) {
+
+
+        if (userId == null || userId <= 0) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.INVALID_ID,
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        Long loggedInUserId = getLoggedInUserId();
+
+        if (loggedInUserId == null) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.UNAUTHORIZED,
+                    HttpStatus.UNAUTHORIZED,
+                    null
+            );
+        }
+
+
+        if (!isAdmin() && !loggedInUserId.equals(userId)) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.FORBIDDEN,
+                    HttpStatus.FORBIDDEN,
+                    null
+            );
+        }
+
+
+
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
             return ResponseHandler.generateResponse(MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
@@ -112,6 +206,36 @@ public class UserController {
 
     @GetMapping("/{userId}")
     public ResponseEntity<Object> getUserById(@PathVariable Long userId) {
+
+
+        if (userId == null || userId <= 0) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.INVALID_ID,
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        Long loggedInUserId = getLoggedInUserId();
+
+        if (loggedInUserId == null) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.UNAUTHORIZED,
+                    HttpStatus.UNAUTHORIZED,
+                    null
+            );
+        }
+
+
+        if (!isAdmin() && !loggedInUserId.equals(userId)) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.FORBIDDEN,
+                    HttpStatus.FORBIDDEN,
+                    null
+            );
+        }
+
+
         if (userId == null || userId <= 0) {
             return ResponseHandler.generateResponse(
                     "Invalid User Id", HttpStatus.BAD_REQUEST, null);
