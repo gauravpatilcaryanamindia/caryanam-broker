@@ -133,31 +133,46 @@ public List<Map<String, Object>> getPendingUsers() {
 
         if (userId == null || userId <= 0) {
             return ResponseHandler.generateResponse(
-                    MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
+                    MessageConfig.INVALID_ID,
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
         }
 
         User user = userRepository.findById(userId).orElse(null);
 
         if (user == null) {
             return ResponseHandler.generateResponse(
-                    MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+                    MessageConfig.USER_NOT_FOUND,
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
         }
 
+        String status = user.getPremiumStatus();
 
-        if (!"PENDING".equals(user.getPremiumStatus())) {
+        if (status == null || !status.contains("PENDING")) {
+
             return ResponseHandler.generateResponse(
-                    "User has not requested premium or already approved",
-                    HttpStatus.BAD_REQUEST, null);
+                    "No pending premium request found",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
         }
 
+        // LAST PENDING -> APPROVED
+        status = status.replaceFirst("PENDING", "APPROVED");
 
-        user.setPremiumStatus("APPROVED");
+        user.setPremiumStatus(status);
         user.setPremiumActive(true);
 
         userRepository.save(user);
 
         return ResponseHandler.generateResponse(
-                MessageConfig.USER_PREMIUM_APPROVED, HttpStatus.OK, user);
+                MessageConfig.USER_PREMIUM_APPROVED,
+                HttpStatus.OK,
+                user
+        );
     }
 
     @PostMapping("/rejectOwnerPremium/{ownerId}")
