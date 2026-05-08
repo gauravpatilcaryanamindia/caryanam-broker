@@ -108,7 +108,6 @@ public class PropertyServiceImpl implements PropertyService {
         return dtoList;
     }
 
-
     @Override
     public PropertyDto getPropertyById(Long id) {
         Property property = propertyRepository.findById(id).orElse(null);
@@ -116,23 +115,11 @@ public class PropertyServiceImpl implements PropertyService {
         if (property == null) {
             return null;
         }
-        if (!AppConstants.ACTIVE.equalsIgnoreCase(property.getStatus())) {
-            return null;
-        }
         PropertyOwner owner = property.getPropertyOwner();
-
         if (owner == null) {
             return null;
         }
-        if (!owner.isPremiumActive()) {
-            return null;
-        }
-        if (owner.getPremiumStatus() == null
-                || !owner.getPremiumStatus().contains("APPROVED")) {
-            return null;
-        }
         PropertyDto dto = new PropertyDto();
-
         dto.setId(property.getId());
         dto.setTitle(property.getTitle());
         dto.setPrice(property.getPrice());
@@ -154,6 +141,7 @@ public class PropertyServiceImpl implements PropertyService {
         dto.setStatus(property.getStatus());
 
         dto.setOwnerId(owner.getOwnerId());
+
         List<PropertyImage> imageList =
                 propertyImageRepository.findByPropertyId(id);
 
@@ -172,7 +160,6 @@ public class PropertyServiceImpl implements PropertyService {
                 }
             }
         }
-
         dto.setDoctypeImages(String.valueOf(doctypeImages));
 
         return dto;
@@ -464,7 +451,7 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public List<PropertyDto> getPropertiesByOwnerId(Long ownerId) {
-        List<Property> properties = propertyRepository.findByPropertyOwner_OwnerIdAndStatus(ownerId, AppConstants.ACTIVE);
+        List<Property> properties = propertyRepository.findByPropertyOwner_OwnerId(ownerId);
         List<PropertyDto> dtoList = new ArrayList<>();
         for (Property property : properties) {
             PropertyDto dto = new PropertyDto();
@@ -501,5 +488,16 @@ public class PropertyServiceImpl implements PropertyService {
             dtoList.add(dto);
         }
         return dtoList;
+    }
+
+    @Override
+    public String activateProperty(Long id) {
+        Property property = propertyRepository.findById(id).orElse(null);
+        if (property == null) {
+            return MessageConfig.PROPERTY_NOT_FOUND;
+        }
+        property.setStatus(AppConstants.ACTIVE);
+        propertyRepository.save(property);
+        return "Property Activated Successfully";
     }
 }

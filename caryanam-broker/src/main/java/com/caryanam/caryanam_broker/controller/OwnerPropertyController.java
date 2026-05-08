@@ -310,4 +310,22 @@ public ResponseEntity<Object> buyPremium(@PathVariable Long ownerId) {
         }
         return ResponseHandler.generateResponse(MessageConfig.PROPERTY_FETCHED, HttpStatus.OK, propertyService.getPropertiesByOwnerId(ownerId));
     }
+
+    @PutMapping("/activatePropertyById/{id}")
+    public ResponseEntity<Object> activateProperty(@PathVariable Long id) {
+        Long loggedInOwnerId = getLoggedInOwnerId();
+        if (loggedInOwnerId == null) {
+            return ResponseHandler.generateResponse(MessageConfig.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, null);
+        }
+        Property property = propertyRepository.findById(id).orElse(null);
+        if (property == null) {
+            return ResponseHandler.generateResponse(MessageConfig.PROPERTY_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+        }
+        if (!isAdmin()) {
+            if (property.getPropertyOwner() == null || !property.getPropertyOwner().getOwnerId().equals(loggedInOwnerId)) {
+                return ResponseHandler.generateResponse(MessageConfig.FORBIDDEN, HttpStatus.FORBIDDEN, null);
+            }
+        }
+        return ResponseHandler.generateResponse("Property Activated Successfully", HttpStatus.OK, propertyService.activateProperty(id));
+    }
 }

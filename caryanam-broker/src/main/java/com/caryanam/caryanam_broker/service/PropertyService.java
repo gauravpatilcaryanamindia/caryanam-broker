@@ -26,4 +26,6 @@ public interface PropertyService {
 
     Object getPropertiesByCityAndAddress(String city, String address);
     List<PropertyDto> getPropertiesByOwnerId(Long ownerId);
+
+    String activateProperty(Long id);
 }
