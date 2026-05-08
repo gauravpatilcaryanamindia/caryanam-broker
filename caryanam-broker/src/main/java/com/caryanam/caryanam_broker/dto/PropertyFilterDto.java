@@ -13,5 +13,6 @@ public class PropertyFilterDto {
     private String city;
     private String address;
     private Boolean fetchAddressOnly;
+    private String pgType;
 
 }
