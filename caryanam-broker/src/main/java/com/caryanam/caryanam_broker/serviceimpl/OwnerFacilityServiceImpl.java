@@ -3,6 +3,7 @@ package com.caryanam.caryanam_broker.serviceimpl;
 import com.caryanam.caryanam_broker.dto.FacilityDto;
 import com.caryanam.caryanam_broker.dto.OwnerFacilityRequest;
 import com.caryanam.caryanam_broker.entity.OwnerFacility;
+import com.caryanam.caryanam_broker.enums.FacilityName;
 import com.caryanam.caryanam_broker.repository.OwnerFacilityRepository;
 import com.caryanam.caryanam_broker.service.OwnerFacilityService;
 
@@ -25,9 +26,6 @@ public class OwnerFacilityServiceImpl
     public String saveFacilities(
             OwnerFacilityRequest request) {
 
-        repository.deleteByOwnerId(
-                request.getOwnerId());
-
         List<OwnerFacility> facilityList =
                 new ArrayList<>();
 
@@ -35,7 +33,12 @@ public class OwnerFacilityServiceImpl
                 request.getFacilities()) {
 
             OwnerFacility ownerFacility =
-                    new OwnerFacility();
+                    repository
+                            .findByOwnerIdAndFacilityName(
+                                    request.getOwnerId(),
+                                    FacilityName.valueOf(String.valueOf(facilityDto.getFacilityName()))
+                            )
+                            .orElse(new OwnerFacility());
 
             ownerFacility.setOwnerId(
                     request.getOwnerId());
