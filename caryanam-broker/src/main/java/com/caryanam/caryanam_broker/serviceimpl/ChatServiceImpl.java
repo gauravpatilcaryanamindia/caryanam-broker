@@ -205,6 +205,13 @@ public MessageResponseDTO sendMessage(MessageRequestDTO dto) {
     room.setRejected(true);
     room.setAccepted(false);
     chatRoomRepo.save(room);
+        List<Message> messages = messageRepo.findByRoomId(roomId);
+        for (Message msg : messages) {
+            if ("USER".equals(msg.getSenderRole())) {
+                msg.setStatus(MessageStatus.REJECTED);
+                messageRepo.save(msg);
+            }
+        }
 
 
     Message rejectMsg = new Message();
