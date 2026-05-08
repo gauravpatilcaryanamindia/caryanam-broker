@@ -4,6 +4,7 @@ import com.caryanam.caryanam_broker.dto.OwnerFacilityRequest;
 import com.caryanam.caryanam_broker.entity.OwnerFacility;
 import com.caryanam.caryanam_broker.repository.OwnerFacilityRepository;
 import com.caryanam.caryanam_broker.service.OwnerFacilityService;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +17,7 @@ public class OwnerFacilityServiceImpl implements OwnerFacilityService {
 
     @Autowired
     private OwnerFacilityRepository repository;
-
+    @Transactional
     @Override
     public String saveFacilities(OwnerFacilityRequest request) {
 
