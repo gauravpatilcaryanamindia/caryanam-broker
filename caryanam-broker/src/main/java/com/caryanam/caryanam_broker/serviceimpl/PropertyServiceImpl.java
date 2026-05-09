@@ -212,6 +212,10 @@ public class PropertyServiceImpl implements PropertyService {
         dto.setApartmentName(property.getApartmentName());
         dto.setStatus(property.getStatus());
 
+        // PROPERTY PAYMENT STATUS
+        dto.setPaymentStatus(property.getPaymentStatus());
+        dto.setPremiumActive(property.isPremiumActive());
+
         dto.setOwnerId(owner.getOwnerId());
 
         List<PropertyImage> imageList =
@@ -563,6 +567,10 @@ public class PropertyServiceImpl implements PropertyService {
             dto.setLikesCount(property.getLikesCount());
             dto.setViewsCount(property.getViewsCount());
 
+            // PROPERTY PAYMENT STATUS
+            dto.setPaymentStatus(property.getPaymentStatus());
+            dto.setPremiumActive(property.isPremiumActive());
+
             // OWNER DETAILS
             PropertyOwner owner = property.getPropertyOwner();
 
@@ -570,7 +578,6 @@ public class PropertyServiceImpl implements PropertyService {
 
                 dto.setOwnerId(owner.getOwnerId());
 
-                // HE DTO MADHE ADD KAR
                 dto.setPremiumActive(owner.isPremiumActive());
 
                 dto.setPremiumStatus(owner.getPremiumStatus());

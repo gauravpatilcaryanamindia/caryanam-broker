@@ -40,6 +40,7 @@ public class PropertyDto {
     private String apartmentName;
     private String ownerName;
     private boolean premiumActive;
+    private String paymentStatus;
 
     private String premiumStatus;
 

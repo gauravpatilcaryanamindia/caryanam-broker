@@ -32,53 +32,29 @@ public class adminController {
     private PropertyRepository propertyRepository;
 
 
-@GetMapping("/pending-users")
-public List<Map<String, Object>> getPendingUsers() {
-    List<User> users = userRepository.findAll();
-    List<Map<String, Object>> response = new ArrayList<>();
-    for (User user : users) {
-        if (user.getPremiumStatus() != null && user.getPremiumStatus().contains("PENDING")) {
-            String[] statuses = user.getPremiumStatus().split(",");
-            for (String status : statuses) {
-                if ("PENDING".equalsIgnoreCase(status.trim())) {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("userId", user.getUserId());
-                    map.put("fullName", user.getFullName());
-                    map.put("email", user.getEmail());
-                    map.put("mobileNumber", user.getMobileNumber());
-                    map.put("premiumStatus", "PENDING");
-                    map.put("premiumCount", user.getPremiumCount());
-                    response.add(map);
+    @GetMapping("/pending-users")
+    public List<Map<String, Object>> getPendingUsers() {
+        List<User> users = userRepository.findAll();
+        List<Map<String, Object>> response = new ArrayList<>();
+        for (User user : users) {
+            if (user.getPremiumStatus() != null && user.getPremiumStatus().contains("PENDING")) {
+                String[] statuses = user.getPremiumStatus().split(",");
+                for (String status : statuses) {
+                    if ("PENDING".equalsIgnoreCase(status.trim())) {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("userId", user.getUserId());
+                        map.put("fullName", user.getFullName());
+                        map.put("email", user.getEmail());
+                        map.put("mobileNumber", user.getMobileNumber());
+                        map.put("premiumStatus", "PENDING");
+                        map.put("premiumCount", user.getPremiumCount());
+                        response.add(map);
+                    }
                 }
             }
         }
+        return response;
     }
-    return response;
-}
-
-//    @GetMapping("/pending-owner")
-//    public List<Map<String, Object>> getPendingOwners() {
-//        List<PropertyOwner> owners = propertyOwnerRepository.findAll();
-//        List<Map<String, Object>> response = new ArrayList<>();
-//        for (PropertyOwner owner : owners) {
-//            if (owner.getPremiumStatus() != null && owner.getPremiumStatus().contains("PENDING")) {
-//                String[] statuses = owner.getPremiumStatus().split(",");
-//                for (String status : statuses) {
-//                    if ("PENDING".equalsIgnoreCase(status.trim())) {
-//                        Map<String, Object> map = new HashMap<>();
-//                        map.put("ownerId", owner.getOwnerId());
-//                        map.put("fullName", owner.getFullName());
-//                        map.put("email", owner.getEmail());
-//                        map.put("mobileNumber", owner.getMobileNumber());
-//                        map.put("premiumStatus", "PENDING");
-//                        map.put("premiumCount", owner.getPremiumCount());
-//                        response.add(map);
-//                    }
-//                }
-//            }
-//        }
-//        return response;
-//    }
 
     @GetMapping("/pending-owner")
     public List<Map<String, Object>> getPendingOwners() {
@@ -151,36 +127,6 @@ public List<Map<String, Object>> getPendingUsers() {
 
         return response;
     }
-//
-//    @PostMapping("/approveOwnerPremium/{ownerId}")
-//    public ResponseEntity<Object> approveOwner(@PathVariable Long ownerId) {
-//
-//        if (ownerId == null || ownerId <= 0) {
-//            return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
-//        }
-//
-//        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
-//
-//        if (owner == null) {
-//            return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
-//        }
-//        String status = owner.getPremiumStatus();
-//
-//        if (status == null || !status.contains("PENDING")) {
-//
-//            return ResponseHandler.generateResponse("No pending premium request found", HttpStatus.BAD_REQUEST, null);
-//        }
-//
-//        // LAST PENDING -> APPROVED
-//        status = status.replaceFirst("PENDING", "APPROVED");
-//
-//        owner.setPremiumStatus(status);
-//        owner.setPremiumActive(true);
-//
-//        propertyOwnerRepository.save(owner);
-//
-//        return ResponseHandler.generateResponse(MessageConfig.OWNER_PREMIUM_APPROVED, HttpStatus.OK, owner);
-//    }
 
     @PostMapping("/approveOwnerPremium/{ownerId}")
     public ResponseEntity<Object> approveOwner(@PathVariable Long ownerId) {
@@ -263,32 +209,6 @@ public List<Map<String, Object>> getPendingUsers() {
 
         return ResponseHandler.generateResponse(MessageConfig.USER_PREMIUM_APPROVED, HttpStatus.OK, user);
     }
-
-//    @PostMapping("/rejectOwnerPremium/{ownerId}")
-//    public ResponseEntity<Object> rejectOwner(@PathVariable Long ownerId) {
-//
-//        if (ownerId == null || ownerId <= 0) {
-//            return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
-//        }
-//
-//        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
-//
-//        if (owner == null) {
-//            return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
-//        }
-//
-//        //   CHECK
-//        if (!"PENDING".equals(owner.getPremiumStatus())) {
-//            return ResponseHandler.generateResponse("Owner has not requested premium or already processed", HttpStatus.BAD_REQUEST, null);
-//        }
-//
-//        //  Reject
-//        owner.setPremiumStatus("REJECTED");
-//        owner.setPremiumActive(false);
-//
-//        propertyOwnerRepository.save(owner);
-//        return ResponseHandler.generateResponse(MessageConfig.OWNER_PREMIUM_REJECTED, HttpStatus.OK, null);
-//    }
 
     @PostMapping("/rejectOwnerPremium/{ownerId}")
     public ResponseEntity<Object> rejectOwner(@PathVariable Long ownerId) {
@@ -382,8 +302,87 @@ public List<Map<String, Object>> getPendingUsers() {
         Map<String, Object> response = new HashMap<>();
         response.put("ownerId", ownerId);
         response.put("ownerName", owner.getFullName());
+        response.put("premiumStatus", owner.getPremiumStatus());
+        response.put("premiumActive", owner.isPremiumActive());
         response.put("totalProperties", properties.size());
         response.put("properties", properties);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/approveProperty/{propertyId}")
+    public ResponseEntity<Object> approveProperty(@PathVariable Long propertyId) {
+        if (propertyId == null || propertyId <= 0) {
+            return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
+        }
+
+        Property property = propertyRepository.findById(propertyId).orElse(null);
+        if (property == null) {
+            return ResponseHandler.generateResponse("Property not found", HttpStatus.BAD_REQUEST, null);
+        }
+
+        if (!"PENDING".equalsIgnoreCase(property.getPaymentStatus())) {
+            return ResponseHandler.generateResponse(
+                    "Property is not in pending status",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        // UPDATE PROPERTY STATUS
+        property.setPaymentStatus("APPROVED");
+        property.setPremiumActive(true);
+        propertyRepository.save(property);
+
+        // UPDATE OWNER STATUS
+        PropertyOwner owner = property.getPropertyOwner();
+        if (owner != null) {
+            String status = owner.getPremiumStatus();
+            if (status == null || !status.contains("APPROVED")) {
+                if (status == null || status.isEmpty()) {
+                    owner.setPremiumStatus("APPROVED");
+                } else {
+                    owner.setPremiumStatus(status + ",APPROVED");
+                }
+                owner.setPremiumActive(true);
+                propertyOwnerRepository.save(owner);
+            }
+        }
+
+        return ResponseHandler.generateResponse(
+                "Property approved successfully",
+                HttpStatus.OK,
+                property
+        );
+    }
+
+    @PostMapping("/rejectProperty/{propertyId}")
+    public ResponseEntity<Object> rejectProperty(@PathVariable Long propertyId) {
+        if (propertyId == null || propertyId <= 0) {
+            return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
+        }
+
+        Property property = propertyRepository.findById(propertyId).orElse(null);
+        if (property == null) {
+            return ResponseHandler.generateResponse("Property not found", HttpStatus.BAD_REQUEST, null);
+        }
+
+        if (!"PENDING".equalsIgnoreCase(property.getPaymentStatus())) {
+            return ResponseHandler.generateResponse(
+                    "Property is not in pending status",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        // UPDATE PROPERTY STATUS
+        property.setPaymentStatus("REJECTED");
+        property.setPremiumActive(false);
+        propertyRepository.save(property);
+
+        return ResponseHandler.generateResponse(
+                "Property rejected successfully",
+                HttpStatus.OK,
+                null
+        );
     }
 }
