@@ -166,6 +166,8 @@ public class PropertyServiceImpl implements PropertyService {
                 dto.setApartmentName(property.getApartmentName());
                 dto.setStatus(property.getStatus());
                 dto.setOwnerId(owner.getOwnerId());
+                dto.setOwnerName(owner.getFullName());
+
 
                 dto.setCoverImage(dto.getCoverImage());
                 dto.setDoctypeImages(String.valueOf(doctypeImages));

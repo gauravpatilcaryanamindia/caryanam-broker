@@ -15,6 +15,7 @@ public class PropertyDto {
 
     private Long id;
     private String title;
+
     private Double  price;
     private String location;
     private String description;
@@ -37,4 +38,5 @@ public class PropertyDto {
     private String doctypeImages;
     private Long ownerId;
     private String apartmentName;
+    private String ownerName;
 }
