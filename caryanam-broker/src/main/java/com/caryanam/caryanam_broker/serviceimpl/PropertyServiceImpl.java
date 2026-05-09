@@ -75,6 +75,112 @@ public class PropertyServiceImpl implements PropertyService {
 
         return dto;
     }
+//
+//    @Override
+//    public List<PropertyDto> getAllProperties(Long userId, HttpServletRequest request) {
+//
+//        boolean isPremium = false;
+//
+//        if (request.getAttribute("isPremium") != null) {
+//            isPremium = (boolean) request.getAttribute("isPremium");
+//        }
+//
+//        List<Property> properties =
+//                propertyRepository.findByStatus(AppConstants.ACTIVE);
+//
+//        List<PropertyDto> dtoList = new ArrayList<>();
+//
+//        for (Property property : properties) {
+//
+//            PropertyOwner owner = property.getPropertyOwner();
+//
+//            if (owner == null) {
+//                continue;
+//            }
+//
+//            // PROPERTY OWNER PREMIUM CHECK
+//            if (!owner.isPremiumActive()) {
+//                continue;
+//            }
+//
+//            if (owner.getPremiumStatus() == null
+//                    || !owner.getPremiumStatus().contains("APPROVED")) {
+//                continue;
+//            }
+//
+//            PropertyDto dto = new PropertyDto();
+//
+//            // IMAGE LOGIC
+//            List<PropertyImage> imageList =
+//                    propertyImageRepository.findByPropertyId(property.getId());
+//
+//            List<String> doctypeImages = new ArrayList<>();
+//
+//            if (imageList != null && !imageList.isEmpty()) {
+//
+//                for (int i = 0; i < imageList.size(); i++) {
+//
+//                    String path = imageList.get(i).getImagePath();
+//
+//                    if (i == 0) {
+//                        dto.setCoverImage(path);
+//                    } else {
+//                        doctypeImages.add(path);
+//                    }
+//                }
+//            }
+//
+//            // NON PREMIUM USER
+//            if (!isPremium) {
+//
+//                dto.setId(property.getId());
+//                dto.setTitle(property.getTitle());
+//                dto.setPrice(property.getPrice());
+//                dto.setLocation(property.getLocation());
+//                dto.setBhkType(property.getBhkType());
+//                dto.setCity(property.getCity());
+//                dto.setAddress(property.getAddress());
+//                // ONLY COVER IMAGE
+//                dto.setCoverImage(dto.getCoverImage());
+//                dto.setDoctypeImages(String.valueOf(doctypeImages));
+//
+//
+//            } else {
+//
+//                // PREMIUM USER → FULL DETAILS
+//                dto.setId(property.getId());
+//                dto.setTitle(property.getTitle());
+//                dto.setPrice(property.getPrice());
+//                dto.setLocation(property.getLocation());
+//                dto.setAddress(property.getAddress());
+//                dto.setCity(property.getCity());
+//                dto.setState(property.getState());
+//                dto.setPincode(property.getPincode());
+//                dto.setDescription(property.getDescription());
+//                dto.setPropertyType(property.getPropertyType());
+//                dto.setPgType(property.getPgType());
+//                dto.setBhkType(property.getBhkType());
+//                dto.setFurnishing(property.getFurnishing());
+//                dto.setCarpetArea(property.getCarpetArea());
+//                dto.setMobileNumber(property.getMobileNumber());
+//                dto.setLikesCount(property.getLikesCount());
+//                dto.setViewsCount(property.getViewsCount());
+//                dto.setApartmentName(property.getApartmentName());
+//                dto.setStatus(property.getStatus());
+//                dto.setOwnerId(owner.getOwnerId());
+//                dto.setOwnerName(owner.getFullName());
+//
+//
+//                dto.setCoverImage(dto.getCoverImage());
+//                dto.setDoctypeImages(String.valueOf(doctypeImages));
+//            }
+//
+//            dtoList.add(dto);
+//        }
+//
+//        return dtoList;
+//    }
+
 
     @Override
     public List<PropertyDto> getAllProperties(Long userId, HttpServletRequest request) {
@@ -85,6 +191,7 @@ public class PropertyServiceImpl implements PropertyService {
             isPremium = (boolean) request.getAttribute("isPremium");
         }
 
+        // ONLY ACTIVE + APPROVED PAYMENT STATUS
         List<Property> properties =
                 propertyRepository.findByStatus(AppConstants.ACTIVE);
 
@@ -92,17 +199,26 @@ public class PropertyServiceImpl implements PropertyService {
 
         for (Property property : properties) {
 
+            // PAYMENT STATUS CHECK
+            // PENDING PAYMENT PROPERTIES HIDE
+            if (property.getPaymentStatus() == null
+                    || !property.getPaymentStatus().equalsIgnoreCase("APPROVED")) {
+                continue;
+            }
+
             PropertyOwner owner = property.getPropertyOwner();
 
+            // OWNER NULL CHECK
             if (owner == null) {
                 continue;
             }
 
-            // PROPERTY OWNER PREMIUM CHECK
+            // OWNER PREMIUM ACTIVE CHECK
             if (!owner.isPremiumActive()) {
                 continue;
             }
 
+            // OWNER PREMIUM APPROVED CHECK
             if (owner.getPremiumStatus() == null
                     || !owner.getPremiumStatus().contains("APPROVED")) {
                 continue;
@@ -140,10 +256,9 @@ public class PropertyServiceImpl implements PropertyService {
                 dto.setBhkType(property.getBhkType());
                 dto.setCity(property.getCity());
                 dto.setAddress(property.getAddress());
-                // ONLY COVER IMAGE
+
                 dto.setCoverImage(dto.getCoverImage());
                 dto.setDoctypeImages(String.valueOf(doctypeImages));
-
 
             } else {
 
@@ -167,9 +282,9 @@ public class PropertyServiceImpl implements PropertyService {
                 dto.setViewsCount(property.getViewsCount());
                 dto.setApartmentName(property.getApartmentName());
                 dto.setStatus(property.getStatus());
+
                 dto.setOwnerId(owner.getOwnerId());
                 dto.setOwnerName(owner.getFullName());
-
 
                 dto.setCoverImage(dto.getCoverImage());
                 dto.setDoctypeImages(String.valueOf(doctypeImages));
@@ -180,6 +295,8 @@ public class PropertyServiceImpl implements PropertyService {
 
         return dtoList;
     }
+
+
     @Override
     public PropertyDto getPropertyById(Long id) {
         Property property = propertyRepository.findById(id).orElse(null);
@@ -398,6 +515,115 @@ public class PropertyServiceImpl implements PropertyService {
         return MessageConfig.IMAGE_UPLOAD_SUCCESS;
     }
 
+//
+//    @Override
+//    public List<?> filterProperties(PropertyFilterDto filterDto, Long userId) {
+//
+//        User user = userRepository.findById(userId).orElse(null);
+//
+//        boolean isPremium = false;
+//
+//        if (user != null && user.isPremiumActive()) {
+//            isPremium = true;
+//        }
+//        List<Property> allProperties = propertyRepository.findByStatus(AppConstants.ACTIVE);
+//        List<Property> filteredList = new ArrayList<>();
+//        for (Property property : allProperties) {
+//            PropertyOwner owner = property.getPropertyOwner();
+//            if (owner == null) {
+//                continue;
+//            }
+//            if (!owner.isPremiumActive()) {
+//                continue;
+//            }
+//            if (owner.getPremiumStatus() == null
+//                    || !owner.getPremiumStatus().contains("APPROVED")) {
+//                continue;
+//            }
+//            boolean match = true;
+//            if (filterDto.getCity() != null && !filterDto.getCity().isEmpty()) {
+//                if (!property.getCity().equalsIgnoreCase(filterDto.getCity())) {
+//                    match = false;
+//                }
+//            }
+//            if (filterDto.getAddress() != null && !filterDto.getAddress().isEmpty()) {
+//                if (!property.getAddress().equalsIgnoreCase(filterDto.getAddress())) {
+//                    match = false;
+//                }
+//            }
+//            if (filterDto.getPropertyType() != null
+//                    && !filterDto.getPropertyType().isEmpty()
+//                    && !filterDto.getPropertyType().equalsIgnoreCase("ALL")) {
+//                if (!property.getPropertyType().name()
+//                        .equalsIgnoreCase(filterDto.getPropertyType())) {
+//                    match = false;
+//                }
+//            }
+//            if (filterDto.getPgType() != null
+//                    && !filterDto.getPgType().isEmpty()
+//                    && !filterDto.getPgType().equalsIgnoreCase("ALL")) {
+//
+//                if (property.getPgType() == null
+//                        || !property.getPgType().name().equalsIgnoreCase(filterDto.getPgType())) {
+//                    match = false;
+//                }
+//            }
+//            if (filterDto.getMinPrice() != null
+//                    && property.getPrice() < filterDto.getMinPrice()) {
+//                match = false;
+//            }
+//            if (filterDto.getMaxPrice() != null
+//                    && property.getPrice() > filterDto.getMaxPrice()) {
+//                match = false;
+//            }
+//            if (match) {
+//                filteredList.add(property);
+//            }
+//        }
+//        List<PropertyDto> dtoList = new ArrayList<>();
+//        for (Property property : filteredList) {
+//            PropertyDto dto = new PropertyDto();
+//            List<PropertyImage> images = propertyImageRepository.findByPropertyId(property.getId());
+//            List<String> imageList = new ArrayList<>();
+//            for (PropertyImage img : images) {
+//                imageList.add(img.getImagePath());
+//            }
+//            if (!isPremium) {
+//
+//                dto.setTitle(property.getTitle());
+//                dto.setPrice(property.getPrice());
+//                dto.setLocation(property.getLocation());
+//
+//                // ONLY DOCTYPE IMAGES
+//                List<String> doctypeImages = new ArrayList<>();
+//
+//                for (String image : imageList) {
+//                    doctypeImages.add(image);
+//                }
+//
+//                dto.setDoctypeImages(doctypeImages.toString());
+//            } else {
+//                dto.setId(property.getId());
+//                dto.setTitle(property.getTitle());
+//                dto.setPrice(property.getPrice());
+//                dto.setLocation(property.getLocation());
+//                dto.setAddress(property.getAddress());
+//                dto.setCity(property.getCity());
+//                dto.setDescription(property.getDescription());
+//                dto.setPropertyType(property.getPropertyType());
+//                dto.setDoctypeImages(imageList.toString());
+//                dto.setApartmentName(property.getApartmentName());
+//            }
+//            if (property.getPropertyOwner() != null) {
+//                dto.setOwnerId(property.getPropertyOwner().getOwnerId());
+//            }
+//
+//            dtoList.add(dto);
+//        }
+//
+//        return dtoList;
+//    }
+
 
     @Override
     public List<?> filterProperties(PropertyFilterDto filterDto, Long userId) {
@@ -409,83 +635,132 @@ public class PropertyServiceImpl implements PropertyService {
         if (user != null && user.isPremiumActive()) {
             isPremium = true;
         }
-        List<Property> allProperties = propertyRepository.findByStatus(AppConstants.ACTIVE);
+
+        // ONLY ACTIVE PROPERTIES
+        List<Property> allProperties =
+                propertyRepository.findByStatus(AppConstants.ACTIVE);
+
         List<Property> filteredList = new ArrayList<>();
+
         for (Property property : allProperties) {
+
+            // PAYMENT STATUS CHECK
+            // ONLY APPROVED PAYMENT STATUS SHOW
+            if (property.getPaymentStatus() == null
+                    || !property.getPaymentStatus().equalsIgnoreCase("APPROVED")) {
+                continue;
+            }
+
             PropertyOwner owner = property.getPropertyOwner();
+
             if (owner == null) {
                 continue;
             }
+
+            // OWNER PREMIUM ACTIVE CHECK
             if (!owner.isPremiumActive()) {
                 continue;
             }
+
+            // OWNER PREMIUM APPROVED CHECK
             if (owner.getPremiumStatus() == null
                     || !owner.getPremiumStatus().contains("APPROVED")) {
                 continue;
             }
+
             boolean match = true;
-            if (filterDto.getCity() != null && !filterDto.getCity().isEmpty()) {
-                if (!property.getCity().equalsIgnoreCase(filterDto.getCity())) {
+
+            // CITY FILTER
+            if (filterDto.getCity() != null
+                    && !filterDto.getCity().isEmpty()) {
+
+                if (!property.getCity()
+                        .equalsIgnoreCase(filterDto.getCity())) {
                     match = false;
                 }
             }
-            if (filterDto.getAddress() != null && !filterDto.getAddress().isEmpty()) {
-                if (!property.getAddress().equalsIgnoreCase(filterDto.getAddress())) {
+
+            // ADDRESS FILTER
+            if (filterDto.getAddress() != null
+                    && !filterDto.getAddress().isEmpty()) {
+
+                if (!property.getAddress()
+                        .equalsIgnoreCase(filterDto.getAddress())) {
                     match = false;
                 }
             }
+
+            // PROPERTY TYPE FILTER
             if (filterDto.getPropertyType() != null
                     && !filterDto.getPropertyType().isEmpty()
                     && !filterDto.getPropertyType().equalsIgnoreCase("ALL")) {
+
                 if (!property.getPropertyType().name()
                         .equalsIgnoreCase(filterDto.getPropertyType())) {
                     match = false;
                 }
             }
+
+            // PG TYPE FILTER
             if (filterDto.getPgType() != null
                     && !filterDto.getPgType().isEmpty()
                     && !filterDto.getPgType().equalsIgnoreCase("ALL")) {
 
                 if (property.getPgType() == null
-                        || !property.getPgType().name().equalsIgnoreCase(filterDto.getPgType())) {
+                        || !property.getPgType().name()
+                        .equalsIgnoreCase(filterDto.getPgType())) {
+
                     match = false;
                 }
             }
+
+            // MIN PRICE FILTER
             if (filterDto.getMinPrice() != null
                     && property.getPrice() < filterDto.getMinPrice()) {
+
                 match = false;
             }
+
+            // MAX PRICE FILTER
             if (filterDto.getMaxPrice() != null
                     && property.getPrice() > filterDto.getMaxPrice()) {
+
                 match = false;
             }
+
             if (match) {
                 filteredList.add(property);
             }
         }
+
         List<PropertyDto> dtoList = new ArrayList<>();
+
         for (Property property : filteredList) {
+
             PropertyDto dto = new PropertyDto();
-            List<PropertyImage> images = propertyImageRepository.findByPropertyId(property.getId());
+
+            List<PropertyImage> images =
+                    propertyImageRepository.findByPropertyId(property.getId());
+
             List<String> imageList = new ArrayList<>();
+
             for (PropertyImage img : images) {
                 imageList.add(img.getImagePath());
             }
+
+            // NON PREMIUM USER
             if (!isPremium) {
 
                 dto.setTitle(property.getTitle());
                 dto.setPrice(property.getPrice());
                 dto.setLocation(property.getLocation());
 
-                // ONLY DOCTYPE IMAGES
-                List<String> doctypeImages = new ArrayList<>();
+                // ONLY IMAGES
+                dto.setDoctypeImages(imageList.toString());
 
-                for (String image : imageList) {
-                    doctypeImages.add(image);
-                }
-
-                dto.setDoctypeImages(doctypeImages.toString());
             } else {
+
+                // PREMIUM USER FULL DETAILS
                 dto.setId(property.getId());
                 dto.setTitle(property.getTitle());
                 dto.setPrice(property.getPrice());
@@ -497,6 +772,8 @@ public class PropertyServiceImpl implements PropertyService {
                 dto.setDoctypeImages(imageList.toString());
                 dto.setApartmentName(property.getApartmentName());
             }
+
+            // OWNER DETAILS
             if (property.getPropertyOwner() != null) {
                 dto.setOwnerId(property.getPropertyOwner().getOwnerId());
             }
@@ -506,7 +783,6 @@ public class PropertyServiceImpl implements PropertyService {
 
         return dtoList;
     }
-
     public List<PropertyDto> getPropertiesByCityAndAddress(String city, String address) {
         List<Property> list;
         if (address == null || address.isEmpty()) {
