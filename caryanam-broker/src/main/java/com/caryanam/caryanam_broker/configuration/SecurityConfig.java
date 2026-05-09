@@ -61,7 +61,8 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/owner/**").hasAnyRole("PROPERTY_OWNER", "ADMIN")
                         .requestMatchers("/api/auth/**","/api/auth/register").permitAll()
-
+                        .requestMatchers("/api/auth/**","/api/auth/register").permitAll()
+                        .requestMatchers("/api/owner/save-facilities","/api/owner/get-facilities").permitAll()
                         .requestMatchers("/chat/**","/socket.io/**").permitAll()
                         .requestMatchers("/api/chat/**").permitAll()
                         .anyRequest().authenticated()
