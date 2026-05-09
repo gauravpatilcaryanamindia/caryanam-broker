@@ -39,4 +39,10 @@ public class PropertyDto {
     private Long ownerId;
     private String apartmentName;
     private String ownerName;
+    private boolean premiumActive;
+
+    private String premiumStatus;
+
+    private Integer premiumCount;
+
 }

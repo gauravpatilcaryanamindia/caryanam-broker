@@ -533,10 +533,16 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public List<PropertyDto> getPropertiesByOwnerId(Long ownerId) {
-        List<Property> properties = propertyRepository.findByPropertyOwner_OwnerId(ownerId);
+
+        List<Property> properties =
+                propertyRepository.findByPropertyOwner_OwnerId(ownerId);
+
         List<PropertyDto> dtoList = new ArrayList<>();
+
         for (Property property : properties) {
+
             PropertyDto dto = new PropertyDto();
+
             dto.setId(property.getId());
             dto.setTitle(property.getTitle());
             dto.setPrice(property.getPrice());
@@ -554,11 +560,37 @@ public class PropertyServiceImpl implements PropertyService {
             dto.setMobileNumber(property.getMobileNumber());
             dto.setApartmentName(property.getApartmentName());
             dto.setStatus(property.getStatus());
-            List<PropertyImage> imageList = propertyImageRepository.findByPropertyId(property.getId());
+            dto.setLikesCount(property.getLikesCount());
+            dto.setViewsCount(property.getViewsCount());
+
+            // OWNER DETAILS
+            PropertyOwner owner = property.getPropertyOwner();
+
+            if (owner != null) {
+
+                dto.setOwnerId(owner.getOwnerId());
+
+                // HE DTO MADHE ADD KAR
+                dto.setPremiumActive(owner.isPremiumActive());
+
+                dto.setPremiumStatus(owner.getPremiumStatus());
+
+                dto.setPremiumCount(owner.getPremiumCount());
+
+            }
+
+            // IMAGES
+            List<PropertyImage> imageList =
+                    propertyImageRepository.findByPropertyId(property.getId());
+
             List<String> doctypeImages = new ArrayList<>();
+
             if (imageList != null && imageList.size() > 0) {
+
                 for (int i = 0; i < imageList.size(); i++) {
+
                     String path = imageList.get(i).getImagePath();
+
                     if (i == 0) {
                         dto.setCoverImage(path);
                     } else {
@@ -566,9 +598,12 @@ public class PropertyServiceImpl implements PropertyService {
                     }
                 }
             }
+
             dto.setDoctypeImages(String.valueOf(doctypeImages));
+
             dtoList.add(dto);
         }
+
         return dtoList;
     }
 

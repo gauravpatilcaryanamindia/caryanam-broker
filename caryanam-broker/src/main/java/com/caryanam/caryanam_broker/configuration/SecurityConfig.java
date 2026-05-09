@@ -43,6 +43,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/user/buyPremium/**").permitAll()
                         .requestMatchers("/api/owner/buyPremiumByOwner/**").permitAll()
+                        .requestMatchers("/api/owner/save-facilities","/api/owner/get-facilities").permitAll()
+
                         .requestMatchers("/api/area/**").permitAll()
                         .requestMatchers("/api/owner/getAreasByCity/**", "/api/owner/getPincode").permitAll()
                         .requestMatchers("/uploads/**", "/images/**", "/**/*.jpg", "/**/*.png", "/**/*.jpeg").permitAll()
@@ -55,7 +57,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/owner/**").hasAnyRole("PROPERTY_OWNER", "ADMIN")
                         .requestMatchers("/api/auth/**","/api/auth/register").permitAll()
                         .requestMatchers("/api/auth/**","/api/auth/register").permitAll()
-                        .requestMatchers("/api/owner/save-facilities","/api/owner/get-facilities").permitAll()
                         .requestMatchers("/chat/**","/socket.io/**").permitAll()
                         .requestMatchers("/api/chat/**").permitAll()
                         .anyRequest().authenticated()
