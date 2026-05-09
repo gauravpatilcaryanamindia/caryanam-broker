@@ -84,33 +84,19 @@ public List<Map<String, Object>> getPendingUsers() {
     public ResponseEntity<Object> approveOwner(@PathVariable Long ownerId) {
 
         if (ownerId == null || ownerId <= 0) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.INVALID_ID,
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
         }
 
-        PropertyOwner owner =
-                propertyOwnerRepository.findById(ownerId).orElse(null);
+        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
 
         if (owner == null) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.OWNER_NOT_FOUND,
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
-
         String status = owner.getPremiumStatus();
 
         if (status == null || !status.contains("PENDING")) {
 
-            return ResponseHandler.generateResponse(
-                    "No pending premium request found",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("No pending premium request found", HttpStatus.BAD_REQUEST, null);
         }
 
         // LAST PENDING -> APPROVED
@@ -121,43 +107,27 @@ public List<Map<String, Object>> getPendingUsers() {
 
         propertyOwnerRepository.save(owner);
 
-        return ResponseHandler.generateResponse(
-                MessageConfig.OWNER_PREMIUM_APPROVED,
-                HttpStatus.OK,
-                owner
-        );
+        return ResponseHandler.generateResponse(MessageConfig.OWNER_PREMIUM_APPROVED, HttpStatus.OK, owner);
     }
 
     @PostMapping("/approveUserPremium/{userId}")
     public ResponseEntity<Object> approveUser(@PathVariable Long userId) {
 
         if (userId == null || userId <= 0) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.INVALID_ID,
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
         }
 
         User user = userRepository.findById(userId).orElse(null);
 
         if (user == null) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.USER_NOT_FOUND,
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
 
         String status = user.getPremiumStatus();
 
         if (status == null || !status.contains("PENDING")) {
 
-            return ResponseHandler.generateResponse(
-                    "No pending premium request found",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("No pending premium request found", HttpStatus.BAD_REQUEST, null);
         }
 
         // LAST PENDING -> APPROVED
@@ -168,33 +138,25 @@ public List<Map<String, Object>> getPendingUsers() {
 
         userRepository.save(user);
 
-        return ResponseHandler.generateResponse(
-                MessageConfig.USER_PREMIUM_APPROVED,
-                HttpStatus.OK,
-                user
-        );
+        return ResponseHandler.generateResponse(MessageConfig.USER_PREMIUM_APPROVED, HttpStatus.OK, user);
     }
 
     @PostMapping("/rejectOwnerPremium/{ownerId}")
     public ResponseEntity<Object> rejectOwner(@PathVariable Long ownerId) {
 
         if (ownerId == null || ownerId <= 0) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
+            return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
         }
 
         PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
 
         if (owner == null) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+            return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
 
         //   CHECK
         if (!"PENDING".equals(owner.getPremiumStatus())) {
-            return ResponseHandler.generateResponse(
-                    "Owner has not requested premium or already processed",
-                    HttpStatus.BAD_REQUEST, null);
+            return ResponseHandler.generateResponse("Owner has not requested premium or already processed", HttpStatus.BAD_REQUEST, null);
         }
 
         //  Reject
@@ -202,31 +164,25 @@ public List<Map<String, Object>> getPendingUsers() {
         owner.setPremiumActive(false);
 
         propertyOwnerRepository.save(owner);
-
-        return ResponseHandler.generateResponse(
-                MessageConfig.OWNER_PREMIUM_REJECTED, HttpStatus.OK, null);
+        return ResponseHandler.generateResponse(MessageConfig.OWNER_PREMIUM_REJECTED, HttpStatus.OK, null);
     }
 
     @PostMapping("/rejectUserPremium/{userId}")
     public ResponseEntity<Object> rejectUser(@PathVariable Long userId) {
 
         if (userId == null || userId <= 0) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
+            return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
         }
 
         User user = userRepository.findById(userId).orElse(null);
 
         if (user == null) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+            return ResponseHandler.generateResponse(MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
 
 
         if (!"PENDING".equals(user.getPremiumStatus())) {
-            return ResponseHandler.generateResponse(
-                    "User has not requested premium or already processed",
-                    HttpStatus.BAD_REQUEST, null);
+            return ResponseHandler.generateResponse("User has not requested premium or already processed", HttpStatus.BAD_REQUEST, null);
         }
 
         user.setPremiumStatus("REJECTED");
@@ -234,8 +190,7 @@ public List<Map<String, Object>> getPendingUsers() {
 
         userRepository.save(user);
 
-        return ResponseHandler.generateResponse(
-                MessageConfig.USER_PREMIUM_REJECTED, HttpStatus.OK, null);
+        return ResponseHandler.generateResponse(MessageConfig.USER_PREMIUM_REJECTED, HttpStatus.OK, null);
     }
 
     @GetMapping("/owner/{ownerId}/properties")

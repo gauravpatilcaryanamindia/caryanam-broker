@@ -10,18 +10,12 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface OwnerFacilityRepository
-        extends JpaRepository<OwnerFacility, Long> {
-
-    List<OwnerFacility> findByOwnerId(Long ownerId);
-
-    Optional<OwnerFacility> findByOwnerIdAndFacilityName(Long ownerId, FacilityName facilityName);
+public interface OwnerFacilityRepository extends JpaRepository<OwnerFacility, Long> {
 
     List<OwnerFacility> findByOwnerIdAndPropertyId(Long ownerId, Long propertyId);
 
     Optional<OwnerFacility> findByOwnerIdAndPropertyIdAndFacilityName(
             Long ownerId, Long propertyId, FacilityName facilityName);
 
-    @Transactional
-    void deleteByOwnerId(Long ownerId);
+
 }

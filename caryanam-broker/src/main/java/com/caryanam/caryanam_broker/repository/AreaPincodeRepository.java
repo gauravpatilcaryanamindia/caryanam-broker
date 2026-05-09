@@ -9,14 +9,7 @@ public interface AreaPincodeRepository extends JpaRepository<AreaPincode, Long> 
 
     List<AreaPincode> findByCityIgnoreCase(String city);
 
-    AreaPincode findByCityIgnoreCaseAndAreaIgnoreCase(
-            String city,
-            String area
-    );
+    AreaPincode findByCityIgnoreCaseAndAreaIgnoreCase(String city, String area);
 
-    boolean existsByCityIgnoreCaseAndAreaIgnoreCaseAndPincode(
-            String city,
-            String area,
-            String pincode
-    );
+
 }

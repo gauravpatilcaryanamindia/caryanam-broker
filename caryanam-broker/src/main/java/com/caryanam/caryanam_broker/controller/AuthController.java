@@ -165,8 +165,7 @@ public class AuthController {
             @RequestHeader(value = "Authorization", required = false) String token) {
 
         if (token == null || token.isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(new ResponseDto<>(400, "Authorization token is missing", null));
+            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Authorization token is missing", null));
         }
         if (token.startsWith("Bearer ")) {
             token = token.substring(7);
