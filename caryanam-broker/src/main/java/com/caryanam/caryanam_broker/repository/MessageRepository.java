@@ -12,7 +12,5 @@ import java.util.Optional;
 public interface MessageRepository extends JpaRepository<Message, Long> {
     List<Message> findByRoomId(String roomId);
 
-    boolean existsByRoomIdAndStatus(String roomId, MessageStatus status);
-
     Message findTopByRoomIdOrderByTimestampDesc(String roomId);
 }

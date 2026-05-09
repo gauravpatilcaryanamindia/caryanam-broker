@@ -42,28 +42,22 @@ public class AreaPincodeServiceImpl implements AreaPincodeService {
                 } else {
                     pincode = pincodeCell.getStringCellValue().trim();
                 }
-                AreaPincode existing =
-                        areaPincodeRepository.findByCityIgnoreCaseAndAreaIgnoreCase(city, area);
+                AreaPincode existing = areaPincodeRepository.findByCityIgnoreCaseAndAreaIgnoreCase(city, area);
                 if (existing != null) {
                     continue;
                 }
                 AreaPincode areaPincode = new AreaPincode();
-
                 areaPincode.setCity(city);
                 areaPincode.setArea(area);
                 areaPincode.setPincode(pincode);
-
                 areaPincodeRepository.save(areaPincode);
             }
-
             workbook.close();
-
             return "Excel uploaded successfully";
 
         } catch (Exception e) {
 
             e.printStackTrace();
-
             return "Failed to upload excel";
         }
     }

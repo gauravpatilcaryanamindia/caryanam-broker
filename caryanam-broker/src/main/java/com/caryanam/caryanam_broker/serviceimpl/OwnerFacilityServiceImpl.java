@@ -22,36 +22,19 @@ public class OwnerFacilityServiceImpl
 
     @Transactional
     @Override
-    public String saveFacilities(
-            OwnerFacilityRequest request) {
+    public String saveFacilities(OwnerFacilityRequest request) {
 
-        List<OwnerFacility> facilityList =
-                new ArrayList<>();
+        List<OwnerFacility> facilityList = new ArrayList<>();
+        for (FacilityDto facilityDto : request.getFacilities()) {
 
-        for (FacilityDto facilityDto :
-                request.getFacilities()) {
-
-            OwnerFacility ownerFacility =
-                    repository
-                            .findByOwnerIdAndPropertyIdAndFacilityName(
-                                    request.getOwnerId(),
-                                    request.getPropertyId(),
-                                    facilityDto.getFacilityName()
-                            )
+            OwnerFacility ownerFacility = repository
+                            .findByOwnerIdAndPropertyIdAndFacilityName(request.getOwnerId(), request.getPropertyId(), facilityDto.getFacilityName())
                             .orElse(new OwnerFacility());
 
-            ownerFacility.setOwnerId(
-                    request.getOwnerId());
-
-            ownerFacility.setPropertyId(
-                    request.getPropertyId());
-
-            ownerFacility.setFacilityName(
-                    facilityDto.getFacilityName());
-
-            ownerFacility.setStatus(
-                    facilityDto.getStatus());
-
+            ownerFacility.setOwnerId(request.getOwnerId());
+            ownerFacility.setPropertyId(request.getPropertyId());
+            ownerFacility.setFacilityName(facilityDto.getFacilityName());
+            ownerFacility.setStatus(facilityDto.getStatus());
             facilityList.add(ownerFacility);
         }
 
@@ -63,13 +46,8 @@ public class OwnerFacilityServiceImpl
 
 
     @Override
-    public List<OwnerFacility> getFacilities(
-            Long ownerId,
-            Long propertyId) {
+    public List<OwnerFacility> getFacilities(Long ownerId, Long propertyId) {
 
-        return repository.findByOwnerIdAndPropertyId(
-                ownerId,
-                propertyId
-        );
+        return repository.findByOwnerIdAndPropertyId(ownerId, propertyId);
     }
 }

@@ -15,11 +15,8 @@ public class AreaPincodeController {
     private AreaPincodeService areaPincodeService;
 
     @PostMapping("/uploadExcel")
-    public ResponseEntity<?> uploadExcel(
-            @RequestParam("file") MultipartFile file) {
-
+    public ResponseEntity<?> uploadExcel(@RequestParam("file") MultipartFile file) {
         String response = areaPincodeService.uploadExcel(file);
-
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

@@ -56,8 +56,7 @@ public class UserController {
         Authentication auth = getAuth();
         if (auth == null) return false;
 
-        return auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        return auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 
 
@@ -66,33 +65,21 @@ public class UserController {
     public ResponseEntity<Object> buyPremium(@PathVariable Long userId) {
 
         if (userId == null || userId <= 0) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.INVALID_ID,
-                    HttpStatus.BAD_REQUEST,
-                    null);
+            return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
         }
         User user = userRepository.findById(userId).orElse(null);
 
         if (user == null) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.USER_NOT_FOUND,
-                    HttpStatus.BAD_REQUEST,
-                    null);
+            return ResponseHandler.generateResponse(MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
-        if (user.getPremiumStatus() != null
-                && user.getPremiumStatus().contains("PENDING")) {
+        if (user.getPremiumStatus() != null && user.getPremiumStatus().contains("PENDING")) {
 
-            return ResponseHandler.generateResponse(
-                    "Premium request already pending",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("Premium request already pending", HttpStatus.BAD_REQUEST, null);
         }
 
         String status = user.getPremiumStatus();
 
-        if (status == null || status.isEmpty()) {
-            user.setPremiumStatus("PENDING");
+        if (status == null || status.isEmpty()) {user.setPremiumStatus("PENDING");
         } else {
             user.setPremiumStatus(status + ",PENDING");
         }
@@ -107,10 +94,7 @@ public class UserController {
         response.put("message", MessageConfig.SCAN_QR);
         response.put("qrCode", qrUrl);
 
-        return ResponseHandler.generateResponse(
-                MessageConfig.PAYMENT_INITIATED,
-                HttpStatus.OK,
-                response);
+        return ResponseHandler.generateResponse(MessageConfig.PAYMENT_INITIATED, HttpStatus.OK, response);
     }
 
     @GetMapping("/properties/{userId}")
@@ -118,30 +102,18 @@ public class UserController {
 
 
         if (userId == null || userId <= 0) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.INVALID_ID,
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
         }
 
         Long loggedInUserId = getLoggedInUserId();
 
         if (loggedInUserId == null) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.UNAUTHORIZED,
-                    HttpStatus.UNAUTHORIZED,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, null);
         }
 
 
         if (!isAdmin() && !loggedInUserId.equals(userId)) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.FORBIDDEN,
-                    HttpStatus.FORBIDDEN,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.FORBIDDEN, HttpStatus.FORBIDDEN, null);
         }
 
 
@@ -164,30 +136,15 @@ public class UserController {
 
 
         if (userId == null || userId <= 0) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.INVALID_ID,
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
         }
 
         Long loggedInUserId = getLoggedInUserId();
-
         if (loggedInUserId == null) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.UNAUTHORIZED,
-                    HttpStatus.UNAUTHORIZED,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, null);
         }
-
-
         if (!isAdmin() && !loggedInUserId.equals(userId)) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.FORBIDDEN,
-                    HttpStatus.FORBIDDEN,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.FORBIDDEN, HttpStatus.FORBIDDEN, null);
         }
 
 
@@ -217,36 +174,23 @@ public class UserController {
 
 
         if (userId == null || userId <= 0) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.INVALID_ID,
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.INVALID_ID, HttpStatus.BAD_REQUEST, null);
         }
 
         Long loggedInUserId = getLoggedInUserId();
 
         if (loggedInUserId == null) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.UNAUTHORIZED,
-                    HttpStatus.UNAUTHORIZED,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, null);
         }
 
 
         if (!isAdmin() && !loggedInUserId.equals(userId)) {
-            return ResponseHandler.generateResponse(
-                    MessageConfig.FORBIDDEN,
-                    HttpStatus.FORBIDDEN,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.FORBIDDEN, HttpStatus.FORBIDDEN, null);
         }
 
 
         if (userId == null || userId <= 0) {
-            return ResponseHandler.generateResponse(
-                    "Invalid User Id", HttpStatus.BAD_REQUEST, null);
+            return ResponseHandler.generateResponse("Invalid User Id", HttpStatus.BAD_REQUEST, null);
         }
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {

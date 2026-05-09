@@ -61,25 +61,19 @@ public class OwnerPropertyController {
         Authentication auth = getAuth();
         if (auth == null) return false;
 
-        return auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        return auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 
     @GetMapping("/getAreasByCity/{city}")
-    public ResponseEntity<Object> getAreasByCity(
-            @PathVariable String city) {
+    public ResponseEntity<Object> getAreasByCity(@PathVariable String city) {
 
-        List<AreaPincode> list =
-                areaPincodeRepository.findByCityIgnoreCase(city);
-
+        List<AreaPincode> list = areaPincodeRepository.findByCityIgnoreCase(city);
         List<String> areas = new ArrayList<>();
-
         for (AreaPincode area : list) {
             areas.add(area.getArea());
         }
 
-        return ResponseHandler.generateResponse(
-                "Areas fetched successfully", HttpStatus.OK, areas);
+        return ResponseHandler.generateResponse("Areas fetched successfully", HttpStatus.OK, areas);
     }
 
     // ================= GET PINCODE =================
@@ -89,8 +83,7 @@ public class OwnerPropertyController {
         if (data == null) {
             return ResponseHandler.generateResponse("Area not found", HttpStatus.BAD_REQUEST, null);
         }
-        return ResponseHandler.generateResponse(
-                "Pincode fetched successfully", HttpStatus.OK, data.getPincode());
+        return ResponseHandler.generateResponse("Pincode fetched successfully", HttpStatus.OK, data.getPincode());
     }
 
     @PostMapping("/addPropertyByOwner/{ownerId}")
@@ -173,33 +166,16 @@ public class OwnerPropertyController {
             return ResponseHandler.generateResponse("Mobile number must be 10 digits", HttpStatus.BAD_REQUEST, null);
         }
 
-        if (propertyDto.getApartmentName() == null
-                || propertyDto.getApartmentName().trim().isEmpty()) {
-
-            return ResponseHandler.generateResponse(
-                    "Apartment name is required",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+        if (propertyDto.getApartmentName() == null || propertyDto.getApartmentName().trim().isEmpty()) {
+            return ResponseHandler.generateResponse("Apartment name is required", HttpStatus.BAD_REQUEST, null);
         }
 
-        PropertyOwner owner =
-                propertyOwnerRepository.findById(ownerId).orElse(null);
-
+        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
         if (owner == null) {
-
-            return ResponseHandler.generateResponse(
-                    MessageConfig.OWNER_NOT_FOUND,
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
 
-        return ResponseHandler.generateResponse(
-                MessageConfig.PROPERTY_ADDED,
-                HttpStatus.OK,
-                propertyService.addProperty(propertyDto, ownerId)
-        );
+        return ResponseHandler.generateResponse(MessageConfig.PROPERTY_ADDED, HttpStatus.OK, propertyService.addProperty(propertyDto, ownerId));
     }
     // ================= GET PROPERTY =================
     @GetMapping("/getPropertyById/{id}")
@@ -216,11 +192,7 @@ public class OwnerPropertyController {
             }
         }
 
-        return ResponseHandler.generateResponse(
-                MessageConfig.PROPERTY_FETCHED,
-                HttpStatus.OK,
-                propertyService.getPropertyById(id)
-        );
+        return ResponseHandler.generateResponse(MessageConfig.PROPERTY_FETCHED, HttpStatus.OK, propertyService.getPropertyById(id));
     }
 
     // ================= UPDATE =================

@@ -31,67 +31,23 @@ public class OwnerFacilityController {
     public ResponseEntity<Object> saveFacilities(
             @RequestBody OwnerFacilityRequest request) {
 
-        // Owner Validation
         if (request.getOwnerId() == null) {
-
-            return ResponseHandler.generateResponse(
-                    "Owner Id Is Required",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("Owner Id Is Required", HttpStatus.BAD_REQUEST, null);
         }
-
-        // Property Validation
         if (request.getPropertyId() == null) {
-
-            return ResponseHandler.generateResponse(
-                    "Property Id Is Required",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse("Property Id Is Required", HttpStatus.BAD_REQUEST, null);
         }
-
-        // Owner Check
-        PropertyOwner owner =
-                propertyOwnerRepository
-                        .findById(request.getOwnerId())
-                        .orElse(null);
-
+        PropertyOwner owner = propertyOwnerRepository.findById(request.getOwnerId()).orElse(null);
         if (owner == null) {
-
-            return ResponseHandler.generateResponse(
-                    MessageConfig.OWNER_NOT_FOUND,
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
+        }
+        if (request.getFacilities() == null || request.getFacilities().isEmpty()) {
+            return ResponseHandler.generateResponse("Facilities List Cannot Be Empty", HttpStatus.BAD_REQUEST, null);
         }
 
-        // Facility Validation
-        if (request.getFacilities() == null ||
-                request.getFacilities().isEmpty()) {
-
-            return ResponseHandler.generateResponse(
-                    "Facilities List Cannot Be Empty",
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
-        }
-
-        // Save Facilities
         service.saveFacilities(request);
-
-        // Fetch Saved Data
-        List<OwnerFacility> savedFacilities =
-                service.getFacilities(
-                        request.getOwnerId(),
-                        request.getPropertyId()
-                );
-
-        return ResponseHandler.generateResponse(
-                "Facilities Saved Successfully",
-                HttpStatus.OK,
-                savedFacilities
-        );
+        List<OwnerFacility> savedFacilities = service.getFacilities(request.getOwnerId(), request.getPropertyId());
+        return ResponseHandler.generateResponse("Facilities Saved Successfully", HttpStatus.OK, savedFacilities);
     }
 
     @GetMapping("/get-facilities")
@@ -99,32 +55,12 @@ public class OwnerFacilityController {
             @RequestParam Long ownerId,
             @RequestParam Long propertyId) {
 
-        // Owner Check
-        PropertyOwner owner =
-                propertyOwnerRepository
-                        .findById(ownerId)
-                        .orElse(null);
-
+        PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
         if (owner == null) {
-
-            return ResponseHandler.generateResponse(
-                    MessageConfig.OWNER_NOT_FOUND,
-                    HttpStatus.BAD_REQUEST,
-                    null
-            );
+            return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
 
-        // Fetch Facilities
-        List<OwnerFacility> facilities =
-                service.getFacilities(
-                        ownerId,
-                        propertyId
-                );
-
-        return ResponseHandler.generateResponse(
-                "Facilities Fetched Successfully",
-                HttpStatus.OK,
-                facilities
-        );
+        List<OwnerFacility> facilities = service.getFacilities(ownerId, propertyId);
+        return ResponseHandler.generateResponse("Facilities Fetched Successfully", HttpStatus.OK, facilities);
     }
 }

@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface PropertyImageRepository extends JpaRepository<PropertyImage, Long> {
 
-    PropertyImage findByImageName(String imageName);
     int countByPropertyId(Long propertyId);
+
     List<PropertyImage> findByPropertyId(Long propertyId);
 }
