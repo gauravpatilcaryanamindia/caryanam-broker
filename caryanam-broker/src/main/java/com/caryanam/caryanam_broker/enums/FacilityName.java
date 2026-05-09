@@ -11,5 +11,7 @@ public enum FacilityName {
     POWER_BACKUP,
     LIFT_FACILITY,
     GYMNASIUM,
-    SWIMMING_POOL
+    SWIMMING_POOL,
+    WIFI_SUPPLY_24X7,
+
 }
