@@ -768,6 +768,7 @@ public class PropertyServiceImpl implements PropertyService {
                 dto.setAddress(property.getAddress());
                 dto.setCity(property.getCity());
                 dto.setBhkType(property.getBhkType());
+                dto.setMobileNumber(property.getMobileNumber());
                 dto.setDescription(property.getDescription());
                 dto.setPropertyType(property.getPropertyType());
                 dto.setDoctypeImages(imageList.toString());
