@@ -138,7 +138,8 @@ public class PropertyServiceImpl implements PropertyService {
                 dto.setPrice(property.getPrice());
                 dto.setLocation(property.getLocation());
                 dto.setBhkType(property.getBhkType());
-
+                dto.setCity(property.getCity());
+                dto.setAddress(property.getAddress());
                 // ONLY COVER IMAGE
                 dto.setCoverImage(dto.getCoverImage());
                 dto.setDoctypeImages(String.valueOf(doctypeImages));
