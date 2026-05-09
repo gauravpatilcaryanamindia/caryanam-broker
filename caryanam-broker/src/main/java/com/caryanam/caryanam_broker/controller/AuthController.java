@@ -65,11 +65,6 @@ public class AuthController {
         if (!dto.getEmail().matches("^[A-Za-z0-9._%+-]+@gmail\\.com$")) {
             return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Only Gmail format allowed (example: user@gmail.com)", null));
         }
-        String password = dto.getPassword();
-        String passwordPattern = "^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?\":{}|<>])(?=\\S+$).{8,}$";
-        if (!password.matches(passwordPattern)) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Password must contain minimum 8 characters, one uppercase letter, one special character and no spaces", null ) );
-        }
         if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
             return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Password is required", null));
         }
@@ -113,11 +108,6 @@ public class AuthController {
         }
         if (!dto.getEmail().matches("^[A-Za-z0-9._%+-]+@gmail\\.com$")) {
             return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Only Gmail format allowed", null));
-        }
-        String password = dto.getPassword();
-        String passwordPattern = "^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?\":{}|<>])(?=\\S+$).{8,}$";
-        if (!password.matches(passwordPattern)) {
-            return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Password must contain minimum 8 characters, one uppercase letter, one special character and no spaces", null ) );
         }
         if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
             return ResponseEntity.badRequest().body(new ResponseDto<>(400, "Password is required", null));
