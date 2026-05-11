@@ -2,19 +2,21 @@ package com.caryanam.caryanam_broker.serviceimpl;
 
 
 import com.caryanam.caryanam_broker.configuration.JwtUtil;
-import com.caryanam.caryanam_broker.dto.LoginRequestDTO;
-import com.caryanam.caryanam_broker.dto.RegisterRequestDTO;
-import com.caryanam.caryanam_broker.dto.RegisterResponseDTO;
+import com.caryanam.caryanam_broker.dto.*;
 import com.caryanam.caryanam_broker.entity.Admin;
+import com.caryanam.caryanam_broker.entity.ForgotPasswordOtp;
 import com.caryanam.caryanam_broker.entity.PropertyOwner;
 import com.caryanam.caryanam_broker.entity.User;
 import com.caryanam.caryanam_broker.enums.Role;
 import com.caryanam.caryanam_broker.repository.AdminRepository;
+import com.caryanam.caryanam_broker.repository.ForgotPasswordOtpRepository;
 import com.caryanam.caryanam_broker.repository.PropertyOwnerRepository;
 import com.caryanam.caryanam_broker.repository.UserRepository;
 import com.caryanam.caryanam_broker.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,6 +24,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -50,6 +53,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private PropertyOwnerRepository propertyOwnerRepository;
+
+    @Autowired
+    private ForgotPasswordOtpRepository forgotPasswordOtpRepository;
+
+    @Autowired
+    private JavaMailSender javaMailSender;
 
 
     private static final Set<String> tokenBlacklist = new HashSet<>();
@@ -237,4 +246,155 @@ public class AuthServiceImpl implements AuthService {
                 || propertyOwerRepository.existsByEmail(email)
                 || adminRepository.existsByEmail(email);
     }
+
+    @Override
+    public void sendForgotPasswordOtp(ForgotPasswordRequestDTO dto) {
+
+        User user = userRepository.findByEmail(dto.getEmail()).orElse(null);
+
+        if (user == null) {
+
+            PropertyOwner owner =
+                    propertyOwnerRepository.findByEmail(dto.getEmail()).orElse(null);
+
+            if (owner == null) {
+
+                Admin admin =
+                        adminRepository.findByEmail(dto.getEmail()).orElse(null);
+
+                if (admin == null) {
+                    throw new RuntimeException("Email not found");
+                }
+            }
+        }
+
+        String otp = String.valueOf(
+                (int) ((Math.random() * 900000) + 100000));
+
+        ForgotPasswordOtp existing =
+                forgotPasswordOtpRepository.findByEmail(dto.getEmail());
+
+        if (existing != null) {
+
+            existing.setOtp(otp);
+            existing.setVerified(false);
+            existing.setExpiryTime(LocalDateTime.now().plusMinutes(5));
+
+            forgotPasswordOtpRepository.save(existing);
+
+        } else {
+
+            ForgotPasswordOtp forgotPasswordOtp =
+                    new ForgotPasswordOtp();
+
+            forgotPasswordOtp.setEmail(dto.getEmail());
+            forgotPasswordOtp.setOtp(otp);
+            forgotPasswordOtp.setVerified(false);
+            forgotPasswordOtp.setExpiryTime(
+                    LocalDateTime.now().plusMinutes(5));
+
+            forgotPasswordOtpRepository.save(forgotPasswordOtp);
+        }
+
+        SimpleMailMessage message = new SimpleMailMessage();
+
+        message.setTo(dto.getEmail());
+
+        message.setSubject("Forgot Password OTP");
+
+        message.setText("Your OTP is : " + otp);
+
+        javaMailSender.send(message);
+    }
+
+    @Override
+    public boolean verifyOtp(VerifyOtpDTO dto) {
+
+        ForgotPasswordOtp forgotPasswordOtp =
+                forgotPasswordOtpRepository.findByEmail(dto.getEmail());
+
+        if (forgotPasswordOtp == null) {
+            return false;
+        }
+
+        if (!forgotPasswordOtp.getOtp().equals(dto.getOtp())) {
+            return false;
+        }
+
+        if (forgotPasswordOtp.getExpiryTime()
+                .isBefore(LocalDateTime.now())) {
+
+            return false;
+        }
+
+        forgotPasswordOtp.setVerified(true);
+
+        forgotPasswordOtpRepository.save(forgotPasswordOtp);
+
+        return true;
+    }
+
+    @Override
+    public boolean resetPassword(ResetPasswordDTO dto) {
+
+        ForgotPasswordOtp forgotPasswordOtp =
+                forgotPasswordOtpRepository.findByEmail(dto.getEmail());
+
+        if (forgotPasswordOtp == null) {
+            return false;
+        }
+
+        if (!forgotPasswordOtp.getVerified()) {
+            return false;
+        }
+
+        if (!dto.getNewPassword()
+                .equals(dto.getConfirmPassword())) {
+
+            return false;
+        }
+
+        String encodedPassword =
+                passwordEncoder.encode(dto.getNewPassword());
+
+        User user =
+                userRepository.findByEmail(dto.getEmail()).orElse(null);
+
+        if (user != null) {
+
+            user.setPassword(encodedPassword);
+
+            userRepository.save(user);
+
+            return true;
+        }
+
+        PropertyOwner owner =
+                propertyOwnerRepository.findByEmail(dto.getEmail()).orElse(null);
+
+        if (owner != null) {
+
+            owner.setPassword(encodedPassword);
+
+            propertyOwnerRepository.save(owner);
+
+            return true;
+        }
+
+        Admin admin =
+                adminRepository.findByEmail(dto.getEmail()).orElse(null);
+
+        if (admin != null) {
+
+            admin.setPassword(encodedPassword);
+
+            adminRepository.save(admin);
+
+            return true;
+        }
+
+        return false;
+    }
+
+
 }

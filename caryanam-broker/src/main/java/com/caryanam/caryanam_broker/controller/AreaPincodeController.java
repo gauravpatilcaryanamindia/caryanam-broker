@@ -19,4 +19,13 @@ public class AreaPincodeController {
         String response = areaPincodeService.uploadExcel(file);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @GetMapping("/nearby")
+    public ResponseEntity<?> getNearbyData(
+            @RequestParam String nearbyPincode) {
+
+        return ResponseEntity.ok(
+                areaPincodeService.getNearbyData(nearbyPincode)
+        );
+    }
 }

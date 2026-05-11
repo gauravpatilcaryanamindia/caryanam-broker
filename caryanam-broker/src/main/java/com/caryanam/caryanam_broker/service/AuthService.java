@@ -1,9 +1,6 @@
 package com.caryanam.caryanam_broker.service;
 
-import com.caryanam.caryanam_broker.dto.LoginRequestDTO;
-import com.caryanam.caryanam_broker.dto.RegisterRequestDTO;
-import com.caryanam.caryanam_broker.dto.RegisterResponseDTO;
-
+import com.caryanam.caryanam_broker.dto.*;
 
 
 public interface AuthService {
@@ -27,4 +24,9 @@ public interface AuthService {
     boolean deactivateAdmin(Long id);
 
     boolean deactivateUser(Long id);
+    void sendForgotPasswordOtp(ForgotPasswordRequestDTO dto);
+
+    boolean verifyOtp(VerifyOtpDTO dto);
+
+    boolean resetPassword(ResetPasswordDTO dto);
 }

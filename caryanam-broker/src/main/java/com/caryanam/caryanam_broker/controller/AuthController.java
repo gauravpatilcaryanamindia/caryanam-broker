@@ -288,4 +288,58 @@ public class AuthController {
         }
         return ResponseEntity.ok("User deactivated successfully");
     }
+
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOtp(
+            @RequestBody VerifyOtpDTO dto) {
+
+        boolean result = authService.verifyOtp(dto);
+
+        if (!result) {
+
+            return ResponseEntity.badRequest().body(
+                    new ResponseDto<>(400,
+                            "Invalid OTP",
+                            null));
+        }
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(200,
+                        "OTP verified successfully",
+                        null));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(
+            @RequestBody ResetPasswordDTO dto) {
+
+        boolean result =
+                authService.resetPassword(dto);
+
+        if (!result) {
+
+            return ResponseEntity.badRequest().body(
+                    new ResponseDto<>(400,
+                            "Password reset failed",
+                            null));
+        }
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(200,
+                        "Password updated successfully",
+                        null));
+    }
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(
+            @RequestBody ForgotPasswordRequestDTO dto) {
+
+        authService.sendForgotPasswordOtp(dto);
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(200,
+                        "OTP sent successfully",
+                        null));
+    }
+
 }

@@ -20,4 +20,6 @@ public class AreaPincode {
     private String pincode;
 
     private String nearBy;
+    private String nearbyPincode;
+
 }

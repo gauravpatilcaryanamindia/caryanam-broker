@@ -11,5 +11,7 @@ public interface AreaPincodeRepository extends JpaRepository<AreaPincode, Long> 
 
     AreaPincode findByCityIgnoreCaseAndAreaIgnoreCase(String city, String area);
 
+    List<AreaPincode> findByNearbyPincode(String nearbyPincode);
+
 
 }
