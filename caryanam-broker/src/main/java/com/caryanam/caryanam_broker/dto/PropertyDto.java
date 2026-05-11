@@ -41,6 +41,7 @@ public class PropertyDto {
     private String ownerName;
     private boolean premiumActive;
     private String paymentStatus;
+    private String nearBy;
 
     private String premiumStatus;
 

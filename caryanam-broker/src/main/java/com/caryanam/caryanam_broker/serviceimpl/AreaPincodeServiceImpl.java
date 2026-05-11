@@ -98,7 +98,7 @@ public class AreaPincodeServiceImpl implements AreaPincodeService {
                 areaPincode.setPincode(pincode);
 
                 areaPincode.setNearBy(nearby);
-                areaPincode.setNearbyPincode(pincode);
+                areaPincode.setNearbyPincode(nearbyPincode);
 
                 areaPincodeRepository.save(areaPincode);
             }

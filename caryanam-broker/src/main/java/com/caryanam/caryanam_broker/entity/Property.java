@@ -51,4 +51,5 @@ public class Property {
     private String paymentStatus;
     @Column(name = "apartment_name")
     private String apartmentName;
+    private String nearBy;
    }
