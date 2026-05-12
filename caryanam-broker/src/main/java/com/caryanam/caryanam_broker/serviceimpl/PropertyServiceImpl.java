@@ -80,6 +80,7 @@ public class PropertyServiceImpl implements PropertyService {
         return dto;
     }
 
+
     @Override
     public List<PropertyDto> getAllProperties(Long userId, HttpServletRequest request) {
 

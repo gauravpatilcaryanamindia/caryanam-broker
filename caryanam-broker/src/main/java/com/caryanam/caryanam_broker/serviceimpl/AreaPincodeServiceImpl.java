@@ -114,30 +114,62 @@ public class AreaPincodeServiceImpl implements AreaPincodeService {
             return "Failed to upload excel";
         }
     }
+//
+//    @Override
+//    public List<String> getNearbyData(String nearbyPincode) {
+//
+//        List<AreaPincode> list =
+//                areaPincodeRepository.findByNearbyPincode(nearbyPincode);
+//
+//        List<String> response = new ArrayList<>();
+//
+//        for (AreaPincode areaPincode : list) {
+//
+//            if (areaPincode.getNearBy() != null &&
+//                    !areaPincode.getNearBy().isEmpty()) {
+//
+//                String[] nearbyArray =
+//                        areaPincode.getNearBy().split(",");
+//
+//                for (String nearby : nearbyArray) {
+//
+//                    response.add(nearby.trim());
+//                }
+//            }
+//        }
+//
+//        return response;
+//    }
 
     @Override
     public List<String> getNearbyData(String nearbyPincode) {
 
+        if (nearbyPincode == null || nearbyPincode.isBlank()) {
+            return new ArrayList<>();
+        }
+
+        String cleanedPincode = nearbyPincode.trim();
+
         List<AreaPincode> list =
-                areaPincodeRepository.findByNearbyPincode(nearbyPincode);
+                areaPincodeRepository.findByNearbyPincode(cleanedPincode);
 
         List<String> response = new ArrayList<>();
 
         for (AreaPincode areaPincode : list) {
 
             if (areaPincode.getNearBy() != null &&
-                    !areaPincode.getNearBy().isEmpty()) {
+                    !areaPincode.getNearBy().isBlank()) {
 
                 String[] nearbyArray =
                         areaPincode.getNearBy().split(",");
 
                 for (String nearby : nearbyArray) {
-
                     response.add(nearby.trim());
                 }
             }
         }
-
+        System.out.println("Pincode from frontend = " + nearbyPincode);
+        System.out.println("Matched rows = " + list.size());
         return response;
     }
 }
