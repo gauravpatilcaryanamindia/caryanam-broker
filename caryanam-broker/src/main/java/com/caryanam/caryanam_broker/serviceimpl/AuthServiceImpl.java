@@ -165,46 +165,116 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public String login(LoginRequestDTO request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
-        EmailVerificationOtp emailOtp =
-                emailVerificationOtpRepository.findByEmail(request.getEmail());
 
-        if (emailOtp == null || !emailOtp.isVerified()) {
-            throw new RuntimeException("Email not verified");
+        Authentication authentication =
+                authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(
+                                request.getEmail(),
+                                request.getPassword()
+                        )
+                );
+
+        String email =
+                request.getEmail()
+                        .toLowerCase()
+                        .trim();
+
+        // USER CHECK
+        boolean isUser =
+                userRepository
+                        .findByEmail(email)
+                        .isPresent();
+
+        // OWNER CHECK
+        boolean isOwner =
+                propertyOwnerRepository
+                        .findByEmail(email)
+                        .isPresent();
+
+        // EMAIL VERIFICATION ONLY FOR USER & OWNER
+        if (isUser || isOwner) {
+
+            EmailVerificationOtp emailOtp =
+                    emailVerificationOtpRepository
+                            .findByEmail(email);
+
+            if (emailOtp == null ||
+                    !Boolean.TRUE.equals(
+                            emailOtp.isVerified())) {
+
+                throw new RuntimeException(
+                        "Email not verified"
+                );
+            }
         }
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String role = userDetails.getAuthorities()
-                .stream()
-                .findFirst()
-                .map(granted -> granted.getAuthority())
-                .orElse("USER");
+
+        UserDetails userDetails =
+                (UserDetails) authentication.getPrincipal();
+
+        String role =
+                userDetails.getAuthorities()
+                        .stream()
+                        .findFirst()
+                        .map(granted ->
+                                granted.getAuthority())
+                        .orElse("USER");
+
         Long id = null;
+
         String fullName = null;
+
         if ("ROLE_USER".equals(role)) {
-            User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+
+            User user =
+                    userRepository
+                            .findByEmail(email)
+                            .orElse(null);
+
             if (user != null) {
+
                 id = user.getUserId();
+
                 fullName = user.getFullName();
             }
+
         } else if ("ROLE_PROPERTY_OWNER".equals(role)) {
-            PropertyOwner owner = propertyOwnerRepository.findByEmail(request.getEmail()).orElse(null);
+
+            PropertyOwner owner =
+                    propertyOwnerRepository
+                            .findByEmail(email)
+                            .orElse(null);
+
             if (owner != null) {
+
                 id = owner.getOwnerId();
+
                 fullName = owner.getFullName();
             }
+
         } else if ("ROLE_ADMIN".equals(role)) {
-            Admin admin = adminRepository.findByEmail(request.getEmail()).orElse(null);
+
+            Admin admin =
+                    adminRepository
+                            .findByEmail(email)
+                            .orElse(null);
+
             if (admin != null) {
+
                 id = admin.getAdminId();
+
                 fullName = admin.getFullName();
             }
         }
-        String deviceType = request.getDeviceType();
-        if (deviceType == null || deviceType.isEmpty()) {
+
+        String deviceType =
+                request.getDeviceType();
+
+        if (deviceType == null ||
+                deviceType.isEmpty()) {
+
             deviceType = "WEB";
         }
+
         return jwtUtil.generateToken(
                 userDetails.getUsername(),
                 fullName,

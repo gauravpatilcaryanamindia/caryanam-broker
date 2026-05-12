@@ -1,8 +1,4 @@
 package com.caryanam.caryanam_broker.entity;
-
-
-
-
 import com.caryanam.caryanam_broker.Enum.BhkType;
 import com.caryanam.caryanam_broker.Enum.FurnishingType;
 import com.caryanam.caryanam_broker.Enum.PgType;
