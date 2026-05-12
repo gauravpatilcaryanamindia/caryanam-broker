@@ -3,15 +3,9 @@ package com.caryanam.caryanam_broker.serviceimpl;
 
 import com.caryanam.caryanam_broker.configuration.JwtUtil;
 import com.caryanam.caryanam_broker.dto.*;
-import com.caryanam.caryanam_broker.entity.Admin;
-import com.caryanam.caryanam_broker.entity.ForgotPasswordOtp;
-import com.caryanam.caryanam_broker.entity.PropertyOwner;
-import com.caryanam.caryanam_broker.entity.User;
+import com.caryanam.caryanam_broker.entity.*;
 import com.caryanam.caryanam_broker.enums.Role;
-import com.caryanam.caryanam_broker.repository.AdminRepository;
-import com.caryanam.caryanam_broker.repository.ForgotPasswordOtpRepository;
-import com.caryanam.caryanam_broker.repository.PropertyOwnerRepository;
-import com.caryanam.caryanam_broker.repository.UserRepository;
+import com.caryanam.caryanam_broker.repository.*;
 import com.caryanam.caryanam_broker.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +54,8 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private JavaMailSender javaMailSender;
 
+    @Autowired
+    private EmailVerificationOtpRepository emailVerificationOtpRepository;
 
     private static final Set<String> tokenBlacklist = new HashSet<>();
 
@@ -70,7 +66,12 @@ public class AuthServiceImpl implements AuthService {
         if (isEmailAlreadyUsed(dto.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
+        EmailVerificationOtp emailOtp =
+                emailVerificationOtpRepository.findByEmail(dto.getEmail());
 
+        if (emailOtp == null || !emailOtp.isVerified()) {
+            throw new RuntimeException("Please verify email first");
+        }
         User user = new User();
         user.setFullName(dto.getFullName());
         user.setMobileNumber(String.valueOf(dto.getMobileNumber()));
@@ -94,6 +95,12 @@ public class AuthServiceImpl implements AuthService {
         if (isEmailAlreadyUsed(dto.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
+        EmailVerificationOtp emailOtp =
+                emailVerificationOtpRepository.findByEmail(dto.getEmail());
+
+        if (emailOtp == null || !emailOtp.isVerified()) {
+            throw new RuntimeException("Please verify email first");
+        }
         PropertyOwner owner = new PropertyOwner();
         owner.setFullName(dto.getFullName());
         owner.setMobileNumber(String.valueOf(dto.getMobileNumber()));
@@ -111,12 +118,62 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+//    @Override
+//    public String login(LoginRequestDTO request) {
+//        Authentication authentication = authenticationManager.authenticate(
+//                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+//        );
+//        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+//        String role = userDetails.getAuthorities()
+//                .stream()
+//                .findFirst()
+//                .map(granted -> granted.getAuthority())
+//                .orElse("USER");
+//        Long id = null;
+//        String fullName = null;
+//        if ("ROLE_USER".equals(role)) {
+//            User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+//            if (user != null) {
+//                id = user.getUserId();
+//                fullName = user.getFullName();
+//            }
+//        } else if ("ROLE_PROPERTY_OWNER".equals(role)) {
+//            PropertyOwner owner = propertyOwnerRepository.findByEmail(request.getEmail()).orElse(null);
+//            if (owner != null) {
+//                id = owner.getOwnerId();
+//                fullName = owner.getFullName();
+//            }
+//        } else if ("ROLE_ADMIN".equals(role)) {
+//            Admin admin = adminRepository.findByEmail(request.getEmail()).orElse(null);
+//            if (admin != null) {
+//                id = admin.getAdminId();
+//                fullName = admin.getFullName();
+//            }
+//        }
+//        String deviceType = request.getDeviceType();
+//        if (deviceType == null || deviceType.isEmpty()) {
+//            deviceType = "WEB";
+//        }
+//        return jwtUtil.generateToken(
+//                userDetails.getUsername(),
+//                fullName,
+//                role,
+//                deviceType,
+//                id
+//        );
+//    }
 
     @Override
     public String login(LoginRequestDTO request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
+        EmailVerificationOtp emailOtp =
+                emailVerificationOtpRepository.findByEmail(request.getEmail());
+
+        if (emailOtp == null || !emailOtp.isVerified()) {
+            throw new RuntimeException("Email not verified");
+        }
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String role = userDetails.getAuthorities()
                 .stream()
@@ -396,5 +453,92 @@ public class AuthServiceImpl implements AuthService {
         return false;
     }
 
+    @Override
+    public void sendEmailVerificationOtp(
+            SendEmailOtpDTO dto) {
 
+        String email =
+                dto.getEmail().toLowerCase().trim();
+
+        // CHECK EXISTING EMAIL
+        boolean userExists =
+                userRepository.existsByEmail(email);
+
+        boolean ownerExists =
+                propertyOwnerRepository.existsByEmail(email);
+
+        boolean adminExists =
+                adminRepository.existsByEmail(email);
+
+        if (userExists || ownerExists || adminExists) {
+
+            throw new RuntimeException(
+                    "Email already exists");
+        }
+
+        // GENERATE OTP
+        String otp =
+                String.valueOf(
+                        (int)((Math.random() * 900000) + 100000)
+                );
+
+        // DELETE OLD OTP
+        emailVerificationOtpRepository
+                .deleteByEmail(email);
+
+        // SAVE ONLY OTP
+        EmailVerificationOtp token =
+                new EmailVerificationOtp();
+
+        token.setEmail(email);
+
+        token.setOtp(otp);
+
+        token.setExpiryTime(
+                LocalDateTime.now().plusMinutes(5)
+        );
+
+        emailVerificationOtpRepository.save(token);
+
+        // SEND MAIL
+        SimpleMailMessage message =
+                new SimpleMailMessage();
+
+        message.setTo(email);
+
+        message.setSubject("Email Verification OTP");
+
+        message.setText(
+                "Your OTP is : " + otp
+        );
+
+        javaMailSender.send(message);
+    }
+
+    @Override
+    public boolean verifyEmailOtp(
+            VerifyEmailOtpDTO dto) {
+
+        EmailVerificationOtp token =
+                emailVerificationOtpRepository
+                        .findByEmail(dto.getEmail());
+
+        if (token == null) {
+            return false;
+        }
+
+        if (!token.getOtp().equals(dto.getOtp())) {
+            return false;
+        }
+
+        if (token.getExpiryTime().isBefore(LocalDateTime.now())) {
+            return false;
+        }
+
+        token.setVerified(true);
+
+        emailVerificationOtpRepository.save(token);
+
+        return true;
+    }
 }

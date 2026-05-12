@@ -29,4 +29,7 @@ public interface AuthService {
     boolean verifyOtp(VerifyOtpDTO dto);
 
     boolean resetPassword(ResetPasswordDTO dto);
+    void sendEmailVerificationOtp(SendEmailOtpDTO dto);
+
+    boolean verifyEmailOtp(VerifyEmailOtpDTO dto);
 }

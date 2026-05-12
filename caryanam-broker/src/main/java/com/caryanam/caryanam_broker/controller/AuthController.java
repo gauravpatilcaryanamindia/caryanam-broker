@@ -341,5 +341,36 @@ public class AuthController {
                         "OTP sent successfully",
                         null));
     }
+    @PostMapping("/send-email-otp")
+    public ResponseEntity<?> sendEmailOtp(
+            @RequestBody SendEmailOtpDTO dto) {
 
+        authService.sendEmailVerificationOtp(dto);
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(200,
+                        "OTP sent successfully",
+                        null));
+    }
+
+    @PostMapping("/verify-email-otp")
+    public ResponseEntity<?> verifyEmailOtp(
+            @RequestBody VerifyEmailOtpDTO dto) {
+
+        boolean result =
+                authService.verifyEmailOtp(dto);
+
+        if (!result) {
+
+            return ResponseEntity.badRequest().body(
+                    new ResponseDto<>(400,
+                            "Invalid OTP",
+                            null));
+        }
+
+        return ResponseEntity.ok(
+                new ResponseDto<>(200,
+                        "Email verified successfully",
+                        null));
+    }
 }
