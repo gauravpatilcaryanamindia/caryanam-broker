@@ -141,6 +141,8 @@ public class AreaPincodeServiceImpl implements AreaPincodeService {
 //        return response;
 //    }
 
+//
+
     @Override
     public List<String> getNearbyData(String nearbyPincode) {
 
@@ -150,8 +152,9 @@ public class AreaPincodeServiceImpl implements AreaPincodeService {
 
         String cleanedPincode = nearbyPincode.trim();
 
+        // CHANGE HERE
         List<AreaPincode> list =
-                areaPincodeRepository.findByNearbyPincode(cleanedPincode);
+                areaPincodeRepository.findByPincode(cleanedPincode);
 
         List<String> response = new ArrayList<>();
 
@@ -164,12 +167,18 @@ public class AreaPincodeServiceImpl implements AreaPincodeService {
                         areaPincode.getNearBy().split(",");
 
                 for (String nearby : nearbyArray) {
-                    response.add(nearby.trim());
+
+                    if (!response.contains(nearby.trim())) {
+                        response.add(nearby.trim());
+                    }
                 }
             }
         }
+
         System.out.println("Pincode from frontend = " + nearbyPincode);
         System.out.println("Matched rows = " + list.size());
+        System.out.println("Nearby response = " + response);
+
         return response;
     }
 }
