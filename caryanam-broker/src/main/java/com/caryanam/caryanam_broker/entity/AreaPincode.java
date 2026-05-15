@@ -1,12 +1,10 @@
 package com.caryanam.caryanam_broker.entity;
 
-
 import jakarta.persistence.*;
 import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "area_pincode")
 public class AreaPincode {
 
     @Id
@@ -19,7 +17,11 @@ public class AreaPincode {
 
     private String pincode;
 
+    @Column(
+            name = "near_by",
+            columnDefinition = "TEXT"
+    )
     private String nearBy;
-    private String nearbyPincode;
 
+    private String nearbyPincode;
 }
