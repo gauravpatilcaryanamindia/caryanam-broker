@@ -18,6 +18,7 @@ public class Property {
     private String title;
     private Double  price;
     private String location;
+    @Column(columnDefinition = "TEXT")
     private String description;
     private String mobileNumber;
     private Integer likesCount;
