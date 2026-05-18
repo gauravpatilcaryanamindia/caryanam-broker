@@ -22,12 +22,12 @@ public class SocketConfig {
                 new com.corundumstudio.socketio.Configuration();
 
         //  BASIC CONFIG
-        // config.setHostname("localhost");
+         config.setHostname("localhost");
                 config.setHostname("0.0.0.0");
         config.setPort(9092);
 
 
-        // config.setOrigin("http://localhost:63342");
+        config.setOrigin("http://localhost:63342");
         config.setOrigin(null);
 
         config.setPingInterval(25000);
