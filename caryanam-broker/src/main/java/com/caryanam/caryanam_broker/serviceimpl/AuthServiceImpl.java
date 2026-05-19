@@ -429,7 +429,24 @@ public class AuthServiceImpl implements AuthService {
 
         message.setSubject("Forgot Password OTP");
 
-        message.setText("Your OTP is : " + otp);
+        message.setText(
+
+                "Hello User,\n\n" +
+
+                        "We received a request to reset your password.\n\n" +
+
+                        "Your One-Time Password (OTP) is: " + otp + "\n\n" +
+
+                        "This OTP is valid for 5 minutes. Please do not share it with anyone for security reasons.\n\n" +
+
+                        "If you did not request a password reset, please ignore this email.\n\n" +
+
+                        "Thank you,\n" +
+
+                        "Support Team"
+
+        );
+
 
         javaMailSender.send(message);
     }
@@ -579,8 +596,23 @@ public class AuthServiceImpl implements AuthService {
         message.setSubject("Email Verification OTP");
 
         message.setText(
-                "Your OTP is : " + otp
+
+                "Hello User,\n\n" +
+
+                        "We received a request to reset your password.\n\n" +
+
+                        "Your One-Time Password (OTP) is: " + otp + "\n\n" +
+
+                        "This OTP is valid for 5 minutes. Please do not share it with anyone for security reasons.\n\n" +
+
+                        "If you did not request a password reset, please ignore this email.\n\n" +
+
+                        "Thank you,\n" +
+
+                        "Support Team"
+
         );
+
 
         javaMailSender.send(message);
     }
