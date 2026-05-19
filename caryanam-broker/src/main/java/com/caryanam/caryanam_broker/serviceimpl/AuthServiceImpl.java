@@ -7,6 +7,7 @@ import com.caryanam.caryanam_broker.entity.*;
 import com.caryanam.caryanam_broker.enums.Role;
 import com.caryanam.caryanam_broker.repository.*;
 import com.caryanam.caryanam_broker.service.AuthService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
@@ -23,6 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
