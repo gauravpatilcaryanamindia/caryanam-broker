@@ -120,50 +120,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-//    @Override
-//    public String login(LoginRequestDTO request) {
-//        Authentication authentication = authenticationManager.authenticate(
-//                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-//        );
-//        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-//        String role = userDetails.getAuthorities()
-//                .stream()
-//                .findFirst()
-//                .map(granted -> granted.getAuthority())
-//                .orElse("USER");
-//        Long id = null;
-//        String fullName = null;
-//        if ("ROLE_USER".equals(role)) {
-//            User user = userRepository.findByEmail(request.getEmail()).orElse(null);
-//            if (user != null) {
-//                id = user.getUserId();
-//                fullName = user.getFullName();
-//            }
-//        } else if ("ROLE_PROPERTY_OWNER".equals(role)) {
-//            PropertyOwner owner = propertyOwnerRepository.findByEmail(request.getEmail()).orElse(null);
-//            if (owner != null) {
-//                id = owner.getOwnerId();
-//                fullName = owner.getFullName();
-//            }
-//        } else if ("ROLE_ADMIN".equals(role)) {
-//            Admin admin = adminRepository.findByEmail(request.getEmail()).orElse(null);
-//            if (admin != null) {
-//                id = admin.getAdminId();
-//                fullName = admin.getFullName();
-//            }
-//        }
-//        String deviceType = request.getDeviceType();
-//        if (deviceType == null || deviceType.isEmpty()) {
-//            deviceType = "WEB";
-//        }
-//        return jwtUtil.generateToken(
-//                userDetails.getUsername(),
-//                fullName,
-//                role,
-//                deviceType,
-//                id
-//        );
-//    }
+
 
     @Override
     public String login(LoginRequestDTO request) {
@@ -397,11 +354,35 @@ public class AuthServiceImpl implements AuthService {
             }
         }
 
-        String otp = String.valueOf(
-                (int) ((Math.random() * 900000) + 100000));
-
         ForgotPasswordOtp existing =
                 forgotPasswordOtpRepository.findByEmail(dto.getEmail());
+
+        // RESEND OTP AFTER 2 MINUTES
+        if (existing != null) {
+
+            LocalDateTime lastSentTime =
+                    existing.getExpiryTime().minusMinutes(5);
+
+            LocalDateTime nextAllowedTime =
+                    lastSentTime.plusMinutes(2);
+
+            if (LocalDateTime.now().isBefore(nextAllowedTime)) {
+
+                long seconds =
+                        java.time.Duration.between(
+                                LocalDateTime.now(),
+                                nextAllowedTime
+                        ).getSeconds();
+
+                throw new RuntimeException(
+                        "Please wait " + seconds +
+                                " seconds before requesting another OTP"
+                );
+            }
+        }
+
+        String otp = String.valueOf(
+                (int) ((Math.random() * 900000) + 100000));
 
         if (existing != null) {
 
@@ -432,7 +413,6 @@ public class AuthServiceImpl implements AuthService {
         message.setSubject("Forgot Password OTP");
 
         message.setText(
-
                 "Hello User,\n\n" +
 
                         "We received a request to reset your password.\n\n" +
@@ -446,9 +426,7 @@ public class AuthServiceImpl implements AuthService {
                         "Thank you,\n" +
 
                         "Support Team"
-
         );
-
 
         javaMailSender.send(message);
     }
@@ -565,29 +543,72 @@ public class AuthServiceImpl implements AuthService {
                     "Email already exists");
         }
 
+        // CHECK EXISTING OTP
+        EmailVerificationOtp existing =
+                emailVerificationOtpRepository
+                        .findByEmail(email);
+
+        // RESEND OTP AFTER 2 MINUTES
+        if (existing != null) {
+
+            LocalDateTime lastSentTime =
+                    existing.getExpiryTime().minusMinutes(5);
+
+            LocalDateTime nextAllowedTime =
+                    lastSentTime.plusMinutes(2);
+
+            if (LocalDateTime.now().isBefore(nextAllowedTime)) {
+
+                long seconds =
+                        java.time.Duration.between(
+                                LocalDateTime.now(),
+                                nextAllowedTime
+                        ).getSeconds();
+
+                throw new RuntimeException(
+                        "Please wait " + seconds +
+                                " seconds before requesting another OTP"
+                );
+            }
+        }
+
         // GENERATE OTP
         String otp =
                 String.valueOf(
                         (int)((Math.random() * 900000) + 100000)
                 );
 
-        // DELETE OLD OTP
-        emailVerificationOtpRepository
-                .deleteByEmail(email);
+        // UPDATE EXISTING OTP
+        if (existing != null) {
 
-        // SAVE ONLY OTP
-        EmailVerificationOtp token =
-                new EmailVerificationOtp();
+            existing.setOtp(otp);
 
-        token.setEmail(email);
+            existing.setVerified(false);
 
-        token.setOtp(otp);
+            existing.setExpiryTime(
+                    LocalDateTime.now().plusMinutes(5)
+            );
 
-        token.setExpiryTime(
-                LocalDateTime.now().plusMinutes(5)
-        );
+            emailVerificationOtpRepository.save(existing);
 
-        emailVerificationOtpRepository.save(token);
+        } else {
+
+            // SAVE NEW OTP
+            EmailVerificationOtp token =
+                    new EmailVerificationOtp();
+
+            token.setEmail(email);
+
+            token.setOtp(otp);
+
+            token.setVerified(false);
+
+            token.setExpiryTime(
+                    LocalDateTime.now().plusMinutes(5)
+            );
+
+            emailVerificationOtpRepository.save(token);
+        }
 
         // SEND MAIL
         SimpleMailMessage message =
@@ -601,20 +622,17 @@ public class AuthServiceImpl implements AuthService {
 
                 "Hello User,\n\n" +
 
-                        "We received a request to reset your password.\n\n" +
+                        "Your email verification OTP is: " + otp + "\n\n" +
 
-                        "Your One-Time Password (OTP) is: " + otp + "\n\n" +
+                        "This OTP is valid for 5 minutes.\n\n" +
 
-                        "This OTP is valid for 5 minutes. Please do not share it with anyone for security reasons.\n\n" +
-
-                        "If you did not request a password reset, please ignore this email.\n\n" +
+                        "Please do not share this OTP with anyone.\n\n" +
 
                         "Thank you,\n" +
 
                         "Support Team"
 
         );
-
 
         javaMailSender.send(message);
     }

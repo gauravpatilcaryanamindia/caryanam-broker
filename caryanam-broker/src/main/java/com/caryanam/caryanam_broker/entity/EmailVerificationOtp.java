@@ -21,4 +21,7 @@ public class EmailVerificationOtp {
     private boolean verified;
 
     private LocalDateTime expiryTime;
+    private LocalDateTime createdTime;
+
+
 }
