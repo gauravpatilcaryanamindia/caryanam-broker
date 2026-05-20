@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PropertyImageRepository extends JpaRepository<PropertyImage, Long> {
@@ -14,4 +15,6 @@ public interface PropertyImageRepository extends JpaRepository<PropertyImage, Lo
     int countByPropertyId(Long propertyId);
 
     List<PropertyImage> findByPropertyId(Long propertyId);
+
+    Optional<PropertyImage> findFirstByImagePath(String imagePath);
 }

@@ -6,6 +6,7 @@ import com.caryanam.caryanam_broker.dto.ResponseDto;
 import com.caryanam.caryanam_broker.dto.ResponseHandler;
 import com.caryanam.caryanam_broker.entity.AreaPincode;
 import com.caryanam.caryanam_broker.entity.Property;
+import com.caryanam.caryanam_broker.entity.PropertyImage;
 import com.caryanam.caryanam_broker.entity.PropertyOwner;
 import com.caryanam.caryanam_broker.messageconfig.MessageConfig;
 import com.caryanam.caryanam_broker.repository.*;
@@ -13,6 +14,7 @@ import com.caryanam.caryanam_broker.service.PropertyService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -225,7 +227,7 @@ public class OwnerPropertyController {
         return ResponseHandler.generateResponse(MessageConfig.PROPERTY_ADDED, HttpStatus.OK, propertyService.addProperty(propertyDto, ownerId));
     }
 
-    
+
     // ================= GET PROPERTY =================
     @GetMapping("/getPropertyById/{id}")
     public ResponseEntity<Object> getPropertyById(@PathVariable Long id) {
@@ -277,44 +279,93 @@ public class OwnerPropertyController {
         return ResponseHandler.generateResponse(MessageConfig.PROPERTY_DELETED, HttpStatus.OK, propertyService.deleteProperty(id));
     }
 
+
     @PostMapping("/uploadPropertyImagesByPropertyId/{id}")
-    public ResponseEntity<Object> uploadPropertyImages(@PathVariable Long id, @RequestParam("files") MultipartFile[] files) {
+    public ResponseEntity<Object> uploadPropertyImages(
+            @PathVariable Long id,
+            @RequestParam("files") MultipartFile[] files) {
+
         Long loggedInOwnerId = getLoggedInOwnerId();
-        if (loggedInOwnerId == null)
-            return ResponseHandler.generateResponse(MessageConfig.UNAUTHORIZED, HttpStatus.UNAUTHORIZED, null);
-        Property property = propertyRepository.findById(id).orElse(null);
-        if (property == null)
-            return ResponseHandler.generateResponse(MessageConfig.PROPERTY_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
-        if (!isAdmin()) {
-            if (property.getPropertyOwner() == null ||
-                    !property.getPropertyOwner().getOwnerId().equals(loggedInOwnerId)) {
-                return ResponseHandler.generateResponse(MessageConfig.FORBIDDEN, HttpStatus.FORBIDDEN, null);
+
+        if (loggedInOwnerId == null) {
+            return ResponseHandler.generateResponse(
+                    MessageConfig.UNAUTHORIZED,
+                    HttpStatus.UNAUTHORIZED,
+                    null
+            );
+        }
+
+        // MAX IMAGE COUNT
+        if (files.length > 10) {
+            return ResponseHandler.generateResponse(
+                    "Maximum 10 images allowed",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        // IMAGE VALIDATION
+        for (MultipartFile file : files) {
+
+            // SIZE VALIDATION
+            if (file.getSize() > 5 * 1024 * 1024) {
+
+                return ResponseHandler.generateResponse(
+                        "Each image size should not exceed 5 MB",
+                        HttpStatus.BAD_REQUEST,
+                        null
+                );
+            }
+
+            // TYPE VALIDATION
+            String contentType = file.getContentType();
+
+            if (contentType == null ||
+                    !(contentType.equals("image/jpeg")
+                            || contentType.equals("image/jpg")
+                            || contentType.equals("image/png"))) {
+
+                return ResponseHandler.generateResponse(
+                        "Only JPG, JPEG and PNG images are allowed",
+                        HttpStatus.BAD_REQUEST,
+                        null
+                );
             }
         }
-        return ResponseHandler.generateResponse(propertyService.uploadPropertyImages(id, files), HttpStatus.OK, null);
+
+        Property property =
+                propertyRepository.findById(id).orElse(null);
+
+        if (property == null) {
+
+            return ResponseHandler.generateResponse(
+                    MessageConfig.PROPERTY_NOT_FOUND,
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+
+        if (!isAdmin()) {
+
+            if (property.getPropertyOwner() == null ||
+                    !property.getPropertyOwner()
+                            .getOwnerId()
+                            .equals(loggedInOwnerId)) {
+
+                return ResponseHandler.generateResponse(
+                        MessageConfig.FORBIDDEN,
+                        HttpStatus.FORBIDDEN,
+                        null
+                );
+            }
+        }
+
+        return ResponseHandler.generateResponse(
+                propertyService.uploadPropertyImages(id, files),
+                HttpStatus.OK,
+                null
+        );
     }
-//
-//@PostMapping("/buyPremiumByOwner/{ownerId}")
-//public ResponseEntity<Object> buyPremium(@PathVariable Long ownerId) {
-//    PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
-//    if (owner == null) {
-//        return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
-//    }
-//    String status = owner.getPremiumStatus();
-//    if (status == null || status.isEmpty()) {
-//        owner.setPremiumStatus("PENDING");
-//    } else {
-//        owner.setPremiumStatus(status + ",PENDING");
-//    }
-//    property.setPaymentStatus("PENDING");
-//    owner.setPremiumCount(owner.getPremiumCount() + 1);
-//    propertyOwnerRepository.save(owner);
-//    String qrUrl = "http://localhost:8080/qr/payment.png";
-//    Map<String, Object> response = new HashMap<>();
-//    response.put("message", MessageConfig.SCAN_QR);
-//    response.put("qrCode", qrUrl);
-//    return ResponseHandler.generateResponse(MessageConfig.PAYMENT_INITIATED, HttpStatus.OK, response);
-//}
 
     @PostMapping("/buyPremiumByOwner/{ownerId}")
     public ResponseEntity<Object> buyPremium(
@@ -467,5 +518,19 @@ public class OwnerPropertyController {
             }
         }
         return ResponseHandler.generateResponse("Property Activated Successfully", HttpStatus.OK, propertyService.activateProperty(id));
+    }
+
+    @GetMapping(value = "/property/image/{filename:.+}", produces = {
+            MediaType.IMAGE_JPEG_VALUE,
+            MediaType.IMAGE_PNG_VALUE,
+            "image/webp",
+            "image/gif"
+    })
+    public ResponseEntity<byte[]> getImage(@PathVariable String filename) {
+        return propertyService.getPropertyImageContent(filename)
+                .map(content -> ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(content.contentType()))
+                        .body(content.data()))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

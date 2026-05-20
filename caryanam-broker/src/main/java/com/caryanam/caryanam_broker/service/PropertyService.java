@@ -7,8 +7,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface PropertyService {
+
+    record PropertyImageContent(byte[] data, String contentType) {}
 
     PropertyDto addProperty(PropertyDto propertyDto, Long adminId);
 
@@ -28,4 +31,6 @@ public interface PropertyService {
     List<PropertyDto> getPropertiesByOwnerId(Long ownerId);
 
     String activateProperty(Long id);
+
+    Optional<PropertyImageContent> getPropertyImageContent(String filename);
 }

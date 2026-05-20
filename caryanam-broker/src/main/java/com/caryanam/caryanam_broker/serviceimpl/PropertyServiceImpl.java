@@ -11,13 +11,20 @@ import com.caryanam.caryanam_broker.service.PropertyService;
 import jakarta.servlet.http.HttpServletRequest;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -38,39 +45,83 @@ public class PropertyServiceImpl implements PropertyService {
     @Autowired
     private AreaPincodeService areaPincodeService;
 
-    private String toImageDataUrl(PropertyImage image) {
-        if (image == null || image.getImageData() == null || image.getImageData().length == 0) {
+    @Value("${app.public-base-url:https://r1.rentalchaavi.com}")
+    private String publicBaseUrl;
+
+    @Value("${app.property-images-dir:/home/ubuntu/property-images/}")
+    private String propertyImagesDir;
+
+//    private String toImageDataUrl(PropertyImage image) {
+//        if (image == null || image.getImageData() == null || image.getImageData().length == 0) {
+//            return null;
+//        }
+//
+//        String contentType = image.getContentType();
+//        if (contentType == null || contentType.isBlank()) {
+//            contentType = "image/jpeg";
+//        }
+//
+//        return "data:" + contentType + ";base64," +
+//                Base64.getEncoder().encodeToString(image.getImageData());
+//    }
+//    private String getImageUrl(PropertyImage image) {
+//
+//        if (image == null || image.getImagePath() == null) {
+//            return null;
+//        }
+//
+//        return "https://r1.rentalchaavi.com/property-images/" + image.getImagePath();
+//    }
+
+//    private String getImageUrl(PropertyImage image) {
+//
+//        if (image == null || image.getImagePath() == null) {
+//            return null;
+//        }
+//
+//        return "https://r1.rentalchaavi.com/property-images/"
+//                + image.getImagePath();
+//    }
+
+    private String getImageUrl(PropertyImage image) {
+
+        if (image == null || image.getImagePath() == null) {
             return null;
         }
 
-        String contentType = image.getContentType();
-        if (contentType == null || contentType.isBlank()) {
-            contentType = "image/jpeg";
-        }
-
-        return "data:" + contentType + ";base64," +
-                Base64.getEncoder().encodeToString(image.getImageData());
+        String base = publicBaseUrl == null ? "" : publicBaseUrl.replaceAll("/+$", "");
+        return base + "/api/owner/property/image/" + image.getImagePath();
     }
 
+
     private void attachDatabaseImages(PropertyDto dto, Long propertyId) {
+
         List<PropertyImage> images =
                 propertyImageRepository.findByPropertyId(propertyId);
 
         List<String> doctypeImageBase64List = new ArrayList<>();
+
         List<String> doctypeImageNames = new ArrayList<>();
 
         if (images != null && !images.isEmpty()) {
-            for (int i = 0; i < images.size(); i++) {
-                PropertyImage image = images.get(i);
-                String dataUrl = toImageDataUrl(image);
 
+            for (int i = 0; i < images.size(); i++) {
+
+                PropertyImage image = images.get(i);
+
+                String dataUrl = getImageUrl(image);
                 if (i == 0) {
+
                     dto.setCoverImage(image.getImageName());
+
                     dto.setCoverImageBase64(dataUrl);
+
                 } else {
+
                     if (dataUrl != null) {
                         doctypeImageBase64List.add(dataUrl);
                     }
+
                     if (image.getImageName() != null) {
                         doctypeImageNames.add(image.getImageName());
                     }
@@ -79,6 +130,7 @@ public class PropertyServiceImpl implements PropertyService {
         }
 
         dto.setDoctypeImageBase64List(doctypeImageBase64List);
+
         dto.setDoctypeImages(String.valueOf(doctypeImageNames));
     }
 
@@ -393,66 +445,105 @@ public class PropertyServiceImpl implements PropertyService {
         return AppConstants.PROPERTY_DELETED;
     }
 
+
     @Override
     public String uploadPropertyImages(Long propertyId, MultipartFile[] files) {
+
         Property property = propertyRepository.findById(propertyId).orElse(null);
+
         if (property == null) {
             return MessageConfig.PROPERTY_NOT_FOUND;
         }
-        int index = 0;
-        StringBuilder doctypeImages = new StringBuilder();
-        for (MultipartFile file : files) {
-            String originalName = file.getOriginalFilename();
-            String fileName = System.currentTimeMillis() + "_" + originalName;
-            Long originalKb = file.getSize() / 1024;
-            Double originalMb = file.getSize() / (1024.0 * 1024.0);
-            try {
-                String contentType = file.getContentType();
-                String outputFormat = getImageOutputFormat(contentType, originalName);
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                Thumbnails.of(file.getInputStream())
-                        .scale(1.0)
-                        .outputQuality(0.5)
-                        .outputFormat(outputFormat)
-                        .toOutputStream(outputStream);
 
-                byte[] imageBytes = outputStream.toByteArray();
-                Long compressedKb = (long) imageBytes.length / 1024;
-                Double compressedMb = imageBytes.length / (1024.0 * 1024.0);
+        int index = 0;
+
+        StringBuilder doctypeImages = new StringBuilder();
+
+        for (MultipartFile file : files) {
+
+            try {
+
+                String originalName = file.getOriginalFilename();
+
+                String extension = "";
+
+                if (originalName != null && originalName.contains(".")) {
+                    extension = originalName.substring(originalName.lastIndexOf("."));
+                }
+
+                String fileName =
+                        System.currentTimeMillis() + "_" + index + extension;
+
+                Long originalKb = file.getSize() / 1024;
+
+                Double originalMb =
+                        file.getSize() / (1024.0 * 1024.0);
+
                 PropertyImage image = new PropertyImage();
+
                 image.setImageName(fileName);
+
                 image.setImagePath(fileName);
-                image.setContentType(getResponseContentType(outputFormat, contentType));
-                image.setImageData(imageBytes);
+
+                image.setContentType(file.getContentType());
+
+                // DB IMAGE SAVE
+                image.setImageData(file.getBytes());
+
                 image.setOriginalSizeKb(originalKb);
+
                 image.setOriginalSizeMb(originalMb);
-                image.setCompressedSizeKb(compressedKb);
-                image.setCompressedSizeMb(compressedMb);
+
+                image.setCompressedSizeKb(originalKb);
+
+                image.setCompressedSizeMb(originalMb);
+
                 image.setProperty(property);
+
                 propertyImageRepository.save(image);
+
                 if (index == 0) {
+
                     property.setCoverImage(fileName);
+
                 } else {
+
                     if (doctypeImages.length() > 0) {
                         doctypeImages.append(",");
                     }
+
                     doctypeImages.append(fileName);
                 }
+
                 index++;
+
             } catch (Exception e) {
+
                 e.printStackTrace();
+
                 return MessageConfig.IMAGE_UPLOAD_FAILED;
             }
         }
+
         if (doctypeImages.length() > 0) {
+
             property.setDoctypeImages(doctypeImages.toString());
         }
-        int totalImages = propertyImageRepository.countByPropertyId(propertyId);
+
+        int totalImages =
+                propertyImageRepository.countByPropertyId(propertyId);
+
         property.setStatus(AppConstants.ACTIVE);
+
         propertyRepository.save(property);
+
         if (totalImages < 4) {
-            return AppConstants.UPLOAD_SUCCESSFULLY + (4 - totalImages) + AppConstants.MORE_IMG;
+
+            return AppConstants.UPLOAD_SUCCESSFULLY
+                    + (4 - totalImages)
+                    + AppConstants.MORE_IMG;
         }
+
         return MessageConfig.IMAGE_UPLOAD_SUCCESS;
     }
 
@@ -706,5 +797,72 @@ public class PropertyServiceImpl implements PropertyService {
         property.setStatus(AppConstants.ACTIVE);
         propertyRepository.save(property);
         return "Property Activated Successfully";
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<PropertyImageContent> getPropertyImageContent(String filename) {
+        if (filename == null || filename.isBlank()) {
+            return Optional.empty();
+        }
+
+        String decodedFilename = URLDecoder.decode(filename.trim(), StandardCharsets.UTF_8);
+        if (decodedFilename.contains("..") || decodedFilename.contains("/") || decodedFilename.contains("\\")) {
+            return Optional.empty();
+        }
+
+        try {
+            Optional<PropertyImage> imageOptional =
+                    propertyImageRepository.findFirstByImagePath(decodedFilename);
+
+            if (imageOptional.isPresent()) {
+                PropertyImage image = imageOptional.get();
+                byte[] data = image.getImageData();
+                if (data != null && data.length > 0) {
+                    return Optional.of(new PropertyImageContent(data, resolveContentType(image.getContentType(), decodedFilename)));
+                }
+            }
+        } catch (Exception ignored) {
+            // Fall through to legacy disk lookup (older uploads / schema issues).
+        }
+
+        return readLegacyDiskImage(decodedFilename);
+    }
+
+    private Optional<PropertyImageContent> readLegacyDiskImage(String filename) {
+        try {
+            Path imagePath = Path.of(propertyImagesDir).resolve(filename).normalize();
+            Path baseDir = Path.of(propertyImagesDir).toAbsolutePath().normalize();
+            if (!imagePath.toAbsolutePath().normalize().startsWith(baseDir)) {
+                return Optional.empty();
+            }
+            if (!Files.isRegularFile(imagePath)) {
+                return Optional.empty();
+            }
+            byte[] data = Files.readAllBytes(imagePath);
+            if (data.length == 0) {
+                return Optional.empty();
+            }
+            return Optional.of(new PropertyImageContent(data, resolveContentType(null, filename)));
+        } catch (Exception ignored) {
+            return Optional.empty();
+        }
+    }
+
+    private String resolveContentType(String contentType, String filename) {
+        if (contentType != null && !contentType.isBlank()) {
+            return contentType;
+        }
+        String lower = filename.toLowerCase();
+        if (lower.endsWith(".png")) {
+            return "image/png";
+        }
+        if (lower.endsWith(".webp")) {
+            return "image/webp";
+        }
+        if (lower.endsWith(".gif")) {
+            return "image/gif";
+        }
+        return "image/jpeg";
     }
 }

@@ -48,7 +48,9 @@ public class PropertyDto {
     private String nearBy;
 
     private String premiumStatus;
+    private String coverImageUrl;
 
+    private List<String> imageUrls;
     private Integer premiumCount;
 
 }
