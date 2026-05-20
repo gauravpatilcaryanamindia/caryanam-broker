@@ -59,6 +59,15 @@ public class UserController {
         return auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 
+    private String currentStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return "";
+        }
+
+        String[] statuses = status.split(",");
+        return statuses[statuses.length - 1].trim().toUpperCase();
+    }
+
 
 
     @PostMapping("/buyPremium/{userId}")
@@ -72,17 +81,19 @@ public class UserController {
         if (user == null) {
             return ResponseHandler.generateResponse(MessageConfig.USER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
-        if (user.getPremiumStatus() != null && user.getPremiumStatus().contains("PENDING")) {
+        String currentPremiumStatus = currentStatus(user.getPremiumStatus());
+
+        if ("APPROVED".equals(currentPremiumStatus) || user.isPremiumActive()) {
+            return ResponseHandler.generateResponse("Premium already approved", HttpStatus.BAD_REQUEST, null);
+        }
+
+        if ("PENDING".equals(currentPremiumStatus)) {
 
             return ResponseHandler.generateResponse("Premium request already pending", HttpStatus.BAD_REQUEST, null);
         }
 
-        String status = user.getPremiumStatus();
-
-        if (status == null || status.isEmpty()) {user.setPremiumStatus("PENDING");
-        } else {
-            user.setPremiumStatus(status + ",PENDING");
-        }
+        user.setPremiumStatus("PENDING");
+        user.setPremiumActive(false);
 
         user.setPremiumCount(user.getPremiumCount() + 1);
 
@@ -197,8 +208,9 @@ public class UserController {
             return ResponseHandler.generateResponse("User not found", HttpStatus.NOT_FOUND, null);}
         Map<String, Object> response = new HashMap<>();
         response.put("id", user.getUserId());
-        response.put("premiumStatus", user.getPremiumStatus());
-        response.put("premiumActive", user.isPremiumActive());
+        String premiumStatus = currentStatus(user.getPremiumStatus());
+        response.put("premiumStatus", premiumStatus);
+        response.put("premiumActive", user.isPremiumActive() || "APPROVED".equals(premiumStatus));
         return ResponseHandler.generateResponse("User fetched successfully", HttpStatus.OK, response);
     }
 

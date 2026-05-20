@@ -21,29 +21,37 @@ public class PremiumCheckFilter extends OncePerRequestFilter {
     @Autowired
     private UserRepository userRepository;
 
-
-@Override
-protected void doFilterInternal(HttpServletRequest request,
-                                HttpServletResponse response,
-                                FilterChain filterChain)
-        throws ServletException, IOException {
-
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-    if (auth != null && auth.isAuthenticated()
-            && !auth.getPrincipal().equals("anonymousUser")) {
-
-        String email = auth.getName();
-
-        User user = userRepository.findByEmail(email).orElse(null);
-
-        if (user != null) {
-
-            boolean isPremium = "APPROVED".equalsIgnoreCase(user.getPremiumStatus());
-            request.setAttribute("isPremium", isPremium);
+    private String currentStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return "";
         }
+
+        String[] statuses = status.split(",");
+        return statuses[statuses.length - 1].trim();
     }
 
-    filterChain.doFilter(request, response);
-}
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
+            throws ServletException, IOException {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth != null && auth.isAuthenticated()
+                && !auth.getPrincipal().equals("anonymousUser")) {
+
+            String email = auth.getName();
+
+            User user = userRepository.findByEmail(email).orElse(null);
+
+            if (user != null) {
+
+                boolean isPremium = "APPROVED".equalsIgnoreCase(currentStatus(user.getPremiumStatus()));
+                request.setAttribute("isPremium", isPremium);
+            }
+        }
+
+        filterChain.doFilter(request, response);
+    }
 }

@@ -31,26 +31,30 @@ public class adminController {
     @Autowired
     private PropertyRepository propertyRepository;
 
+    private String currentStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return "";
+        }
+
+        String[] statuses = status.split(",");
+        return statuses[statuses.length - 1].trim().toUpperCase();
+    }
+
 
     @GetMapping("/pending-users")
     public List<Map<String, Object>> getPendingUsers() {
         List<User> users = userRepository.findAll();
         List<Map<String, Object>> response = new ArrayList<>();
         for (User user : users) {
-            if (user.getPremiumStatus() != null && user.getPremiumStatus().contains("PENDING")) {
-                String[] statuses = user.getPremiumStatus().split(",");
-                for (String status : statuses) {
-                    if ("PENDING".equalsIgnoreCase(status.trim())) {
-                        Map<String, Object> map = new HashMap<>();
-                        map.put("userId", user.getUserId());
-                        map.put("fullName", user.getFullName());
-                        map.put("email", user.getEmail());
-                        map.put("mobileNumber", user.getMobileNumber());
-                        map.put("premiumStatus", "PENDING");
-                        map.put("premiumCount", user.getPremiumCount());
-                        response.add(map);
-                    }
-                }
+            if ("PENDING".equals(currentStatus(user.getPremiumStatus()))) {
+                Map<String, Object> map = new HashMap<>();
+                map.put("userId", user.getUserId());
+                map.put("fullName", user.getFullName());
+                map.put("email", user.getEmail());
+                map.put("mobileNumber", user.getMobileNumber());
+                map.put("premiumStatus", "PENDING");
+                map.put("premiumCount", user.getPremiumCount());
+                response.add(map);
             }
         }
         return response;
@@ -194,15 +198,12 @@ public class adminController {
 
         String status = user.getPremiumStatus();
 
-        if (status == null || !status.contains("PENDING")) {
+        if (!"PENDING".equals(currentStatus(status))) {
 
             return ResponseHandler.generateResponse("No pending premium request found", HttpStatus.BAD_REQUEST, null);
         }
 
-        // LAST PENDING -> APPROVED
-        status = status.replaceFirst("PENDING", "APPROVED");
-
-        user.setPremiumStatus(status);
+        user.setPremiumStatus("APPROVED");
         user.setPremiumActive(true);
 
         userRepository.save(user);
@@ -280,7 +281,7 @@ public class adminController {
         }
 
 
-        if (!"PENDING".equals(user.getPremiumStatus())) {
+        if (!"PENDING".equals(currentStatus(user.getPremiumStatus()))) {
             return ResponseHandler.generateResponse("User has not requested premium or already processed", HttpStatus.BAD_REQUEST, null);
         }
 

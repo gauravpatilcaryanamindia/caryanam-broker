@@ -14,7 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 
@@ -35,6 +37,85 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Autowired
     private AreaPincodeService areaPincodeService;
+
+    private String toImageDataUrl(PropertyImage image) {
+        if (image == null || image.getImageData() == null || image.getImageData().length == 0) {
+            return null;
+        }
+
+        String contentType = image.getContentType();
+        if (contentType == null || contentType.isBlank()) {
+            contentType = "image/jpeg";
+        }
+
+        return "data:" + contentType + ";base64," +
+                Base64.getEncoder().encodeToString(image.getImageData());
+    }
+
+    private void attachDatabaseImages(PropertyDto dto, Long propertyId) {
+        List<PropertyImage> images =
+                propertyImageRepository.findByPropertyId(propertyId);
+
+        List<String> doctypeImageBase64List = new ArrayList<>();
+        List<String> doctypeImageNames = new ArrayList<>();
+
+        if (images != null && !images.isEmpty()) {
+            for (int i = 0; i < images.size(); i++) {
+                PropertyImage image = images.get(i);
+                String dataUrl = toImageDataUrl(image);
+
+                if (i == 0) {
+                    dto.setCoverImage(image.getImageName());
+                    dto.setCoverImageBase64(dataUrl);
+                } else {
+                    if (dataUrl != null) {
+                        doctypeImageBase64List.add(dataUrl);
+                    }
+                    if (image.getImageName() != null) {
+                        doctypeImageNames.add(image.getImageName());
+                    }
+                }
+            }
+        }
+
+        dto.setDoctypeImageBase64List(doctypeImageBase64List);
+        dto.setDoctypeImages(String.valueOf(doctypeImageNames));
+    }
+
+    private String getImageOutputFormat(String contentType, String originalName) {
+        String normalizedContentType = String.valueOf(contentType).toLowerCase();
+        String normalizedName = String.valueOf(originalName).toLowerCase();
+
+        if (normalizedContentType.contains("png") || normalizedName.endsWith(".png")) {
+            return "png";
+        }
+
+        return "jpg";
+    }
+
+    private String getResponseContentType(String outputFormat, String contentType) {
+        if ("png".equals(outputFormat)) {
+            return "image/png";
+        }
+
+        if (contentType != null && !contentType.isBlank()) {
+            return contentType;
+        }
+
+        return "image/jpeg";
+    }
+
+    private boolean matchesText(String source, String filter) {
+        return source != null
+                && filter != null
+                && source.trim().equalsIgnoreCase(filter.trim());
+    }
+
+    private boolean matchesLocationOrAddress(Property property, String filter) {
+        return matchesText(property.getLocation(), filter)
+                || matchesText(property.getAddress(), filter);
+    }
+
 
 
     @Override
@@ -124,26 +205,7 @@ public class PropertyServiceImpl implements PropertyService {
             }
 
             PropertyDto dto = new PropertyDto();
-
-            // IMAGE LOGIC
-            List<PropertyImage> imageList =
-                    propertyImageRepository.findByPropertyId(property.getId());
-
-            List<String> doctypeImages = new ArrayList<>();
-
-            if (imageList != null && !imageList.isEmpty()) {
-
-                for (int i = 0; i < imageList.size(); i++) {
-
-                    String path = imageList.get(i).getImagePath();
-
-                    if (i == 0) {
-                        dto.setCoverImage(path);
-                    } else {
-                        doctypeImages.add(path);
-                    }
-                }
-            }
+            attachDatabaseImages(dto, property.getId());
 
             // NON PREMIUM USER
             if (!isPremium) {
@@ -163,9 +225,6 @@ public class PropertyServiceImpl implements PropertyService {
 
                     dto.setNearBy(String.valueOf(nearbyAreas));
                 }
-                dto.setCoverImage(dto.getCoverImage());
-                dto.setDoctypeImages(String.valueOf(doctypeImages));
-
             } else {
 
                 // PREMIUM USER → FULL DETAILS
@@ -193,8 +252,6 @@ public class PropertyServiceImpl implements PropertyService {
                 dto.setOwnerId(owner.getOwnerId());
                 dto.setOwnerName(owner.getFullName());
 
-                dto.setCoverImage(dto.getCoverImage());
-                dto.setDoctypeImages(String.valueOf(doctypeImages));
             }
 
             dtoList.add(dto);
@@ -242,25 +299,7 @@ public class PropertyServiceImpl implements PropertyService {
 
         dto.setOwnerId(owner.getOwnerId());
 
-        List<PropertyImage> imageList =
-                propertyImageRepository.findByPropertyId(id);
-
-        List<String> doctypeImages = new ArrayList<>();
-
-        if (imageList != null && !imageList.isEmpty()) {
-
-            for (int i = 0; i < imageList.size(); i++) {
-
-                String path = imageList.get(i).getImagePath();
-
-                if (i == 0) {
-                    dto.setCoverImage(path);
-                } else {
-                    doctypeImages.add(path);
-                }
-            }
-        }
-        dto.setDoctypeImages(String.valueOf(doctypeImages));
+        attachDatabaseImages(dto, id);
 
         return dto;
     }
@@ -339,12 +378,7 @@ public class PropertyServiceImpl implements PropertyService {
         responseDto.setStatus(updatedProperty.getStatus());
         responseDto.setLikesCount(updatedProperty.getLikesCount());
         responseDto.setViewsCount(updatedProperty.getViewsCount());
-        List<PropertyImage> images = propertyImageRepository.findByPropertyId(updatedProperty.getId());
-        List<String> imageList = new ArrayList<>();
-        for (PropertyImage img : images) {
-            imageList.add(img.getImagePath());
-        }
-        responseDto.setDoctypeImages(imageList.toString());
+        attachDatabaseImages(responseDto, updatedProperty.getId());
 
         return responseDto;
     }
@@ -366,30 +400,31 @@ public class PropertyServiceImpl implements PropertyService {
         if (property == null) {
             return MessageConfig.PROPERTY_NOT_FOUND;
         }
-        String uploadDir = System.getProperty(AppConstants.USER_DIR) + AppConstants.UPLOAD_DIR;
-        java.io.File folder = new java.io.File(uploadDir);
-        if (!folder.exists()) {
-            folder.mkdirs();
-        }
         int index = 0;
         StringBuilder doctypeImages = new StringBuilder();
         for (MultipartFile file : files) {
             String originalName = file.getOriginalFilename();
             String fileName = System.currentTimeMillis() + "_" + originalName;
-            String filePath = uploadDir + fileName;
             Long originalKb = file.getSize() / 1024;
             Double originalMb = file.getSize() / (1024.0 * 1024.0);
             try {
-                java.io.File compressedFile = new java.io.File(filePath);
+                String contentType = file.getContentType();
+                String outputFormat = getImageOutputFormat(contentType, originalName);
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                 Thumbnails.of(file.getInputStream())
                         .scale(1.0)
                         .outputQuality(0.5)
-                        .toFile(compressedFile);
-                Long compressedKb = compressedFile.length() / 1024;
-                Double compressedMb = compressedFile.length() / (1024.0 * 1024.0);
+                        .outputFormat(outputFormat)
+                        .toOutputStream(outputStream);
+
+                byte[] imageBytes = outputStream.toByteArray();
+                Long compressedKb = (long) imageBytes.length / 1024;
+                Double compressedMb = imageBytes.length / (1024.0 * 1024.0);
                 PropertyImage image = new PropertyImage();
                 image.setImageName(fileName);
                 image.setImagePath(fileName);
+                image.setContentType(getResponseContentType(outputFormat, contentType));
+                image.setImageData(imageBytes);
                 image.setOriginalSizeKb(originalKb);
                 image.setOriginalSizeMb(originalMb);
                 image.setCompressedSizeKb(compressedKb);
@@ -479,10 +514,9 @@ public class PropertyServiceImpl implements PropertyService {
 
             // ADDRESS FILTER
             if (filterDto.getAddress() != null
-                    && !filterDto.getAddress().isEmpty()) {
+                    && !filterDto.getAddress().isBlank()) {
 
-                if (!property.getAddress()
-                        .equalsIgnoreCase(filterDto.getAddress())) {
+                if (!matchesLocationOrAddress(property, filterDto.getAddress())) {
                     match = false;
                 }
             }
@@ -535,25 +569,20 @@ public class PropertyServiceImpl implements PropertyService {
         for (Property property : filteredList) {
 
             PropertyDto dto = new PropertyDto();
-
-            List<PropertyImage> images =
-                    propertyImageRepository.findByPropertyId(property.getId());
-
-            List<String> imageList = new ArrayList<>();
-
-            for (PropertyImage img : images) {
-                imageList.add(img.getImagePath());
-            }
+            attachDatabaseImages(dto, property.getId());
 
             // NON PREMIUM USER
             if (!isPremium) {
 
+                dto.setId(property.getId());
                 dto.setTitle(property.getTitle());
                 dto.setPrice(property.getPrice());
                 dto.setLocation(property.getLocation());
-
-                // ONLY IMAGES
-                dto.setDoctypeImages(imageList.toString());
+                dto.setAddress(property.getAddress());
+                dto.setCity(property.getCity());
+                dto.setBhkType(property.getBhkType());
+                dto.setPropertyType(property.getPropertyType());
+                dto.setApartmentName(property.getApartmentName());
 
             } else {
 
@@ -568,7 +597,6 @@ public class PropertyServiceImpl implements PropertyService {
                 dto.setMobileNumber(property.getMobileNumber());
                 dto.setDescription(property.getDescription());
                 dto.setPropertyType(property.getPropertyType());
-                dto.setDoctypeImages(imageList.toString());
                 dto.setApartmentName(property.getApartmentName());
             }
 
@@ -604,6 +632,7 @@ public class PropertyServiceImpl implements PropertyService {
             dto.setBhkType(property.getBhkType());
             dto.setLocation(property.getLocation());
             dto.setApartmentName(property.getApartmentName());
+            attachDatabaseImages(dto, property.getId());
             dtoList.add(dto);
         }
 
@@ -661,27 +690,7 @@ public class PropertyServiceImpl implements PropertyService {
 
             }
 
-            // IMAGES
-            List<PropertyImage> imageList =
-                    propertyImageRepository.findByPropertyId(property.getId());
-
-            List<String> doctypeImages = new ArrayList<>();
-
-            if (imageList != null && imageList.size() > 0) {
-
-                for (int i = 0; i < imageList.size(); i++) {
-
-                    String path = imageList.get(i).getImagePath();
-
-                    if (i == 0) {
-                        dto.setCoverImage(path);
-                    } else {
-                        doctypeImages.add(path);
-                    }
-                }
-            }
-
-            dto.setDoctypeImages(String.valueOf(doctypeImages));
+            attachDatabaseImages(dto, property.getId());
 
             dtoList.add(dto);
         }

@@ -8,6 +8,8 @@ import com.caryanam.caryanam_broker.Enum.PropertyType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
+import java.util.List;
+
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
@@ -35,7 +37,9 @@ public class PropertyDto {
     private FurnishingType furnishing;
     private String carpetArea;
     private String coverImage;
+    private String coverImageBase64;
     private String doctypeImages;
+    private List<String> doctypeImageBase64List;
     private Long ownerId;
     private String apartmentName;
     private String ownerName;
