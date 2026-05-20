@@ -138,11 +138,10 @@ public class PropertyServiceImpl implements PropertyService {
         property.setPgType(propertyDto.getPgType());
         property.setBhkType(propertyDto.getBhkType());
         property.setFurnishing(propertyDto.getFurnishing());
-        property.setCarpetArea(propertyDto.getCarpetArea());
+//        property.setCarpetArea(propertyDto.getCarpetArea());
+        property.setCarpetArea(propertyDto.getCarpetArea().trim() + " sq ft");
         property.setMobileNumber(propertyDto.getMobileNumber());
         property.setApartmentName(propertyDto.getApartmentName());
-
-
         property.setLikesCount(0);
         property.setViewsCount(0);
         if (owner.isPremiumActive()) {

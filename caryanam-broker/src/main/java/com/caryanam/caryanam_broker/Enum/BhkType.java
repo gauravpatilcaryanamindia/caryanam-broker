@@ -5,5 +5,8 @@ public enum BhkType {
     TWO_BHK,
     THREE_BHK,
     FOUR_BHK,
-    STUDIO
+    STUDIO,
+    SINGLE_SHARING,
+    DOUBLE_SHARING,
+    MULTIPLE_SHARING
 }

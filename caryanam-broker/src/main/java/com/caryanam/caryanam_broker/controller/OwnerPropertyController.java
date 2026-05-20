@@ -105,6 +105,13 @@ public class OwnerPropertyController {
                 return ResponseHandler.generateResponse("Title should not contain numbers", HttpStatus.BAD_REQUEST, null);
             }
         }
+        String title = propertyDto.getTitle().trim();
+        if (title.length() < 3 || title.length() > 50) {
+            return ResponseHandler.generateResponse("Property title must be between 3 to 50 characters", HttpStatus.BAD_REQUEST, null);
+        }
+        if (!title.matches("^[A-Za-z ]+$")) {
+            return ResponseHandler.generateResponse("Property title must contain only alphabets", HttpStatus.BAD_REQUEST, null);
+        }
         if (propertyDto.getPrice() == null) {
             return ResponseHandler.generateResponse("Price is required", HttpStatus.BAD_REQUEST, null);
         }
@@ -116,6 +123,11 @@ public class OwnerPropertyController {
         }
         if (propertyDto.getAddress() == null || propertyDto.getAddress().trim().isEmpty()) {
             return ResponseHandler.generateResponse("Address is required", HttpStatus.BAD_REQUEST, null);
+        }
+        String address = propertyDto.getAddress().trim();
+        if (address.length() < 10 || address.length() > 150) {
+            return ResponseHandler.generateResponse(
+                    "Address must be between 10 to 150 characters", HttpStatus.BAD_REQUEST, null);
         }
         if (propertyDto.getCity() == null || propertyDto.getCity().trim().isEmpty()) {
             return ResponseHandler.generateResponse("City is required", HttpStatus.BAD_REQUEST, null);
@@ -146,6 +158,13 @@ public class OwnerPropertyController {
         if (propertyDto.getDescription() == null || propertyDto.getDescription().trim().isEmpty()) {
             return ResponseHandler.generateResponse("Description is required", HttpStatus.BAD_REQUEST, null);
         }
+        String description = propertyDto.getDescription().trim();
+        if (description.length() < 40) {
+            return ResponseHandler.generateResponse("Description must contain minimum 40 characters", HttpStatus.BAD_REQUEST, null);
+        }
+        if (description.length() > 7000) {
+            return ResponseHandler.generateResponse("Description cannot exceed 7000 characters", HttpStatus.BAD_REQUEST, null);
+        }
         if (propertyDto.getPropertyType() == null) {
             return ResponseHandler.generateResponse("Property type is required", HttpStatus.BAD_REQUEST, null);
         }
@@ -155,12 +174,26 @@ public class OwnerPropertyController {
         if (propertyDto.getFurnishing() == null) {
             return ResponseHandler.generateResponse("Furnishing is required", HttpStatus.BAD_REQUEST, null);
         }
-        if (propertyDto.getCarpetArea() == null) {
+        if (propertyDto.getCarpetArea() == null || propertyDto.getCarpetArea().trim().isEmpty()) {
             return ResponseHandler.generateResponse("Carpet area is required", HttpStatus.BAD_REQUEST, null);
         }
-
+        String carpetArea = propertyDto.getCarpetArea().trim();
+        if (!carpetArea.matches("^[0-9]+$")) {
+            return ResponseHandler.generateResponse("Carpet area must contain only numbers", HttpStatus.BAD_REQUEST, null);
+        }
+        int area = Integer.parseInt(carpetArea);
+        if (area <= 0) {
+            return ResponseHandler.generateResponse("Carpet area must be greater than 0", HttpStatus.BAD_REQUEST, null);
+        }
+        if (area > 100000) {
+            return ResponseHandler.generateResponse("Invalid carpet area", HttpStatus.BAD_REQUEST, null);
+        }
         if (propertyDto.getMobileNumber() == null || propertyDto.getMobileNumber().trim().isEmpty()) {
             return ResponseHandler.generateResponse("Mobile number is required", HttpStatus.BAD_REQUEST, null);
+        }
+        String mobile = propertyDto.getMobileNumber().trim();
+        if (!mobile.matches("[6-9][0-9]{9}")) {
+            return ResponseHandler.generateResponse("Mobile number must start with 6/7/8/9 and contain 10 digits", HttpStatus.BAD_REQUEST, null);
         }
         if (!propertyDto.getMobileNumber().matches("\\d{10}")) {
             return ResponseHandler.generateResponse("Mobile number must be 10 digits", HttpStatus.BAD_REQUEST, null);
@@ -169,7 +202,21 @@ public class OwnerPropertyController {
         if (propertyDto.getApartmentName() == null || propertyDto.getApartmentName().trim().isEmpty()) {
             return ResponseHandler.generateResponse("Apartment name is required", HttpStatus.BAD_REQUEST, null);
         }
-
+        String apartmentName = propertyDto.getApartmentName().trim();
+        if (apartmentName.length() < 3 || apartmentName.length() > 40) {
+            return ResponseHandler.generateResponse(
+                    "Apartment name must be between 3 to 40 characters",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
+        if (!apartmentName.matches("^[A-Za-z0-9 .,-]+$")) {
+            return ResponseHandler.generateResponse(
+                    "Apartment name contains invalid characters",
+                    HttpStatus.BAD_REQUEST,
+                    null
+            );
+        }
         PropertyOwner owner = propertyOwnerRepository.findById(ownerId).orElse(null);
         if (owner == null) {
             return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
@@ -177,6 +224,8 @@ public class OwnerPropertyController {
 
         return ResponseHandler.generateResponse(MessageConfig.PROPERTY_ADDED, HttpStatus.OK, propertyService.addProperty(propertyDto, ownerId));
     }
+
+    
     // ================= GET PROPERTY =================
     @GetMapping("/getPropertyById/{id}")
     public ResponseEntity<Object> getPropertyById(@PathVariable Long id) {
