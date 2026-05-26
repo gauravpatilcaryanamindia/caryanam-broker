@@ -36,6 +36,8 @@ public class PropertyServiceImpl implements PropertyService {
     @Autowired
     private PropertyImageRepository propertyImageRepository;
 
+    @Autowired
+    private PropertyLikeRepository propertyLikeRepository;
 
     @Autowired
     private PropertyOwnerRepository propertyOwnerRepository;
@@ -51,37 +53,6 @@ public class PropertyServiceImpl implements PropertyService {
     @Value("${app.property-images-dir:/home/ubuntu/property-images/}")
     private String propertyImagesDir;
 
-//    private String toImageDataUrl(PropertyImage image) {
-//        if (image == null || image.getImageData() == null || image.getImageData().length == 0) {
-//            return null;
-//        }
-//
-//        String contentType = image.getContentType();
-//        if (contentType == null || contentType.isBlank()) {
-//            contentType = "image/jpeg";
-//        }
-//
-//        return "data:" + contentType + ";base64," +
-//                Base64.getEncoder().encodeToString(image.getImageData());
-//    }
-//    private String getImageUrl(PropertyImage image) {
-//
-//        if (image == null || image.getImagePath() == null) {
-//            return null;
-//        }
-//
-//        return "https://r1.rentalchaavi.com/property-images/" + image.getImagePath();
-//    }
-
-//    private String getImageUrl(PropertyImage image) {
-//
-//        if (image == null || image.getImagePath() == null) {
-//            return null;
-//        }
-//
-//        return "https://r1.rentalchaavi.com/property-images/"
-//                + image.getImagePath();
-//    }
 
     private String getImageUrl(PropertyImage image) {
 
@@ -733,7 +704,7 @@ public class PropertyServiceImpl implements PropertyService {
     public List<PropertyDto> getPropertiesByOwnerId(Long ownerId) {
 
         List<Property> properties =
-                propertyRepository.findByPropertyOwner_OwnerId(ownerId);
+                propertyRepository.findByPropertyOwner_OwnerIdOrderByCreatedAtDesc(ownerId);
 
         List<PropertyDto> dtoList = new ArrayList<>();
 
@@ -864,5 +835,104 @@ public class PropertyServiceImpl implements PropertyService {
             return "image/gif";
         }
         return "image/jpeg";
+    }
+    //................................
+    @Override
+    public String toggleLikeProperty(Long propertyId, Long userId) {
+
+        Property property = propertyRepository.findById(propertyId).orElse(null);
+
+        if (property == null) {
+            return "Property Not Found";
+        }
+
+        User user = userRepository.findById(userId).orElse(null);
+
+        if (user == null) {
+            return "User Not Found";
+        }
+
+        PropertyLike existingLike =
+                propertyLikeRepository
+                        .findByUser_UserIdAndProperty_Id(userId, propertyId)
+                        .orElse(null);
+
+        // UNLIKE
+        if (existingLike != null) {
+
+            propertyLikeRepository.delete(existingLike);
+
+            Integer count =
+                    propertyLikeRepository.countByProperty_Id(propertyId);
+
+            property.setLikesCount(count);
+
+            propertyRepository.save(property);
+
+            return "Property Unliked Successfully";
+        }
+
+        // LIKE
+        PropertyLike like = new PropertyLike();
+
+        like.setUser(user);
+
+        like.setProperty(property);
+
+        propertyLikeRepository.save(like);
+
+        Integer count =
+                propertyLikeRepository.countByProperty_Id(propertyId);
+
+        property.setLikesCount(count);
+
+        propertyRepository.save(property);
+
+        return "Property Liked Successfully";
+    }
+
+    @Override
+    public List<PropertyDto> getLikedProperties(Long userId) {
+
+        List<PropertyLike> likes =
+                propertyLikeRepository.findByUser_UserId(userId);
+
+        List<PropertyDto> dtoList = new ArrayList<>();
+
+        for (PropertyLike like : likes) {
+
+            Property property = like.getProperty();
+
+            if (property == null) {
+                continue;
+            }
+
+            PropertyDto dto = new PropertyDto();
+
+            dto.setId(property.getId());
+            dto.setTitle(property.getTitle());
+            dto.setPrice(property.getPrice());
+            dto.setLocation(property.getLocation());
+            dto.setAddress(property.getAddress());
+            dto.setCity(property.getCity());
+            dto.setLikesCount(property.getLikesCount());
+            dto.setLiked(true);
+
+
+
+            attachDatabaseImages(dto, property.getId());
+
+            dtoList.add(dto);
+        }
+
+        return dtoList;
+    }
+
+    @Override
+    public Integer getUserLikedPropertiesCount(Long userId) {
+
+        return propertyLikeRepository
+                .findByUser_UserId(userId)
+                .size();
     }
 }

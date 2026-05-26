@@ -6,6 +6,9 @@ import com.caryanam.caryanam_broker.Enum.PropertyType;
 import jakarta.persistence.*;
 import jakarta.persistence.Enumerated;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -21,6 +24,7 @@ public class Property {
     @Column(columnDefinition = "TEXT")
     private String description;
     private String mobileNumber;
+
     private Integer likesCount;
     private Integer viewsCount;
     private String status;
@@ -49,4 +53,8 @@ public class Property {
     @Column(name = "apartment_name")
     private String apartmentName;
     private String nearBy;
+
+    @Column(updatable = false)
+    @CreationTimestamp
+    private LocalDateTime createdAt;
    }

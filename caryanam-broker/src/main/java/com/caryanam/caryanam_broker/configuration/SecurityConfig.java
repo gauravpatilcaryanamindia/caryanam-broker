@@ -165,6 +165,7 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/user/likeProperty/**","/api/user/likedProperties","/api/user/likedPropertiesCount").hasAnyRole("USER")
                         .requestMatchers(HttpMethod.GET, "/api/owner/getPropertyById/**")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/owner/property/image/**")
@@ -212,6 +213,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",
                 "http://localhost:3000",
+                "http://localhost:63342",
                 "https://caryanambroker.vercel.app",
                 "https://r1.rentalchaavi.com"
         ));

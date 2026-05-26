@@ -33,4 +33,11 @@ public interface PropertyService {
     String activateProperty(Long id);
 
     Optional<PropertyImageContent> getPropertyImageContent(String filename);
+    //........................................................
+    String toggleLikeProperty(Long propertyId, Long userId);
+
+    List<PropertyDto> getLikedProperties(Long userId);
+
+    Integer getUserLikedPropertiesCount(Long userId);
+
 }

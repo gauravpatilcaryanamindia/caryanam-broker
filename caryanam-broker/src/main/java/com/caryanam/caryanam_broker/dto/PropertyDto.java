@@ -52,5 +52,9 @@ public class PropertyDto {
 
     private List<String> imageUrls;
     private Integer premiumCount;
+    private Integer liked;
 
+
+    public void setLiked(boolean b) {
+    }
 }

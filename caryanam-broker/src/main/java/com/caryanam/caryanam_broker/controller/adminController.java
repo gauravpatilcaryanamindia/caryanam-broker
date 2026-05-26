@@ -73,7 +73,7 @@ public class adminController {
 
             // OWNER PROPERTIES
             List<Property> properties =
-                    propertyRepository.findByPropertyOwner_OwnerId(
+                    propertyRepository.findByPropertyOwner_OwnerIdOrderByCreatedAtDesc(
                             owner.getOwnerId()
                     );
 
@@ -166,7 +166,7 @@ public class adminController {
 
         // PROPERTY TABLE UPDATE
         List<Property> properties =
-                propertyRepository.findByPropertyOwner_OwnerId(ownerId);
+                propertyRepository.findByPropertyOwner_OwnerIdOrderByCreatedAtDesc(ownerId);
 
         for (Property property : properties) {
 
@@ -250,7 +250,7 @@ public class adminController {
 
         // PROPERTY TABLE UPDATE
         List<Property> properties =
-                propertyRepository.findByPropertyOwner_OwnerId(ownerId);
+                propertyRepository.findByPropertyOwner_OwnerIdOrderByCreatedAtDesc(ownerId);
 
         for (Property property : properties) {
 
@@ -299,7 +299,7 @@ public class adminController {
         if (owner == null) {
             return ResponseHandler.generateResponse(MessageConfig.OWNER_NOT_FOUND, HttpStatus.BAD_REQUEST, null);
         }
-        List<Property> properties = propertyRepository.findByPropertyOwner_OwnerId(ownerId);
+        List<Property> properties = propertyRepository.findByPropertyOwner_OwnerIdOrderByCreatedAtDesc(ownerId);
         Map<String, Object> response = new HashMap<>();
         response.put("ownerId", ownerId);
         response.put("ownerName", owner.getFullName());

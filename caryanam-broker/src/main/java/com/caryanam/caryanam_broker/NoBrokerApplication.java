@@ -12,12 +12,12 @@ public class NoBrokerApplication {
 		System.out.println("Caryanam Broker Application start Successfully");
 		System.out.println("\n\n");
 		System.err.println("PORT : localhost8080");
-		System.err.println("documentation : "+"http://localhost:8080/swagger-ui.html");
+
 		System.err.println("  *****    *******  *******       *****   *******    *****    ******   *******" );
 		System.err.println(" *     *   *      *    *         *           *      *     *   *     *     *   " );
 		System.err.println("*       *  *      *    *         *           *     *       *  *     *     *   " );
 		System.err.println("*       *  *******     *          *****      *     *       *  ******      *   " );
-		System.err.println("*********  * 	          *               *     *     *********  *   *       *   " );
+		System.err.println("*********  * 	       *               *     *     *********  *   *       *   " );
 		System.err.println("*       *  *           *               *     *     *       *  *    *      *   " );
 		System.err.println("*       *  *        *******       *****      *     *       *  *     *     *   " );
 

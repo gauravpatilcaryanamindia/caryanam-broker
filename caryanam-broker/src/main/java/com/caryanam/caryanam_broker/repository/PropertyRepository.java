@@ -15,7 +15,7 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
 
     List<Property> findByStatus(String active);
 
-    List<Property> findByPropertyOwner_OwnerId(Long ownerId);
+    List<Property> findByPropertyOwner_OwnerIdOrderByCreatedAtDesc(Long ownerId);
 
     List<Property> findByCityIgnoreCaseAndAddressIgnoreCaseAndStatus(String city, String address, String active);
 

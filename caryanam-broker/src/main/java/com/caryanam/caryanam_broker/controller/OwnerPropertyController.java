@@ -389,7 +389,7 @@ public class OwnerPropertyController {
         // GET ALL OWNER PROPERTIES
         List<Property> properties =
                 propertyRepository
-                        .findByPropertyOwner_OwnerId(ownerId);
+                        .findByPropertyOwner_OwnerIdOrderByCreatedAtDesc(ownerId);
 
         // IF PROPERTY ID IS PROVIDED, ONLY CHECK THAT PROPERTY
         if (propertyId != null) {
